@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interactive Diagram Prototype</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Diagram JSON Renderer</p>
+          <h1 id="diagram-title">Loading diagram</h1>
+        </div>
+        <div class="toolbar" aria-label="Diagram controls">
+          <label class="toggle">
+            <input id="toggle-animation" type="checkbox" checked />
+            <span>Animation</span>
+          </label>
+          <label class="toggle">
+            <input id="toggle-labels" type="checkbox" checked />
+            <span>Labels</span>
+          </label>
+        </div>
+      </header>
+
+      <section class="workspace" aria-label="Diagram canvas">
+        <div id="diagram-root" class="diagram-root"></div>
+      </section>
+
+      <footer class="statusbar">
+        <span id="diagram-meta">examples/basic-web-architecture.diagram.json</span>
+        <span id="diagram-stats"></span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/renderer.js"></script>
+  </body>
+</html>
