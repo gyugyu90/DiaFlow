@@ -1,16 +1,10 @@
 :root {
   color-scheme: light;
   --bg: #eef2f7;
-  --panel: #ffffff;
   --panel-strong: #f8fafc;
   --text: #172033;
   --muted: #697586;
-  --line: #9aa8ba;
   --line-strong: #2f6fed;
-  --teal: #0f9f8f;
-  --amber: #d18a00;
-  --violet: #7657d6;
-  --green: #27945f;
   --border: #d7dee8;
   --shadow: 0 18px 42px rgba(35, 48, 72, 0.13);
 }
@@ -20,7 +14,8 @@
 }
 
 html,
-body {
+body,
+#root {
   min-height: 100%;
 }
 
@@ -148,11 +143,6 @@ h1 {
 
 .node-card {
   filter: drop-shadow(0 10px 18px rgba(31, 42, 68, 0.12));
-}
-
-.node-card.is-active .node-box {
-  stroke: var(--line-strong);
-  stroke-width: 2;
 }
 
 .node-box {

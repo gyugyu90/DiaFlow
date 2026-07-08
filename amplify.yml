@@ -1,12 +1,14 @@
 version: 1
 frontend:
   phases:
+    preBuild:
+      commands:
+        - npm ci
     build:
       commands:
-        - 'echo "Static site build skipped"'
+        - npm test
+        - npm run build
   artifacts:
-    baseDirectory: .
+    baseDirectory: dist
     files:
-      - index.html
-      - src/**/*
-      - examples/**/*
+      - "**/*"
