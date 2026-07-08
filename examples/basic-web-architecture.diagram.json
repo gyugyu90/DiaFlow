@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "0.1",
+  "id": "diagram_basic_web_architecture",
+  "kind": "architecture",
+  "metadata": {
+    "title": "Basic Web Architecture",
+    "description": "A browser sends traffic through a load balancer to an app server, database, and object storage.",
+    "createdAt": "2026-07-08T00:00:00.000Z",
+    "updatedAt": "2026-07-08T00:00:00.000Z",
+    "tags": ["web", "architecture"]
+  },
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "theme": {
+    "mode": "light",
+    "accent": "blue",
+    "background": "#f8fafc"
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "type": "user",
+      "label": "User",
+      "position": { "x": 80, "y": 220 },
+      "size": { "width": 120, "height": 72 },
+      "icon": "user"
+    },
+    {
+      "id": "browser",
+      "type": "browser",
+      "label": "Browser",
+      "position": { "x": 280, "y": 220 },
+      "size": { "width": 140, "height": 72 },
+      "icon": "browser"
+    },
+    {
+      "id": "load_balancer",
+      "type": "load_balancer",
+      "label": "Load Balancer",
+      "position": { "x": 500, "y": 220 },
+      "size": { "width": 160, "height": 72 },
+      "icon": "network"
+    },
+    {
+      "id": "app_server",
+      "type": "app",
+      "label": "App Server",
+      "position": { "x": 740, "y": 160 },
+      "size": { "width": 160, "height": 80 },
+      "icon": "server",
+      "groupId": "backend"
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "label": "Database",
+      "position": { "x": 980, "y": 120 },
+      "size": { "width": 160, "height": 80 },
+      "icon": "database",
+      "groupId": "data"
+    },
+    {
+      "id": "storage",
+      "type": "storage",
+      "label": "Object Storage",
+      "position": { "x": 980, "y": 280 },
+      "size": { "width": 160, "height": 80 },
+      "icon": "storage",
+      "groupId": "data"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_user_browser",
+      "source": { "nodeId": "user" },
+      "target": { "nodeId": "browser" },
+      "label": "Uses",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "muted"
+      }
+    },
+    {
+      "id": "edge_browser_lb",
+      "source": { "nodeId": "browser" },
+      "target": { "nodeId": "load_balancer" },
+      "label": "HTTPS",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "accent"
+      },
+      "animationId": "anim_request"
+    },
+    {
+      "id": "edge_lb_app",
+      "source": { "nodeId": "load_balancer" },
+      "target": { "nodeId": "app_server" },
+      "label": "HTTP",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "accent"
+      },
+      "animationId": "anim_request"
+    },
+    {
+      "id": "edge_app_db",
+      "source": { "nodeId": "app_server" },
+      "target": { "nodeId": "database" },
+      "label": "SQL",
+      "direction": "bidirectional",
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "default"
+      }
+    },
+    {
+      "id": "edge_app_storage",
+      "source": { "nodeId": "app_server" },
+      "target": { "nodeId": "storage" },
+      "label": "Files",
+      "direction": "bidirectional",
+      "style": {
+        "line": "dashed",
+        "routing": "smooth",
+        "color": "default"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "id": "backend",
+      "label": "Backend",
+      "nodeIds": ["app_server"],
+      "style": {
+        "variant": "boundary"
+      }
+    },
+    {
+      "id": "data",
+      "label": "Data Layer",
+      "nodeIds": ["database", "storage"],
+      "style": {
+        "variant": "boundary"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "id": "anim_request",
+      "type": "packet",
+      "edgeIds": ["edge_browser_lb", "edge_lb_app"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Request",
+      "payload": {
+        "kind": "request"
+      }
+    }
+  ]
+}

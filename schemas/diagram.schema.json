@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://interactive-diagram.local/schemas/diagram.schema.json",
+  "title": "Interactive Diagram",
+  "description": "Source-of-truth document schema for interactive architecture diagrams.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "kind",
+    "metadata",
+    "viewport",
+    "theme",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["architecture"]
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "viewport": {
+      "$ref": "#/$defs/viewport"
+    },
+    "theme": {
+      "$ref": "#/$defs/theme"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/edge"
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/group"
+      },
+      "default": []
+    },
+    "animations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/animation"
+      },
+      "default": []
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "accent", "background"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["light", "dark"]
+        },
+        "accent": {
+          "type": "string"
+        },
+        "background": {
+          "type": "string"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "label", "position"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "user",
+            "browser",
+            "mobile",
+            "load_balancer",
+            "api",
+            "app",
+            "server",
+            "worker",
+            "database",
+            "cache",
+            "queue",
+            "storage",
+            "cdn",
+            "external_service",
+            "network",
+            "group",
+            "unknown"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "position": {
+          "$ref": "#/$defs/point"
+        },
+        "size": {
+          "$ref": "#/$defs/size"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "groupId": {
+          "$ref": "#/$defs/id"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          },
+          "default": []
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "side"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "side": {
+          "type": "string",
+          "enum": ["top", "right", "bottom", "left"]
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "source": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "target": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "label": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["none", "forward", "backward", "bidirectional"],
+          "default": "forward"
+        },
+        "style": {
+          "$ref": "#/$defs/edgeStyle"
+        },
+        "animationId": {
+          "$ref": "#/$defs/id"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId"],
+      "properties": {
+        "nodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "portId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "edgeStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "type": "string",
+          "enum": ["solid", "dashed", "dotted"],
+          "default": "solid"
+        },
+        "routing": {
+          "type": "string",
+          "enum": ["straight", "smooth", "orthogonal"],
+          "default": "smooth"
+        },
+        "color": {
+          "type": "string",
+          "default": "default"
+        }
+      }
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "nodeIds"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodeIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "style": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "variant": {
+              "type": "string",
+              "enum": ["boundary", "lane", "none"],
+              "default": "boundary"
+            }
+          }
+        }
+      }
+    },
+    "animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "edgeIds", "enabled"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "packet",
+            "request",
+            "response",
+            "cache_hit",
+            "cache_miss",
+            "retry",
+            "broadcast",
+            "step_reveal",
+            "none"
+          ]
+        },
+        "edgeIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "minItems": 1
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["forward", "backward", "bidirectional"],
+          "default": "forward"
+        },
+        "speed": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 1
+        },
+        "loop": {
+          "type": "boolean",
+          "default": true
+        },
+        "label": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      }
+    }
+  }
+}
