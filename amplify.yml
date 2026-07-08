@@ -1,0 +1,12 @@
+version: 1
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "Static site: no build step required"
+  artifacts:
+    baseDirectory: .
+    files:
+      - index.html
+      - src/**/*
+      - examples/**/*
