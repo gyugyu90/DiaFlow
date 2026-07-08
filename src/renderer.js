@@ -1,8 +1,16 @@
 const SVG_NS = "http://www.w3.org/2000/svg";
 const DIAGRAM_URL = "/examples/basic-web-architecture.diagram.json";
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.5;
+const WHEEL_ZOOM_SENSITIVITY = 0.001;
+const GRID_SIZE = 32;
+const MAJOR_GRID_SIZE = GRID_SIZE * 5;
 
 const state = {
   diagram: null,
+  initialViewBox: null,
+  viewBox: null,
+  pan: null,
 };
 
 const nodeTypeAccent = {
@@ -81,19 +89,24 @@ function renderDiagram(diagram) {
 
   const nodesById = new Map(diagram.nodes.map((node) => [node.id, normalizeNode(node)]));
   const bounds = getDiagramBounds([...nodesById.values()]);
+  state.initialViewBox = { ...bounds };
+  state.viewBox = { ...bounds };
   const svg = createSvg("svg", {
     class: "diagram-svg",
-    viewBox: `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`,
     role: "img",
     "aria-label": diagram.metadata.title,
   });
+  setViewBox(svg, state.viewBox);
 
   svg.appendChild(createDefs());
 
+  const gridLayer = createSvg("g", { class: "grid-layer" });
   const groupLayer = createSvg("g", { class: "groups" });
   const edgeLayer = createSvg("g", { class: "edges" });
   const animationLayer = createSvg("g", { class: "animations" });
   const nodeLayer = createSvg("g", { class: "nodes" });
+
+  gridLayer.appendChild(renderGrid());
 
   for (const group of diagram.groups ?? []) {
     groupLayer.appendChild(renderGroup(group, nodesById));
@@ -116,8 +129,110 @@ function renderDiagram(diagram) {
     nodeLayer.appendChild(renderNode(node));
   }
 
-  svg.append(groupLayer, edgeLayer, animationLayer, nodeLayer);
+  svg.append(gridLayer, groupLayer, edgeLayer, animationLayer, nodeLayer);
   root.appendChild(svg);
+  wireViewportControls(svg);
+}
+
+function wireViewportControls(svg) {
+  svg.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    zoomAt(svg, event.clientX, event.clientY, event.deltaY);
+  }, { passive: false });
+
+  svg.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    svg.setPointerCapture(event.pointerId);
+    state.pan = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startViewBox: { ...state.viewBox },
+    };
+    document.querySelector("#diagram-root").classList.add("is-panning");
+  });
+
+  svg.addEventListener("pointermove", (event) => {
+    if (!state.pan || state.pan.pointerId !== event.pointerId) return;
+    const scaleX = state.viewBox.width / svg.clientWidth;
+    const scaleY = state.viewBox.height / svg.clientHeight;
+    const dx = (event.clientX - state.pan.startClientX) * scaleX;
+    const dy = (event.clientY - state.pan.startClientY) * scaleY;
+
+    state.viewBox = {
+      ...state.viewBox,
+      x: state.pan.startViewBox.x - dx,
+      y: state.pan.startViewBox.y - dy,
+    };
+    setViewBox(svg, state.viewBox);
+  });
+
+  svg.addEventListener("pointerup", (event) => endPan(svg, event));
+  svg.addEventListener("pointercancel", (event) => endPan(svg, event));
+  svg.addEventListener("dblclick", () => {
+    state.viewBox = { ...state.initialViewBox };
+    setViewBox(svg, state.viewBox);
+  });
+}
+
+function zoomAt(svg, clientX, clientY, deltaY) {
+  const rect = svg.getBoundingClientRect();
+  const pointer = {
+    x: state.viewBox.x + ((clientX - rect.left) / rect.width) * state.viewBox.width,
+    y: state.viewBox.y + ((clientY - rect.top) / rect.height) * state.viewBox.height,
+  };
+  const zoomFactor = Math.exp(deltaY * WHEEL_ZOOM_SENSITIVITY);
+  const minWidth = state.initialViewBox.width / MAX_ZOOM;
+  const maxWidth = state.initialViewBox.width / MIN_ZOOM;
+  const nextWidth = clamp(state.viewBox.width * zoomFactor, minWidth, maxWidth);
+  const nextHeight = state.viewBox.height * (nextWidth / state.viewBox.width);
+  const widthRatio = nextWidth / state.viewBox.width;
+  const heightRatio = nextHeight / state.viewBox.height;
+
+  state.viewBox = {
+    x: pointer.x - (pointer.x - state.viewBox.x) * widthRatio,
+    y: pointer.y - (pointer.y - state.viewBox.y) * heightRatio,
+    width: nextWidth,
+    height: nextHeight,
+  };
+  setViewBox(svg, state.viewBox);
+}
+
+function endPan(svg, event) {
+  if (!state.pan || state.pan.pointerId !== event.pointerId) return;
+  state.pan = null;
+  svg.releasePointerCapture(event.pointerId);
+  document.querySelector("#diagram-root").classList.remove("is-panning");
+}
+
+function setViewBox(svg, viewBox) {
+  svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+  updateGridStyle(svg);
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function updateGridStyle(svg) {
+  if (!state.initialViewBox) return;
+
+  const zoom = state.initialViewBox.width / state.viewBox.width;
+  const zoomOutAmount = clamp((1 - zoom) / (1 - MIN_ZOOM), 0, 1);
+  const zoomInAmount = clamp((zoom - 1) / (MAX_ZOOM - 1), 0, 1);
+  const fineOpacity = 0.055 + zoomOutAmount * 0.02 - zoomInAmount * 0.015;
+  const majorOpacity = 0.095 + zoomOutAmount * 0.085 - zoomInAmount * 0.02;
+  const fineWidth = 1 + zoomOutAmount * 0.1;
+  const majorWidth = 1.2 + zoomOutAmount * 0.3;
+
+  svg.querySelectorAll(".grid-line-fine").forEach((line) => {
+    line.setAttribute("stroke-opacity", fineOpacity.toFixed(3));
+    line.setAttribute("stroke-width", fineWidth.toFixed(2));
+  });
+  svg.querySelectorAll(".grid-line-major").forEach((line) => {
+    line.setAttribute("stroke-opacity", majorOpacity.toFixed(3));
+    line.setAttribute("stroke-width", majorWidth.toFixed(2));
+  });
 }
 
 function normalizeNode(node) {
@@ -144,6 +259,30 @@ function getDiagramBounds(nodes) {
 
 function createDefs() {
   const defs = createSvg("defs");
+  const grid = createSvg("pattern", {
+    id: "canvas-grid",
+    width: MAJOR_GRID_SIZE,
+    height: MAJOR_GRID_SIZE,
+    patternUnits: "userSpaceOnUse",
+  });
+  grid.appendChild(createSvg("path", {
+    class: "grid-line-fine",
+    d: getGridPath(GRID_SIZE, MAJOR_GRID_SIZE),
+    fill: "none",
+    stroke: "#263246",
+    "stroke-opacity": 0.055,
+    "stroke-width": 1,
+    "vector-effect": "non-scaling-stroke",
+  }));
+  grid.appendChild(createSvg("path", {
+    class: "grid-line-major",
+    d: `M ${MAJOR_GRID_SIZE} 0 H 0 V ${MAJOR_GRID_SIZE}`,
+    fill: "none",
+    stroke: "#263246",
+    "stroke-opacity": 0.095,
+    "stroke-width": 1.2,
+    "vector-effect": "non-scaling-stroke",
+  }));
 
   const arrow = createSvg("marker", {
     id: "arrow-forward",
@@ -178,8 +317,28 @@ function createDefs() {
   });
   arrowMuted.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#a1adbd" }));
 
-  defs.append(arrow, arrowAccent, arrowMuted);
+  defs.append(grid, arrow, arrowAccent, arrowMuted);
   return defs;
+}
+
+function renderGrid() {
+  return createSvg("rect", {
+    class: "canvas-grid",
+    x: -100000,
+    y: -100000,
+    width: 200000,
+    height: 200000,
+    fill: "url(#canvas-grid)",
+  });
+}
+
+function getGridPath(step, size) {
+  const segments = [];
+  for (let offset = step; offset < size; offset += step) {
+    segments.push(`M ${offset} 0 V ${size}`);
+    segments.push(`M 0 ${offset} H ${size}`);
+  }
+  return segments.join(" ");
 }
 
 function renderGroup(group, nodesById) {
