@@ -301,6 +301,11 @@
         "color": {
           "type": "string",
           "default": "default"
+        },
+        "labelPlacement": {
+          "type": "string",
+          "enum": ["center", "above", "below"],
+          "default": "above"
         }
       }
     },

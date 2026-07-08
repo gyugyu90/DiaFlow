@@ -82,7 +82,8 @@
       "style": {
         "line": "solid",
         "routing": "smooth",
-        "color": "muted"
+        "color": "muted",
+        "labelPlacement": "center"
       }
     },
     {
@@ -94,7 +95,8 @@
       "style": {
         "line": "solid",
         "routing": "smooth",
-        "color": "accent"
+        "color": "accent",
+        "labelPlacement": "above"
       },
       "animationId": "anim_request"
     },
@@ -132,7 +134,8 @@
       "style": {
         "line": "dashed",
         "routing": "smooth",
-        "color": "default"
+        "color": "default",
+        "labelPlacement": "below"
       }
     }
   ],

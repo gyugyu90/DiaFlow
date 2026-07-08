@@ -218,7 +218,8 @@ Edges represent relationships or communication paths between nodes.
   "style": {
     "line": "solid",
     "routing": "smooth",
-    "color": "default"
+    "color": "default",
+    "labelPlacement": "above"
   },
   "animationId": "anim_browser_lb_request",
   "data": {}
@@ -257,7 +258,8 @@ Direction is semantic. It does not automatically mean the edge is animated.
 {
   "line": "solid",
   "routing": "smooth",
-  "color": "default"
+  "color": "default",
+  "labelPlacement": "above"
 }
 ```
 
@@ -266,6 +268,15 @@ Initial values:
 - `line`: `solid`, `dashed`, `dotted`
 - `routing`: `straight`, `smooth`, `orthogonal`
 - `color`: `default`, `muted`, `accent`, or hex color
+- `labelPlacement`: `center`, `above`, `below`
+
+`labelPlacement` controls where the edge label is rendered:
+
+- `center`: label is placed on the edge and may visually cover the line.
+- `above`: label is offset above a horizontal edge. For vertical edges, it is offset to the right.
+- `below`: label is offset below a horizontal edge. For vertical edges, it is offset to the left.
+
+Default value: `above`.
 
 ## Animation
 
@@ -431,7 +442,7 @@ Groups are optional. Nodes can reference groups with `groupId`, and groups can l
       "target": { "nodeId": "load_balancer" },
       "label": "HTTPS",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent" },
+      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above" },
       "animationId": "anim_request"
     },
     {

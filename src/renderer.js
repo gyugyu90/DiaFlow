@@ -5,6 +5,7 @@ const MAX_ZOOM = 2.5;
 const WHEEL_ZOOM_SENSITIVITY = 0.001;
 const GRID_SIZE = 32;
 const MAJOR_GRID_SIZE = GRID_SIZE * 5;
+const EDGE_LABEL_OFFSET = 24;
 
 const state = {
   diagram: null,
@@ -406,7 +407,12 @@ function renderEdge(edge, nodesById) {
 
   element.appendChild(path);
   if (edge.label) {
-    element.appendChild(renderEdgeLabel(edge.label, sourcePoint, targetPoint));
+    element.appendChild(renderEdgeLabel(
+      edge.label,
+      sourcePoint,
+      targetPoint,
+      edge.style?.labelPlacement ?? "above",
+    ));
   }
 
   return { element, sourcePoint, targetPoint, pathData };
@@ -468,30 +474,50 @@ function getDashArray(line) {
   return null;
 }
 
-function renderEdgeLabel(label, source, target) {
-  const midpoint = {
-    x: (source.x + target.x) / 2,
-    y: (source.y + target.y) / 2,
-  };
+function renderEdgeLabel(label, source, target, placement) {
+  const anchor = getEdgeLabelAnchor(source, target, placement);
   const width = Math.max(44, label.length * 7 + 18);
-  const group = createSvg("g", { class: "edge-label" });
+  const group = createSvg("g", {
+    class: `edge-label edge-label-${placement}`,
+    "data-placement": placement,
+  });
 
   group.appendChild(createSvg("rect", {
     class: "edge-label-bg",
-    x: midpoint.x - width / 2,
-    y: midpoint.y - 15,
+    x: anchor.x - width / 2,
+    y: anchor.y - 15,
     width,
     height: 24,
     rx: 8,
   }));
   group.appendChild(createSvg("text", {
     class: "edge-label-text",
-    x: midpoint.x,
-    y: midpoint.y + 2,
+    x: anchor.x,
+    y: anchor.y + 2,
     "text-anchor": "middle",
   }, label));
 
   return group;
+}
+
+function getEdgeLabelAnchor(source, target, placement) {
+  const anchor = {
+    x: (source.x + target.x) / 2,
+    y: (source.y + target.y) / 2,
+  };
+  if (placement === "center") return anchor;
+
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  const direction = placement === "below" ? -1 : 1;
+
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    anchor.y -= EDGE_LABEL_OFFSET * direction;
+  } else {
+    anchor.x += EDGE_LABEL_OFFSET * direction;
+  }
+
+  return anchor;
 }
 
 function renderAnimation(animation, edgeGeometry) {
