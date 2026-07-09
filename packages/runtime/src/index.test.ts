@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
+import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
 import { renderDiagram } from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);
+const circuitDiagram = parseDiagramDocument(circuitBreakerDiagram);
 
 function renderSample(options = {}) {
   const container = document.createElement("div");
@@ -94,6 +96,37 @@ describe("renderDiagram", () => {
     expect(container.classList.contains("animations-off")).toBe(false);
     expect(container.classList.contains("labels-off")).toBe(false);
     expect(container.querySelectorAll("[data-node-id]")).toHaveLength(6);
+  });
+
+  it("renders scene-specific labels, tones, and animation filters", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    renderDiagram(container, circuitDiagram, { sceneId: "scene_open" });
+
+    expect(container.dataset.sceneId).toBe("scene_open");
+    expect(container.textContent).toContain("Circuit open");
+    expect(container.textContent).toContain("Fallback cache");
+    expect(container.querySelector('[data-edge-id="edge_order_payment"]')?.classList.contains("edge-disabled")).toBe(true);
+    expect(container.querySelector('[data-node-id="fallback_cache"]')?.classList.contains("node-tone-active")).toBe(true);
+    expect(container.querySelectorAll(".animation")).toHaveLength(1);
+    expect(container.querySelector('[data-animation-id="anim_fallback_response"]')).toBeTruthy();
+  });
+
+  it("re-renders when switching scenes through renderer options", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const renderer = renderDiagram(container, circuitDiagram, { sceneId: "scene_failure" });
+
+    expect(container.textContent).toContain("Timeout / retry");
+    expect(container.querySelector('[data-node-id="payment_service"]')?.classList.contains("node-tone-danger")).toBe(true);
+
+    renderer.setOptions({ sceneId: "scene_recovered" });
+
+    expect(container.dataset.sceneId).toBe("scene_recovered");
+    expect(container.textContent).not.toContain("Timeout / retry");
+    expect(container.textContent).toContain("Charge card");
+    expect(container.querySelector('[data-node-id="payment_service"]')?.classList.contains("node-tone-active")).toBe(true);
   });
 
   it("clamps wheel zoom to the configured limits", () => {

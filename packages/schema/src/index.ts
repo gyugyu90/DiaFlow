@@ -57,6 +57,8 @@ export const edgeStyleSchema = z.object({
   labelPlacement: z.enum(["center", "above", "below"]).default("above").optional(),
 });
 
+export const sceneToneSchema = z.enum(["normal", "active", "warning", "danger", "muted"]);
+
 export const endpointSchema = z.object({
   nodeId: z.string().min(1),
   portId: z.string().optional(),
@@ -106,6 +108,30 @@ export const animationSchema = z.object({
   payload: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const sceneEdgeOverrideSchema = z.object({
+  edgeId: z.string().min(1),
+  label: z.string().optional(),
+  disabled: z.boolean().optional(),
+  animationId: z.string().min(1).nullable().optional(),
+  tone: sceneToneSchema.optional(),
+  style: edgeStyleSchema.partial().optional(),
+});
+
+export const sceneNodeOverrideSchema = z.object({
+  nodeId: z.string().min(1),
+  tone: sceneToneSchema.optional(),
+  status: z.string().optional(),
+});
+
+export const sceneSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  animationIds: z.array(z.string().min(1)).optional(),
+  edgeOverrides: z.array(sceneEdgeOverrideSchema).optional(),
+  nodeOverrides: z.array(sceneNodeOverrideSchema).optional(),
+});
+
 export const diagramDocumentSchema = z.object({
   schemaVersion: z.literal("0.1"),
   id: z.string().min(1),
@@ -131,6 +157,7 @@ export const diagramDocumentSchema = z.object({
   edges: z.array(edgeSchema),
   groups: z.array(groupSchema).optional(),
   animations: z.array(animationSchema).optional(),
+  scenes: z.array(sceneSchema).optional(),
 });
 
 export type DiagramDocument = z.infer<typeof diagramDocumentSchema>;
@@ -138,6 +165,9 @@ export type DiagramNode = z.infer<typeof nodeSchema>;
 export type DiagramEdge = z.infer<typeof edgeSchema>;
 export type DiagramGroup = z.infer<typeof groupSchema>;
 export type DiagramAnimation = z.infer<typeof animationSchema>;
+export type DiagramScene = z.infer<typeof sceneSchema>;
+export type DiagramSceneEdgeOverride = z.infer<typeof sceneEdgeOverrideSchema>;
+export type DiagramSceneNodeOverride = z.infer<typeof sceneNodeOverrideSchema>;
 export type EdgeLabelPlacement = NonNullable<DiagramEdge["style"]>["labelPlacement"];
 
 export function parseDiagramDocument(value: unknown): DiagramDocument {

@@ -61,6 +61,13 @@
         "$ref": "#/$defs/animation"
       },
       "default": []
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scene"
+      },
+      "default": []
     }
   },
   "$defs": {
@@ -393,6 +400,89 @@
           "type": "object",
           "additionalProperties": true,
           "default": {}
+        }
+      }
+    },
+    "sceneTone": {
+      "type": "string",
+      "enum": ["normal", "active", "warning", "danger", "muted"]
+    },
+    "sceneEdgeOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edgeId"],
+      "properties": {
+        "edgeId": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "disabled": {
+          "type": "boolean"
+        },
+        "animationId": {
+          "oneOf": [
+            { "$ref": "#/$defs/id" },
+            { "type": "null" }
+          ]
+        },
+        "tone": {
+          "$ref": "#/$defs/sceneTone"
+        },
+        "style": {
+          "$ref": "#/$defs/edgeStyle"
+        }
+      }
+    },
+    "sceneNodeOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId"],
+      "properties": {
+        "nodeId": {
+          "$ref": "#/$defs/id"
+        },
+        "tone": {
+          "$ref": "#/$defs/sceneTone"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "animationIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "edgeOverrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sceneEdgeOverride"
+          }
+        },
+        "nodeOverrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sceneNodeOverride"
+          }
         }
       }
     }

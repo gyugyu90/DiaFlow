@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Edit3,
   Eye,
   Maximize2,
@@ -8,8 +10,9 @@ import {
   X,
 } from "lucide-react";
 import { renderDiagram, type DiagramRenderer } from "@interactive-diagram/runtime";
-import { parseDiagramDocument, type DiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument, type DiagramDocument, type DiagramScene } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
+import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 
 type DiagramListItem = {
   id: string;
@@ -26,6 +29,12 @@ const diagrams: DiagramListItem[] = [
     title: "Basic Web Architecture",
     description: "Browser traffic through a load balancer to app, database, and object storage.",
     diagram: parseDiagramDocument(sampleDiagram),
+  },
+  {
+    id: "circuit-breaker-scenes",
+    title: "Circuit Breaker Scenes",
+    description: "MSA circuit breaker behavior across normal traffic, failure propagation, open circuit, and recovery.",
+    diagram: parseDiagramDocument(circuitBreakerDiagram),
   },
 ];
 
@@ -125,6 +134,10 @@ function DiagramCard({
           <dt>Animations</dt>
           <dd>{item.diagram.animations?.length ?? 0}</dd>
         </div>
+        <div>
+          <dt>Scenes</dt>
+          <dd>{item.diagram.scenes?.length ?? 0}</dd>
+        </div>
       </dl>
       <div className="card-actions">
         <button className="button button-secondary" type="button" onClick={onView}>
@@ -148,6 +161,13 @@ function DiagramViewModal({
   onClose: () => void;
 }) {
   const modalRef = useRef<HTMLDivElement | null>(null);
+  const scenes = item.diagram.scenes ?? [];
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const scene = scenes[sceneIndex] ?? null;
+
+  useEffect(() => {
+    setSceneIndex(0);
+  }, [item.id]);
 
   async function enterFullscreen() {
     await modalRef.current?.requestFullscreen?.();
@@ -170,7 +190,14 @@ function DiagramViewModal({
             </button>
           </div>
         </header>
-        <DiagramViewport diagram={item.diagram} className="viewer-diagram-root" />
+        <SceneControls
+          scene={scene}
+          sceneIndex={sceneIndex}
+          sceneCount={scenes.length}
+          onPrevious={() => setSceneIndex((index) => Math.max(0, index - 1))}
+          onNext={() => setSceneIndex((index) => Math.min(scenes.length - 1, index + 1))}
+        />
+        <DiagramViewport diagram={item.diagram} sceneId={scene?.id ?? null} className="viewer-diagram-root" />
       </section>
     </div>
   );
@@ -185,6 +212,14 @@ function EditorPage({
   onBack: () => void;
   onView: () => void;
 }) {
+  const scenes = item.diagram.scenes ?? [];
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const scene = scenes[sceneIndex] ?? null;
+
+  useEffect(() => {
+    setSceneIndex(0);
+  }, [item.id]);
+
   return (
     <main className="editor-shell">
       <header className="editor-topbar">
@@ -220,6 +255,10 @@ function EditorPage({
                 <dt>Animations</dt>
                 <dd>{item.diagram.animations?.length ?? 0}</dd>
               </div>
+              <div>
+                <dt>Scenes</dt>
+                <dd>{item.diagram.scenes?.length ?? 0}</dd>
+              </div>
             </dl>
           </section>
 
@@ -237,7 +276,14 @@ function EditorPage({
         </aside>
 
         <section className="editor-workspace" aria-label="Diagram editor canvas">
-          <DiagramViewport diagram={item.diagram} className="editor-diagram-root" />
+          <SceneControls
+            scene={scene}
+            sceneIndex={sceneIndex}
+            sceneCount={scenes.length}
+            onPrevious={() => setSceneIndex((index) => Math.max(0, index - 1))}
+            onNext={() => setSceneIndex((index) => Math.min(scenes.length - 1, index + 1))}
+          />
+          <DiagramViewport diagram={item.diagram} sceneId={scene?.id ?? null} className="editor-diagram-root" />
           <form className="prompt-bar">
             <PlayCircle size={18} aria-hidden="true" />
             <input
@@ -252,12 +298,58 @@ function EditorPage({
   );
 }
 
+function SceneControls({
+  scene,
+  sceneIndex,
+  sceneCount,
+  onPrevious,
+  onNext,
+}: {
+  scene: DiagramScene | null;
+  sceneIndex: number;
+  sceneCount: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  if (!scene || sceneCount === 0) return null;
+
+  return (
+    <section className="scene-controls" aria-label="Scene controls">
+      <button
+        className="icon-button"
+        type="button"
+        onClick={onPrevious}
+        disabled={sceneIndex === 0}
+        aria-label="Previous scene"
+      >
+        <ChevronLeft size={18} aria-hidden="true" />
+      </button>
+      <div className="scene-copy">
+        <p className="eyebrow">Scene {sceneIndex + 1} / {sceneCount}</p>
+        <h3>{scene.title}</h3>
+        {scene.description ? <p>{scene.description}</p> : null}
+      </div>
+      <button
+        className="icon-button"
+        type="button"
+        onClick={onNext}
+        disabled={sceneIndex === sceneCount - 1}
+        aria-label="Next scene"
+      >
+        <ChevronRight size={18} aria-hidden="true" />
+      </button>
+    </section>
+  );
+}
+
 function DiagramViewport({
   className,
   diagram,
+  sceneId,
 }: {
   className?: string;
   diagram: DiagramDocument;
+  sceneId?: string | null;
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<DiagramRenderer | null>(null);
@@ -265,13 +357,13 @@ function DiagramViewport({
   useEffect(() => {
     if (!rootRef.current) return;
 
-    rendererRef.current = renderDiagram(rootRef.current, diagram);
+    rendererRef.current = renderDiagram(rootRef.current, diagram, { sceneId });
 
     return () => {
       rendererRef.current?.destroy();
       rendererRef.current = null;
     };
-  }, [diagram]);
+  }, [diagram, sceneId]);
 
   return <div ref={rootRef} className={`diagram-root ${className ?? ""}`} />;
 }

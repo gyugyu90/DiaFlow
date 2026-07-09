@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
+import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import { parseDiagramDocument } from "./index";
 
 function cloneSample() {
@@ -24,6 +25,27 @@ describe("diagramDocumentSchema", () => {
     expect(placements).toContain("center");
     expect(placements).toContain("above");
     expect(placements).toContain("below");
+  });
+
+  it("accepts scene-based circuit breaker samples", () => {
+    const diagram = parseDiagramDocument(circuitBreakerDiagram);
+
+    expect(diagram.nodes).toHaveLength(7);
+    expect(diagram.scenes ?? []).toHaveLength(4);
+    expect(diagram.scenes?.map((scene) => scene.id)).toEqual([
+      "scene_normal",
+      "scene_failure",
+      "scene_open",
+      "scene_recovered",
+    ]);
+    expect(diagram.scenes?.[2].edgeOverrides?.some((override) => override.disabled)).toBe(true);
+  });
+
+  it("rejects unsupported scene tones", () => {
+    const invalid = structuredClone(circuitBreakerDiagram);
+    invalid.scenes[0].nodeOverrides[0].tone = "critical";
+
+    expect(() => parseDiagramDocument(invalid)).toThrow();
   });
 
   it("rejects unsupported edge label placement values", () => {

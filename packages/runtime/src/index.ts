@@ -4,6 +4,9 @@ import type {
   DiagramEdge,
   DiagramGroup,
   DiagramNode,
+  DiagramScene,
+  DiagramSceneEdgeOverride,
+  DiagramSceneNodeOverride,
   EdgeLabelPlacement,
 } from "@interactive-diagram/schema";
 
@@ -39,6 +42,13 @@ type RendererState = {
 export type DiagramRenderOptions = {
   animations?: boolean;
   labels?: boolean;
+  sceneId?: string | null;
+};
+
+type ResolvedDiagramRenderOptions = {
+  animations: boolean;
+  labels: boolean;
+  sceneId: string | null;
 };
 
 export type DiagramRenderer = {
@@ -66,6 +76,9 @@ const edgeColor: Record<string, string> = {
   default: "#7d8ca3",
   muted: "#a1adbd",
   accent: "#2f6fed",
+  active: "#2f6fed",
+  warning: "#d18a00",
+  danger: "#cf3f3f",
 };
 
 export function renderDiagram(
@@ -86,7 +99,7 @@ class SvgDiagramRenderer implements DiagramRenderer {
   };
 
   private svg: SVGSVGElement | null = null;
-  private options: Required<DiagramRenderOptions>;
+  private options: ResolvedDiagramRenderOptions;
 
   constructor(
     private readonly container: HTMLElement,
@@ -96,6 +109,7 @@ class SvgDiagramRenderer implements DiagramRenderer {
     this.options = {
       animations: options.animations ?? true,
       labels: options.labels ?? true,
+      sceneId: options.sceneId ?? null,
     };
   }
 
@@ -104,8 +118,16 @@ class SvgDiagramRenderer implements DiagramRenderer {
     this.container.classList.toggle("animations-off", !this.options.animations);
     this.container.classList.toggle("labels-off", !this.options.labels);
 
+    const scene = getScene(this.diagram, this.options.sceneId);
+    const diagram = applyScene(this.diagram, scene);
+    if (scene) {
+      this.container.dataset.sceneId = scene.id;
+    } else {
+      delete this.container.dataset.sceneId;
+    }
+
     const nodesById = new Map(
-      this.diagram.nodes.map((node) => [node.id, normalizeNode(node)]),
+      diagram.nodes.map((node) => [node.id, normalizeNode(node)]),
     );
     const bounds = getDiagramBounds([...nodesById.values()]);
     this.state.initialViewBox = { ...bounds };
@@ -113,7 +135,7 @@ class SvgDiagramRenderer implements DiagramRenderer {
     const svg = createSvg("svg", {
       class: "diagram-svg",
       role: "img",
-      "aria-label": this.diagram.metadata.title,
+      "aria-label": scene ? `${diagram.metadata.title}: ${scene.title}` : diagram.metadata.title,
     });
     this.svg = svg;
     this.setViewBox(this.state.viewBox);
@@ -128,19 +150,19 @@ class SvgDiagramRenderer implements DiagramRenderer {
 
     gridLayer.appendChild(renderGrid());
 
-    for (const group of this.diagram.groups ?? []) {
+    for (const group of diagram.groups ?? []) {
       groupLayer.appendChild(renderGroup(group, nodesById));
     }
 
     const edgeGeometry = new Map<string, RenderedEdge>();
-    for (const edge of this.diagram.edges) {
+    for (const edge of diagram.edges) {
       const rendered = renderEdge(edge, nodesById);
       if (!rendered) continue;
       edgeLayer.appendChild(rendered.element);
       edgeGeometry.set(edge.id, rendered);
     }
 
-    for (const animation of this.diagram.animations ?? []) {
+    for (const animation of diagram.animations ?? []) {
       if (!animation.enabled) continue;
       animationLayer.appendChild(renderAnimation(animation, edgeGeometry));
     }
@@ -160,10 +182,19 @@ class SvgDiagramRenderer implements DiagramRenderer {
   }
 
   setOptions(options: DiagramRenderOptions): void {
-    this.options = {
+    const nextOptions = {
       ...this.options,
       ...options,
     };
+    const shouldRender = nextOptions.sceneId !== this.options.sceneId;
+    this.options = {
+      ...nextOptions,
+      sceneId: nextOptions.sceneId ?? null,
+    };
+    if (shouldRender) {
+      this.render();
+      return;
+    }
     this.container.classList.toggle("animations-off", !this.options.animations);
     this.container.classList.toggle("labels-off", !this.options.labels);
   }
@@ -272,6 +303,79 @@ class SvgDiagramRenderer implements DiagramRenderer {
   }
 }
 
+function getScene(diagram: DiagramDocument, sceneId: string | null): DiagramScene | null {
+  if (!sceneId) return null;
+  return diagram.scenes?.find((scene) => scene.id === sceneId) ?? null;
+}
+
+function applyScene(diagram: DiagramDocument, scene: DiagramScene | null): DiagramDocument {
+  if (!scene) return diagram;
+
+  const edgeOverrides = new Map(scene.edgeOverrides?.map((override) => [override.edgeId, override]) ?? []);
+  const nodeOverrides = new Map(scene.nodeOverrides?.map((override) => [override.nodeId, override]) ?? []);
+  const animationIds = scene.animationIds ? new Set(scene.animationIds) : null;
+
+  return {
+    ...diagram,
+    nodes: diagram.nodes.map((node) => applySceneNodeOverride(node, nodeOverrides.get(node.id))),
+    edges: diagram.edges.map((edge) => applySceneEdgeOverride(edge, edgeOverrides.get(edge.id))),
+    animations: (diagram.animations ?? []).filter((animation) => !animationIds || animationIds.has(animation.id)),
+  };
+}
+
+function applySceneNodeOverride(
+  node: DiagramNode,
+  override: DiagramSceneNodeOverride | undefined,
+): DiagramNode {
+  if (!override) return node;
+  return {
+    ...node,
+    data: {
+      ...node.data,
+      tone: override.tone,
+      status: override.status,
+    },
+  };
+}
+
+function applySceneEdgeOverride(
+  edge: DiagramEdge,
+  override: DiagramSceneEdgeOverride | undefined,
+): DiagramEdge {
+  if (!override) return edge;
+
+  const style = {
+    ...edge.style,
+    ...override.style,
+  };
+  if (override.tone) {
+    style.color = toneToEdgeColor(override.tone);
+  }
+  if (override.disabled) {
+    style.color = "muted";
+    style.line = override.style?.line ?? "dashed";
+  }
+
+  return {
+    ...edge,
+    label: override.label ?? edge.label,
+    direction: override.disabled ? "none" : edge.direction,
+    animationId: override.animationId === null ? undefined : override.animationId ?? edge.animationId,
+    style,
+    data: {
+      ...edge.data,
+      disabled: override.disabled,
+      tone: override.tone,
+    },
+  };
+}
+
+function toneToEdgeColor(tone: string): string {
+  if (tone === "normal") return "default";
+  if (tone === "active") return "accent";
+  return tone;
+}
+
 function normalizeNode(node: DiagramNode): NormalizedNode {
   return {
     ...node,
@@ -354,7 +458,29 @@ function createDefs(): SVGDefsElement {
   });
   arrowMuted.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#a1adbd" }));
 
-  defs.append(grid, arrow, arrowAccent, arrowMuted);
+  const arrowWarning = createSvg("marker", {
+    id: "arrow-warning",
+    markerWidth: 10,
+    markerHeight: 10,
+    refX: 8,
+    refY: 5,
+    orient: "auto",
+    markerUnits: "strokeWidth",
+  });
+  arrowWarning.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#d18a00" }));
+
+  const arrowDanger = createSvg("marker", {
+    id: "arrow-danger",
+    markerWidth: 10,
+    markerHeight: 10,
+    refX: 8,
+    refY: 5,
+    orient: "auto",
+    markerUnits: "strokeWidth",
+  });
+  arrowDanger.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: "#cf3f3f" }));
+
+  defs.append(grid, arrow, arrowAccent, arrowMuted, arrowWarning, arrowDanger);
   return defs;
 }
 
@@ -425,7 +551,13 @@ function renderEdge(edge: DiagramEdge, nodesById: Map<string, NormalizedNode>): 
   const targetPoint = getRectConnectionPoint(target, source);
   const pathData = getPathData(sourcePoint, targetPoint, edge.style?.routing ?? "smooth");
   const color = resolveEdgeColor(edge.style?.color);
-  const element = createSvg("g", { class: "edge", "data-edge-id": edge.id });
+  const tone = getStringData(edge.data, "tone");
+  const disabled = edge.data?.disabled === true;
+  const element = createSvg("g", {
+    class: getClassName("edge", tone ? `edge-tone-${tone}` : null, disabled ? "edge-disabled" : null),
+    "data-edge-id": edge.id,
+    "data-tone": tone,
+  });
   const path = createSvg("path", {
     id: `path-${edge.id}`,
     class: "edge-path",
@@ -499,8 +631,10 @@ function resolveEdgeColor(color: string | undefined): string {
 }
 
 function getMarkerId(color: string | undefined): string {
-  if (color === "accent") return "arrow-accent";
+  if (color === "accent" || color === "active") return "arrow-accent";
   if (color === "muted") return "arrow-muted";
+  if (color === "warning") return "arrow-warning";
+  if (color === "danger") return "arrow-danger";
   return "arrow-forward";
 }
 
@@ -591,10 +725,12 @@ function renderAnimation(animation: DiagramAnimation, edgeGeometry: Map<string, 
 
 function renderNode(node: NormalizedNode): SVGGElement {
   const accent = nodeTypeAccent[node.type] ?? nodeTypeAccent.unknown;
+  const tone = getStringData(node.data, "tone");
   const group = createSvg("g", {
-    class: "node-card",
+    class: getClassName("node-card", tone ? `node-tone-${tone}` : null),
     transform: `translate(${node.position.x} ${node.position.y})`,
     "data-node-id": node.id,
+    "data-tone": tone,
   });
 
   group.appendChild(createSvg("rect", {
@@ -715,6 +851,15 @@ function createSvg<K extends keyof SvgElementNameMap>(
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+function getStringData(data: Record<string, unknown> | undefined, key: string): string | null {
+  const value = data?.[key];
+  return typeof value === "string" ? value : null;
+}
+
+function getClassName(...values: Array<string | null | undefined>): string {
+  return values.filter((value): value is string => value !== null && value !== undefined).join(" ");
 }
 
 function isDefined<T>(value: T | undefined): value is T {

@@ -34,6 +34,7 @@ Supported in the MVP:
 - Directed and undirected edges
 - Static edges
 - Packet-style animated edges
+- Scene-based step playback
 - Manual node positions
 - Basic groups
 - Basic theme
@@ -61,7 +62,8 @@ Out of scope for the first schema version:
   "nodes": [],
   "edges": [],
   "groups": [],
-  "animations": []
+  "animations": [],
+  "scenes": []
 }
 ```
 
@@ -332,6 +334,59 @@ Animation is separate from edge structure.
 Edge = connection
 Animation = meaning over time
 ```
+
+## Scene
+
+Scenes describe step-by-step changes over the same diagram.
+
+They do not replace nodes or edges. A scene selects active animations and can override edge labels, edge style, edge tone, node tone, or disabled state for that step.
+
+```json
+{
+  "id": "scene_open",
+  "title": "Circuit Open",
+  "description": "The order service stops calling payment and returns a fallback response.",
+  "animationIds": ["anim_fallback_response"],
+  "edgeOverrides": [
+    {
+      "edgeId": "edge_order_payment",
+      "label": "Circuit open",
+      "disabled": true,
+      "tone": "muted",
+      "animationId": null
+    }
+  ],
+  "nodeOverrides": [
+    {
+      "nodeId": "payment_service",
+      "tone": "muted"
+    }
+  ]
+}
+```
+
+### Scene Fields
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `id` | yes | Stable scene identifier. |
+| `title` | yes | Human-facing scene name. |
+| `description` | no | Short explanation for viewer/editor UI. |
+| `animationIds` | no | Animation IDs active in this scene. If omitted, all enabled animations are rendered. |
+| `edgeOverrides` | no | Per-edge label, style, tone, animation, or disabled-state changes. |
+| `nodeOverrides` | no | Per-node visual tone or status changes. |
+
+Initial scene tones:
+
+```txt
+normal
+active
+warning
+danger
+muted
+```
+
+Scenes are useful for explaining changing runtime behavior without moving the architecture itself.
 
 ## Group
 
