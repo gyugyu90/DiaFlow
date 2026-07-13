@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
-import { renderDiagram } from "./index";
+import { renderDiagram, type DiagramRenderOptions } from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);
 const circuitDiagram = parseDiagramDocument(circuitBreakerDiagram);
 
-function renderSample(options = {}) {
+function renderSample(options: DiagramRenderOptions = {}) {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const renderer = renderDiagram(container, diagram, options);
@@ -183,6 +183,25 @@ describe("renderDiagram", () => {
     }
 
     expect(getViewBox(svg).width).toBeCloseTo(2480);
+  });
+
+  it("reports the zoom viewport lifecycle", () => {
+    vi.useFakeTimers();
+    try {
+      const events: string[] = [];
+      const { svg } = renderSample({
+        onViewportChange: (event) => events.push(`${event.reason}:${event.phase}`),
+      });
+      configureSvgViewport(svg);
+
+      dispatchWheel(svg, -200);
+
+      expect(events).toEqual(["zoom:start", "zoom:change"]);
+      vi.advanceTimersByTime(140);
+      expect(events).toEqual(["zoom:start", "zoom:change", "zoom:end"]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("strengthens only the major grid substantially at maximum zoom out", () => {

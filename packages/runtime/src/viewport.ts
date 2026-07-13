@@ -1,9 +1,10 @@
 import { clamp } from "./svg.js";
-import type { ViewBox } from "./types.js";
+import type { ViewBox, ViewportChangeEvent } from "./types.js";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2.5;
 const WHEEL_ZOOM_SENSITIVITY = 0.001;
+const ZOOM_END_DELAY = 140;
 
 type PanState = null | {
   pointerId: number;
@@ -21,12 +22,15 @@ export class ViewportController {
   private initialViewBox: ViewBox;
   private viewBox: ViewBox;
   private pan: PanState = null;
+  private zoomEndTimer: number | null = null;
+  private zooming = false;
 
   constructor(
     private readonly container: HTMLElement,
     private readonly svg: SVGSVGElement,
     initialViewBox: ViewBox,
     viewBox: ViewBox = initialViewBox,
+    private readonly onViewportChange?: (event: ViewportChangeEvent) => void,
   ) {
     this.initialViewBox = { ...initialViewBox };
     this.viewBox = { ...viewBox };
@@ -42,6 +46,11 @@ export class ViewportController {
   }
 
   destroy(): void {
+    if (this.zoomEndTimer !== null) {
+      window.clearTimeout(this.zoomEndTimer);
+      this.zoomEndTimer = null;
+    }
+    this.zooming = false;
     this.pan = null;
     this.container.classList.remove("is-panning");
   }
@@ -49,7 +58,13 @@ export class ViewportController {
   private wireControls(): void {
     this.svg.addEventListener("wheel", (event) => {
       event.preventDefault();
+      if (!this.zooming) {
+        this.zooming = true;
+        this.emitViewportChange("zoom", "start");
+      }
       this.zoomAt(event.clientX, event.clientY, event.deltaY);
+      this.emitViewportChange("zoom", "change");
+      this.scheduleZoomEnd();
     }, { passive: false });
 
     this.svg.addEventListener("pointerdown", (event) => {
@@ -62,6 +77,7 @@ export class ViewportController {
         startViewBox: { ...this.viewBox },
       };
       this.container.classList.add("is-panning");
+      this.emitViewportChange("pan", "start");
     });
 
     this.svg.addEventListener("pointermove", (event) => {
@@ -77,14 +93,29 @@ export class ViewportController {
         y: this.pan.startViewBox.y - dy,
       };
       this.setViewBox(this.viewBox);
+      this.emitViewportChange("pan", "change");
     });
 
     this.svg.addEventListener("pointerup", (event) => this.endPan(event));
     this.svg.addEventListener("pointercancel", (event) => this.endPan(event));
     this.svg.addEventListener("dblclick", () => {
+      this.emitViewportChange("reset", "start");
       this.viewBox = { ...this.initialViewBox };
       this.setViewBox(this.viewBox);
+      this.emitViewportChange("reset", "change");
+      this.emitViewportChange("reset", "end");
     });
+  }
+
+  private scheduleZoomEnd(): void {
+    if (this.zoomEndTimer !== null) {
+      window.clearTimeout(this.zoomEndTimer);
+    }
+    this.zoomEndTimer = window.setTimeout(() => {
+      this.zoomEndTimer = null;
+      this.zooming = false;
+      this.emitViewportChange("zoom", "end");
+    }, ZOOM_END_DELAY);
   }
 
   private zoomAt(clientX: number, clientY: number, deltaY: number): void {
@@ -115,6 +146,18 @@ export class ViewportController {
     this.pan = null;
     this.svg.releasePointerCapture(event.pointerId);
     this.container.classList.remove("is-panning");
+    this.emitViewportChange("pan", "end");
+  }
+
+  private emitViewportChange(
+    reason: ViewportChangeEvent["reason"],
+    phase: ViewportChangeEvent["phase"],
+  ): void {
+    this.onViewportChange?.({
+      phase,
+      reason,
+      viewBox: { ...this.viewBox },
+    });
   }
 
   private setViewBox(viewBox: ViewBox): void {

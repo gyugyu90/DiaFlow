@@ -53,6 +53,16 @@ export function updateSelectedNodeAnchor(
 
   const nodeRect = nodeElement.getBoundingClientRect();
   const rootRect = root.getBoundingClientRect();
+  const nodeIsOutsideViewport =
+    nodeRect.right < rootRect.left ||
+    nodeRect.left > rootRect.right ||
+    nodeRect.bottom < rootRect.top ||
+    nodeRect.top > rootRect.bottom;
+  if (nodeIsOutsideViewport) {
+    onChange(null);
+    return;
+  }
+
   onChange({
     left: Math.min(Math.max(nodeRect.right - rootRect.left + 12, 12), Math.max(rootRect.width - 292, 12)),
     top: Math.min(Math.max(nodeRect.top - rootRect.top, 12), Math.max(rootRect.height - 280, 12)),

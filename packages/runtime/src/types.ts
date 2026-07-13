@@ -11,15 +11,23 @@ export type RenderedEdge = {
   pathData: string;
 };
 
+export type ViewportChangeEvent = {
+  phase: "start" | "change" | "end";
+  reason: "zoom" | "pan" | "reset";
+  viewBox: ViewBox;
+};
+
 export type DiagramRenderOptions = {
   animations?: boolean;
   labels?: boolean;
+  onViewportChange?: (event: ViewportChangeEvent) => void;
   sceneId?: string | null;
 };
 
 export type ResolvedDiagramRenderOptions = {
   animations: boolean;
   labels: boolean;
+  onViewportChange?: (event: ViewportChangeEvent) => void;
   sceneId: string | null;
 };
 

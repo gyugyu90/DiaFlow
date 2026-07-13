@@ -30,6 +30,7 @@ export class SvgDiagramRenderer implements DiagramRenderer {
     this.options = {
       animations: options.animations ?? true,
       labels: options.labels ?? true,
+      onViewportChange: options.onViewportChange,
       sceneId: options.sceneId ?? null,
     };
   }
@@ -99,6 +100,7 @@ export class SvgDiagramRenderer implements DiagramRenderer {
       svg,
       previousViewport?.initialViewBox ?? bounds,
       previousViewport?.viewBox ?? bounds,
+      this.options.onViewportChange,
     );
   }
 
@@ -118,13 +120,18 @@ export class SvgDiagramRenderer implements DiagramRenderer {
       ...this.options,
       ...options,
     };
-    const shouldRender = nextOptions.sceneId !== this.options.sceneId;
+    const sceneChanged = nextOptions.sceneId !== this.options.sceneId;
+    const viewportHandlerChanged = nextOptions.onViewportChange !== this.options.onViewportChange;
     this.options = {
       ...nextOptions,
       sceneId: nextOptions.sceneId ?? null,
     };
-    if (shouldRender) {
+    if (sceneChanged) {
       this.render();
+      return;
+    }
+    if (viewportHandlerChanged) {
+      this.render({ preserveViewport: true });
       return;
     }
     this.container.classList.toggle("animations-off", !this.options.animations);

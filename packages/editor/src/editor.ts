@@ -1,4 +1,8 @@
-import { renderDiagram, type DiagramRenderer } from "@interactive-diagram/runtime";
+import {
+  renderDiagram,
+  type DiagramRenderer,
+  type ViewportChangeEvent,
+} from "@interactive-diagram/runtime";
 import type { DiagramDocument, DiagramNode } from "@interactive-diagram/schema";
 import {
   getEventNodeId,
@@ -38,6 +42,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private past: DiagramDocument[] = [];
   private future: DiagramDocument[] = [];
   private drag: DragState | null = null;
+  private viewportInteractionActive = false;
 
   constructor(
     private readonly container: HTMLElement,
@@ -46,7 +51,10 @@ class DomDiagramEditor implements DiagramEditorController {
   ) {
     this.diagram = diagram;
     this.sceneId = options.sceneId ?? null;
-    this.renderer = renderDiagram(container, diagram, { sceneId: this.sceneId });
+    this.renderer = renderDiagram(container, diagram, {
+      sceneId: this.sceneId,
+      onViewportChange: this.handleViewportChange,
+    });
     this.pressEventName = typeof window.PointerEvent === "function" ? "pointerdown" : "mousedown";
 
     container.addEventListener(this.pressEventName, this.handlePress, true);
@@ -164,6 +172,7 @@ class DomDiagramEditor implements DiagramEditorController {
       startPosition: { ...node.position },
     };
     this.container.classList.add("is-node-dragging");
+    this.options.onSelectedNodeAnchorChange?.(null);
   };
 
   private readonly handleClick = (event: Event): void => {
@@ -197,12 +206,26 @@ class DomDiagramEditor implements DiagramEditorController {
     const didMove = originalDiagram !== this.diagram;
     this.drag = null;
     this.container.classList.remove("is-node-dragging");
+    this.refreshSelection();
 
     if (didMove) {
       this.past.push(originalDiagram);
       this.future = [];
       this.emitState();
     }
+  };
+
+  private readonly handleViewportChange = (event: ViewportChangeEvent): void => {
+    if (event.phase !== "end") {
+      if (!this.viewportInteractionActive) {
+        this.viewportInteractionActive = true;
+        this.options.onSelectedNodeAnchorChange?.(null);
+      }
+      return;
+    }
+
+    this.viewportInteractionActive = false;
+    this.refreshSelection();
   };
 
   private commit(nextDiagram: DiagramDocument): void {
@@ -228,11 +251,15 @@ class DomDiagramEditor implements DiagramEditorController {
     if (this.selectedNodeId) {
       this.container.querySelector(selectNodeById(this.selectedNodeId))?.classList.add("node-selected");
     }
-    updateSelectedNodeAnchor(
-      this.container,
-      this.selectedNodeId,
-      this.options.onSelectedNodeAnchorChange,
-    );
+    if (this.viewportInteractionActive || this.drag) {
+      this.options.onSelectedNodeAnchorChange?.(null);
+    } else {
+      updateSelectedNodeAnchor(
+        this.container,
+        this.selectedNodeId,
+        this.options.onSelectedNodeAnchorChange,
+      );
+    }
   }
 
   private emitState(): void {
