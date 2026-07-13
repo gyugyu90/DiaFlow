@@ -74,16 +74,16 @@ describe("createDiagramEditor", () => {
       throw new Error("Missing browser node");
     }
 
-    fireEvent.mouseDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
-    fireEvent.mouseMove(window, { clientX: 220, clientY: 100 });
+    fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(window, { clientX: 220, clientY: 100 });
     expect(container.classList.contains("is-node-dragging")).toBe(false);
     expect(editor.getState().diagram.nodes.find((node) => node.id === "browser")?.position).toEqual(
       originalPosition,
     );
 
-    fireEvent.mouseDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
-    fireEvent.mouseMove(window, { clientX: 220, clientY: 100 });
-    fireEvent.mouseUp(window);
+    fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(window, { clientX: 220, clientY: 100 });
+    fireEvent.pointerUp(window);
 
     const movedPosition = editor.getState().diagram.nodes.find((node) => node.id === "browser")?.position;
     expect(movedPosition?.x).toBe(originalPosition.x + 120);

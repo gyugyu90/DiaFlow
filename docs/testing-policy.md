@@ -151,16 +151,16 @@ npm run build
 
 ## Node Version Note
 
-The current local environment uses Node.js 18, so test tooling is pinned to versions that still work on Node.js 18.
+The project standardizes on Node.js 24. The local version is declared in `.nvmrc`, and Amplify selects the same major version before installing dependencies.
 
-See:
+The test environment currently uses:
 
-```txt
-TODO.md
-```
+- Vitest 4
+- jsdom 29
 
-After upgrading to Node.js 20 LTS or newer, update test tooling and run:
+After changing the Node.js or test-tooling versions, verify both a clean install and the complete check:
 
 ```sh
+npm ci
 npm run check
 ```

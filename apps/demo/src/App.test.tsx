@@ -111,7 +111,7 @@ describe("App", () => {
       throw new Error("Missing editor root or browser node");
     }
 
-    fireEvent.mouseDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
     expect(root.classList.contains("is-node-dragging")).toBe(false);
 
     fireEvent.click(browserNode);
@@ -119,9 +119,9 @@ describe("App", () => {
       expect(browserNode.classList.contains("node-selected")).toBe(true);
     });
 
-    fireEvent.mouseDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
     expect(root.classList.contains("is-node-dragging")).toBe(true);
-    fireEvent.mouseUp(window);
+    fireEvent.pointerUp(window);
   });
 
   it("connects editor undo and redo controls to node changes", async () => {

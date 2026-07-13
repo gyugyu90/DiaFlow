@@ -2,6 +2,9 @@
   "name": "interactive-diagram",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -21,9 +24,9 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
-    "jsdom": "^24.1.3",
+    "jsdom": "^29.1.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.10"
   }
 }
