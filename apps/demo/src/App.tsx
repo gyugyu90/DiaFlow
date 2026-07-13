@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -7,9 +7,16 @@ import {
   Eye,
   Maximize2,
   PlayCircle,
+  Redo2,
+  Undo2,
   X,
 } from "lucide-react";
-import { renderDiagram, type DiagramRenderer } from "@interactive-diagram/runtime";
+import type {
+  DiagramEditorController,
+  DiagramEditorState,
+  InspectorPosition,
+  NodePatch,
+} from "@interactive-diagram/editor";
 import {
   nodeTypeSchema,
   parseDiagramDocument,
@@ -19,6 +26,8 @@ import {
 } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
+import { DiagramEditorViewport } from "./DiagramEditorViewport";
+import { DiagramViewport } from "./DiagramViewport";
 
 type DiagramListItem = {
   id: string;
@@ -28,8 +37,6 @@ type DiagramListItem = {
 };
 
 type ViewMode = "list" | "edit";
-type NodePatch = Partial<Pick<DiagramNode, "label" | "type" | "icon">>;
-type InspectorPosition = { left: number; top: number };
 
 const initialDiagrams: DiagramListItem[] = [
   {
@@ -72,20 +79,6 @@ export function App() {
     );
   }
 
-  function updateNode(diagramId: string, nodeId: string, patch: NodePatch) {
-    updateDiagram(diagramId, (diagram) => ({
-      ...diagram,
-      nodes: diagram.nodes.map((node) => node.id === nodeId ? { ...node, ...patch } : node),
-    }));
-  }
-
-  function moveNode(diagramId: string, nodeId: string, position: DiagramNode["position"]) {
-    updateDiagram(diagramId, (diagram) => ({
-      ...diagram,
-      nodes: diagram.nodes.map((node) => node.id === nodeId ? { ...node, position } : node),
-    }));
-  }
-
   if (mode === "edit") {
     return (
       <>
@@ -93,8 +86,9 @@ export function App() {
           item={selectedDiagram}
           onBack={() => setMode("list")}
           onView={() => setViewingDiagramId(selectedDiagram.id)}
-          onNodeChange={(nodeId, patch) => updateNode(selectedDiagram.id, nodeId, patch)}
-          onNodeMove={(nodeId, position) => moveNode(selectedDiagram.id, nodeId, position)}
+          onDiagramChange={(diagram) =>
+            updateDiagram(selectedDiagram.id, () => diagram)
+          }
         />
         {viewingDiagram ? (
           <DiagramViewModal
@@ -251,20 +245,20 @@ function DiagramViewModal({
 function EditorPage({
   item,
   onBack,
-  onNodeChange,
-  onNodeMove,
+  onDiagramChange,
   onView,
 }: {
   item: DiagramListItem;
   onBack: () => void;
-  onNodeChange: (nodeId: string, patch: NodePatch) => void;
-  onNodeMove: (nodeId: string, position: DiagramNode["position"]) => void;
+  onDiagramChange: (diagram: DiagramDocument) => void;
   onView: () => void;
 }) {
+  const editorRef = useRef<DiagramEditorController | null>(null);
   const scenes = item.diagram.scenes ?? [];
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [inspectorPosition, setInspectorPosition] = useState<InspectorPosition | null>(null);
+  const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
   const scene = scenes[sceneIndex] ?? null;
   const selectedNode = selectedNodeId
     ? item.diagram.nodes.find((node) => node.id === selectedNodeId) ?? null
@@ -274,7 +268,13 @@ function EditorPage({
     setSceneIndex(0);
     setSelectedNodeId(null);
     setInspectorPosition(null);
+    setHistoryState({ canUndo: false, canRedo: false });
   }, [item.id]);
+
+  function handleEditorStateChange(state: DiagramEditorState) {
+    setSelectedNodeId(state.selectedNodeId);
+    setHistoryState({ canUndo: state.canUndo, canRedo: state.canRedo });
+  }
 
   return (
     <main className="editor-shell">
@@ -288,10 +288,30 @@ function EditorPage({
             <h1>{item.title}</h1>
           </div>
         </div>
-        <button className="button button-secondary" type="button" onClick={onView}>
-          <Eye size={17} aria-hidden="true" />
-          <span>View</span>
-        </button>
+        <div className="toolbar">
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => editorRef.current?.undo()}
+            disabled={!historyState.canUndo}
+            aria-label="Undo edit"
+          >
+            <Undo2 size={18} aria-hidden="true" />
+          </button>
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => editorRef.current?.redo()}
+            disabled={!historyState.canRedo}
+            aria-label="Redo edit"
+          >
+            <Redo2 size={18} aria-hidden="true" />
+          </button>
+          <button className="button button-secondary" type="button" onClick={onView}>
+            <Eye size={17} aria-hidden="true" />
+            <span>View</span>
+          </button>
+        </div>
       </header>
 
       <section className="editor-layout">
@@ -326,7 +346,7 @@ function EditorPage({
                   <button
                     className="node-list-button"
                     type="button"
-                    onClick={() => setSelectedNodeId(node.id)}
+                    onClick={() => editorRef.current?.selectNode(node.id)}
                   >
                     <span>{node.label}</span>
                     <small>{node.type.replaceAll("_", " ")}</small>
@@ -346,24 +366,25 @@ function EditorPage({
             onNext={() => setSceneIndex((index) => Math.min(scenes.length - 1, index + 1))}
           />
           <div className="diagram-edit-surface">
-            <DiagramViewport
+            <DiagramEditorViewport
+              key={item.id}
               diagram={item.diagram}
               sceneId={scene?.id ?? null}
-              selectedNodeId={selectedNodeId}
               className="editor-diagram-root"
-              editable
-              onNodeSelect={setSelectedNodeId}
-              onNodeMove={onNodeMove}
+              onDiagramChange={onDiagramChange}
+              onReady={(editor) => {
+                editorRef.current = editor;
+              }}
               onSelectedNodeAnchorChange={setInspectorPosition}
+              onStateChange={handleEditorStateChange}
             />
             {selectedNode ? (
               <NodeInspector
                 node={selectedNode}
                 position={inspectorPosition}
-                onChange={(patch) => onNodeChange(selectedNode.id, patch)}
+                onChange={(patch) => editorRef.current?.updateNode(selectedNode.id, patch)}
                 onClose={() => {
-                  setSelectedNodeId(null);
-                  setInspectorPosition(null);
+                  editorRef.current?.clearSelection();
                 }}
               />
             ) : null}
@@ -497,211 +518,4 @@ function SceneControls({
       </button>
     </section>
   );
-}
-
-function DiagramViewport({
-  className,
-  diagram,
-  editable = false,
-  onNodeMove,
-  onNodeSelect,
-  onSelectedNodeAnchorChange,
-  selectedNodeId,
-  sceneId,
-}: {
-  className?: string;
-  diagram: DiagramDocument;
-  editable?: boolean;
-  onNodeMove?: (nodeId: string, position: DiagramNode["position"]) => void;
-  onNodeSelect?: (nodeId: string) => void;
-  onSelectedNodeAnchorChange?: (position: InspectorPosition | null) => void;
-  selectedNodeId?: string | null;
-  sceneId?: string | null;
-}) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const rendererRef = useRef<DiagramRenderer | null>(null);
-  const dragRef = useRef<null | {
-    nodeId: string;
-    startPointer: DiagramNode["position"];
-    startPosition: DiagramNode["position"];
-  }>(null);
-
-  useEffect(() => {
-    if (!rootRef.current) return;
-
-    rendererRef.current = renderDiagram(rootRef.current, diagram, { sceneId });
-
-    return () => {
-      rendererRef.current?.destroy();
-      rendererRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    rendererRef.current?.setDiagram(diagram);
-  }, [diagram]);
-
-  useEffect(() => {
-    rendererRef.current?.setOptions({ sceneId });
-  }, [sceneId]);
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    updateSelectedNodeAnchor(root, selectedNodeId ?? null, onSelectedNodeAnchorChange);
-    root.querySelectorAll(".node-selected").forEach((node) => node.classList.remove("node-selected"));
-    if (selectedNodeId) {
-      root.querySelector(selectNodeById(selectedNodeId))?.classList.add("node-selected");
-    }
-  }, [diagram, onSelectedNodeAnchorChange, selectedNodeId]);
-
-  function handleNodePress(event: ReactMouseEvent<HTMLDivElement> | ReactPointerEvent<HTMLDivElement>) {
-    if (!editable || event.button !== 0) return;
-
-    const root = rootRef.current;
-    const nodeId = getEventNodeId(event.nativeEvent);
-    const node = diagram.nodes.find((candidate) => candidate.id === nodeId);
-    if (!root || !nodeId || !node) return;
-    const rootElement = root;
-
-    event.preventDefault();
-    event.stopPropagation();
-    onNodeSelect?.(nodeId);
-    if (nodeId !== selectedNodeId) return;
-    if (dragRef.current) return;
-
-    const svg = rootElement.querySelector(".diagram-svg") as SVGSVGElement | null;
-    dragRef.current = {
-      nodeId,
-      startPointer: svg
-        ? getSvgPoint(svg, event.clientX, event.clientY)
-        : { x: event.clientX, y: event.clientY },
-      startPosition: { ...node.position },
-    };
-    rootElement.classList.add("is-node-dragging");
-
-    function handlePointerMove(moveEvent: MouseEvent | PointerEvent) {
-      const drag = dragRef.current;
-      const svg = rootElement.querySelector(".diagram-svg");
-      if (!drag || !svg) return;
-
-      const pointer = getSvgPoint(svg as SVGSVGElement, moveEvent.clientX, moveEvent.clientY);
-      onNodeMove?.(drag.nodeId, {
-        x: Math.round(drag.startPosition.x + pointer.x - drag.startPointer.x),
-        y: Math.round(drag.startPosition.y + pointer.y - drag.startPointer.y),
-      });
-      updateSelectedNodeAnchor(rootElement, drag.nodeId, onSelectedNodeAnchorChange);
-    }
-
-    function handlePointerUp() {
-      dragRef.current = null;
-      rootElement.classList.remove("is-node-dragging");
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("mousemove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("mouseup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
-    }
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("mousemove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("mouseup", handlePointerUp);
-    window.addEventListener("pointercancel", handlePointerUp);
-  }
-
-  function handleClick(event: ReactMouseEvent<HTMLDivElement>) {
-    if (!editable) return;
-
-    const nodeId = getEventNodeId(event.nativeEvent);
-    if (!nodeId) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    onNodeSelect?.(nodeId);
-  }
-
-  return (
-    <div
-      ref={rootRef}
-      className={`diagram-root ${className ?? ""}`}
-      onClickCapture={handleClick}
-      onMouseDownCapture={handleNodePress}
-      onPointerDownCapture={handleNodePress}
-    />
-  );
-}
-
-function getEventNodeId(event: Event): string | null {
-  const target = event.target;
-  if (!(target instanceof Element)) return null;
-
-  return target.closest("[data-node-id]")?.getAttribute("data-node-id") ?? null;
-}
-
-function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number): DiagramNode["position"] {
-  if (typeof svg.createSVGPoint === "function") {
-    const matrix = svg.getScreenCTM();
-    if (matrix) {
-      const point = svg.createSVGPoint();
-      point.x = clientX;
-      point.y = clientY;
-      const svgPoint = point.matrixTransform(matrix.inverse());
-      return { x: svgPoint.x, y: svgPoint.y };
-    }
-  }
-
-  const viewBox = getSvgViewBox(svg);
-  const rect = svg.getBoundingClientRect();
-  const width = rect.width || svg.clientWidth || 1;
-  const height = rect.height || svg.clientHeight || 1;
-
-  return {
-    x: viewBox.x + ((clientX - rect.left) / width) * viewBox.width,
-    y: viewBox.y + ((clientY - rect.top) / height) * viewBox.height,
-  };
-}
-
-function getSvgViewBox(svg: SVGSVGElement): DiagramNode["position"] & { width: number; height: number } {
-  if (svg.viewBox?.baseVal) {
-    return svg.viewBox.baseVal;
-  }
-
-  const values = svg.getAttribute("viewBox")?.split(" ").map(Number);
-  if (values?.length === 4 && values.every(Number.isFinite)) {
-    const [x, y, width, height] = values;
-    return { x, y, width, height };
-  }
-
-  return { x: 0, y: 0, width: svg.clientWidth || 1, height: svg.clientHeight || 1 };
-}
-
-function updateSelectedNodeAnchor(
-  root: HTMLElement,
-  nodeId: string | null,
-  onChange: ((position: InspectorPosition | null) => void) | undefined,
-) {
-  if (!onChange) return;
-  if (!nodeId) {
-    onChange(null);
-    return;
-  }
-
-  const nodeElement = root.querySelector(selectNodeById(nodeId));
-  if (!nodeElement) {
-    onChange(null);
-    return;
-  }
-
-  const nodeRect = nodeElement.getBoundingClientRect();
-  const rootRect = root.getBoundingClientRect();
-  onChange({
-    left: Math.min(Math.max(nodeRect.right - rootRect.left + 12, 12), Math.max(rootRect.width - 292, 12)),
-    top: Math.min(Math.max(nodeRect.top - rootRect.top, 12), Math.max(rootRect.height - 280, 12)),
-  });
-}
-
-function selectNodeById(nodeId: string): string {
-  return `[data-node-id="${nodeId.replaceAll('"', '\\"')}"]`;
 }

@@ -207,7 +207,7 @@ dd {
 }
 
 .button-secondary:hover,
-.icon-button:hover {
+.icon-button:not(:disabled):hover {
   border-color: var(--line-hover);
 }
 
@@ -215,6 +215,11 @@ dd {
   width: 38px;
   height: 38px;
   padding: 0;
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 .build-version {

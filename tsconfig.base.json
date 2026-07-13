@@ -15,6 +15,7 @@
     "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
+      "@interactive-diagram/editor": ["packages/editor/src/index.ts"],
       "@interactive-diagram/runtime": ["packages/runtime/src/index.ts"],
       "@interactive-diagram/schema": ["packages/schema/src/index.ts"]
     }

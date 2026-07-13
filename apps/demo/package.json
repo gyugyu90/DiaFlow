@@ -10,6 +10,7 @@
     "test": "vitest run --root ../.. --config vitest.config.ts apps/demo/src/App.test.tsx"
   },
   "dependencies": {
+    "@interactive-diagram/editor": "0.1.0",
     "@interactive-diagram/runtime": "0.1.0",
     "@interactive-diagram/schema": "0.1.0",
     "lucide-react": "^1.23.0",

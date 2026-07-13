@@ -124,6 +124,32 @@ describe("App", () => {
     fireEvent.mouseUp(window);
   });
 
+  it("connects editor undo and redo controls to node changes", async () => {
+    render(<App />);
+
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
+
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) {
+      throw new Error("Missing user node");
+    }
+    fireEvent.click(userNode);
+    fireEvent.change(screen.getByLabelText("Node name"), {
+      target: { value: "Customer" },
+    });
+
+    const undo = screen.getByRole("button", { name: "Undo edit" });
+    const redo = screen.getByRole("button", { name: "Redo edit" });
+    expect((undo as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(undo);
+    expect(screen.getByRole("dialog", { name: "Edit node User" })).toBeTruthy();
+
+    expect((redo as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.click(redo);
+    expect(screen.getByRole("dialog", { name: "Edit node Customer" })).toBeTruthy();
+  });
+
   it("returns from edit page to list view", () => {
     render(<App />);
 

@@ -10,6 +10,7 @@
   "include": ["src", "vite.config.ts"],
   "references": [
     { "path": "../../packages/schema" },
-    { "path": "../../packages/runtime" }
+    { "path": "../../packages/runtime" },
+    { "path": "../../packages/editor" }
   ]
 }

@@ -75,6 +75,24 @@ describe("renderDiagram", () => {
     expect(container.querySelectorAll(".packet")).toHaveLength(2);
   });
 
+  it("keeps packets hidden until their motion begins", () => {
+    const { container } = renderSample();
+    const packets = Array.from(container.querySelectorAll(".packet"));
+
+    expect(packets.map((packet) => packet.getAttribute("visibility"))).toEqual([
+      "hidden",
+      "hidden",
+    ]);
+    expect(packets.map((packet) => ({
+      motionBegin: packet.querySelector("animateMotion")?.getAttribute("begin"),
+      visibilityBegin: packet.querySelector("set")?.getAttribute("begin"),
+      visibilityDuration: packet.querySelector("set")?.getAttribute("dur"),
+    }))).toEqual([
+      { motionBegin: "0s", visibilityBegin: "0s", visibilityDuration: "indefinite" },
+      { motionBegin: "0.42s", visibilityBegin: "0.42s", visibilityDuration: "indefinite" },
+    ]);
+  });
+
   it("renders edge label placement variants", () => {
     const { container } = renderSample();
     const placements = Array.from(container.querySelectorAll(".edge-label")).map((label) =>
