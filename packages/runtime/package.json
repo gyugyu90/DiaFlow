@@ -1,0 +1,23 @@
+{
+  "name": "@interactive-diagram/runtime",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b tsconfig.json",
+    "test": "vitest run --root ../.. --config vitest.config.ts packages/runtime/src/index.test.ts"
+  },
+  "dependencies": {
+    "@interactive-diagram/schema": "0.1.0"
+  }
+}

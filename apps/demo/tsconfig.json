@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "noEmit": true,
+    "tsBuildInfoFile": "../../dist/tsconfig.demo.tsbuildinfo"
+  },
+  "include": ["src", "vite.config.ts"],
+  "references": [
+    { "path": "../../packages/schema" },
+    { "path": "../../packages/runtime" }
+  ]
+}

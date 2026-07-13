@@ -69,37 +69,49 @@ export function App() {
             onClose={() => setViewingDiagramId(null)}
           />
         ) : null}
+        <BuildVersionBadge />
       </>
     );
   }
 
   return (
-    <main className="app-shell">
-      <header className="app-header">
-        <div>
-          <p className="eyebrow">Interactive Diagram</p>
-          <h1>Diagrams</h1>
-        </div>
-      </header>
+    <>
+      <main className="app-shell">
+        <header className="app-header">
+          <div>
+            <p className="eyebrow">Interactive Diagram</p>
+            <h1>Diagrams</h1>
+          </div>
+        </header>
 
-      <section className="diagram-list" aria-label="Diagram list">
-        {diagrams.map((item) => (
-          <DiagramCard
-            key={item.id}
-            item={item}
-            onEdit={() => openEditor(item.id)}
-            onView={() => setViewingDiagramId(item.id)}
+        <section className="diagram-list" aria-label="Diagram list">
+          {diagrams.map((item) => (
+            <DiagramCard
+              key={item.id}
+              item={item}
+              onEdit={() => openEditor(item.id)}
+              onView={() => setViewingDiagramId(item.id)}
+            />
+          ))}
+        </section>
+
+        {viewingDiagram ? (
+          <DiagramViewModal
+            item={viewingDiagram}
+            onClose={() => setViewingDiagramId(null)}
           />
-        ))}
-      </section>
+        ) : null}
+      </main>
+      <BuildVersionBadge />
+    </>
+  );
+}
 
-      {viewingDiagram ? (
-        <DiagramViewModal
-          item={viewingDiagram}
-          onClose={() => setViewingDiagramId(null)}
-        />
-      ) : null}
-    </main>
+function BuildVersionBadge() {
+  return (
+    <div className="build-version" aria-label="Build version">
+      Build {__BUILD_VERSION__}
+    </div>
   );
 }
 

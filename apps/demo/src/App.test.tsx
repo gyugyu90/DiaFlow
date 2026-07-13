@@ -25,6 +25,7 @@ describe("App", () => {
     expect(within(list).getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
     expect(within(list).getAllByRole("button", { name: "View" })).toHaveLength(2);
     expect(within(list).getAllByRole("button", { name: "Edit" })).toHaveLength(2);
+    expect(screen.getByLabelText("Build version").textContent).toBe("Build test-build");
   });
 
   it("opens the selected diagram in a large view modal", async () => {

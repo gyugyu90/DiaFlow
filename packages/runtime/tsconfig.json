@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": false,
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["src/index.ts"],
+  "references": [
+    { "path": "../schema" }
+  ]
+}
