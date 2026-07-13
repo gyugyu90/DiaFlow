@@ -393,10 +393,12 @@ function NodeInspector({
   onClose: () => void;
   position: InspectorPosition | null;
 }) {
+  if (!position) return null;
+
   return (
     <section
       className="node-inspector"
-      style={position ? { left: position.left, top: position.top } : undefined}
+      style={{ left: position.left, top: position.top }}
       role="dialog"
       aria-label={`Edit node ${node.label}`}
     >
