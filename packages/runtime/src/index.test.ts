@@ -129,6 +129,25 @@ describe("renderDiagram", () => {
     expect(container.querySelector('[data-node-id="payment_service"]')?.classList.contains("node-tone-active")).toBe(true);
   });
 
+  it("updates the diagram without resetting the current viewport", () => {
+    const { container, renderer, svg } = renderSample();
+    configureSvgViewport(svg);
+    dispatchWheel(svg, -400);
+    const zoomedViewBox = getViewBox(svg);
+    const updatedDiagram = {
+      ...diagram,
+      nodes: diagram.nodes.map((node) =>
+        node.id === "browser" ? { ...node, label: "Client Browser" } : node,
+      ),
+    };
+
+    renderer.setDiagram(updatedDiagram);
+
+    const updatedSvg = container.querySelector(".diagram-svg") as SVGSVGElement;
+    expect(container.textContent).toContain("Client Browser");
+    expect(getViewBox(updatedSvg)).toEqual(zoomedViewBox);
+  });
+
   it("clamps wheel zoom to the configured limits", () => {
     const { svg } = renderSample();
     configureSvgViewport(svg);

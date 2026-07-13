@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -522,8 +522,7 @@ function DiagramViewport({
   const rendererRef = useRef<DiagramRenderer | null>(null);
   const dragRef = useRef<null | {
     nodeId: string;
-    startClientX: number;
-    startClientY: number;
+    startPointer: DiagramNode["position"];
     startPosition: DiagramNode["position"];
   }>(null);
 
@@ -536,7 +535,15 @@ function DiagramViewport({
       rendererRef.current?.destroy();
       rendererRef.current = null;
     };
-  }, [diagram, sceneId]);
+  }, []);
+
+  useEffect(() => {
+    rendererRef.current?.setDiagram(diagram);
+  }, [diagram]);
+
+  useEffect(() => {
+    rendererRef.current?.setOptions({ sceneId });
+  }, [sceneId]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -549,52 +556,40 @@ function DiagramViewport({
     }
   }, [diagram, onSelectedNodeAnchorChange, selectedNodeId]);
 
-  useEffect(() => {
+  function handleNodePress(event: ReactMouseEvent<HTMLDivElement> | ReactPointerEvent<HTMLDivElement>) {
+    if (!editable || event.button !== 0) return;
+
     const root = rootRef.current;
-    if (!root || !editable) return;
+    const nodeId = getEventNodeId(event.nativeEvent);
+    const node = diagram.nodes.find((candidate) => candidate.id === nodeId);
+    if (!root || !nodeId || !node) return;
     const rootElement = root;
 
-    function handlePointerDown(event: PointerEvent) {
-      if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    onNodeSelect?.(nodeId);
+    if (nodeId !== selectedNodeId) return;
+    if (dragRef.current) return;
 
-      const nodeId = getEventNodeId(event);
-      const node = diagram.nodes.find((candidate) => candidate.id === nodeId);
-      if (!nodeId || !node) return;
+    const svg = rootElement.querySelector(".diagram-svg") as SVGSVGElement | null;
+    dragRef.current = {
+      nodeId,
+      startPointer: svg
+        ? getSvgPoint(svg, event.clientX, event.clientY)
+        : { x: event.clientX, y: event.clientY },
+      startPosition: { ...node.position },
+    };
+    rootElement.classList.add("is-node-dragging");
 
-      event.preventDefault();
-      event.stopPropagation();
-      onNodeSelect?.(nodeId);
-      dragRef.current = {
-        nodeId,
-        startClientX: event.clientX,
-        startClientY: event.clientY,
-        startPosition: { ...node.position },
-      };
-      rootElement.classList.add("is-node-dragging");
-
-      window.addEventListener("pointermove", handlePointerMove);
-      window.addEventListener("pointerup", handlePointerUp, { once: true });
-      window.addEventListener("pointercancel", handlePointerUp, { once: true });
-    }
-
-    function handleClick(event: MouseEvent) {
-      const nodeId = getEventNodeId(event);
-      if (!nodeId) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      onNodeSelect?.(nodeId);
-    }
-
-    function handlePointerMove(event: PointerEvent) {
+    function handlePointerMove(moveEvent: MouseEvent | PointerEvent) {
       const drag = dragRef.current;
       const svg = rootElement.querySelector(".diagram-svg");
       if (!drag || !svg) return;
 
-      const scale = getSvgClientScale(svg as SVGSVGElement);
+      const pointer = getSvgPoint(svg as SVGSVGElement, moveEvent.clientX, moveEvent.clientY);
       onNodeMove?.(drag.nodeId, {
-        x: Math.round(drag.startPosition.x + (event.clientX - drag.startClientX) * scale.x),
-        y: Math.round(drag.startPosition.y + (event.clientY - drag.startClientY) * scale.y),
+        x: Math.round(drag.startPosition.x + pointer.x - drag.startPointer.x),
+        y: Math.round(drag.startPosition.y + pointer.y - drag.startPointer.y),
       });
       updateSelectedNodeAnchor(rootElement, drag.nodeId, onSelectedNodeAnchorChange);
     }
@@ -603,21 +598,39 @@ function DiagramViewport({
       dragRef.current = null;
       rootElement.classList.remove("is-node-dragging");
       window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("mouseup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
     }
 
-    rootElement.addEventListener("pointerdown", handlePointerDown, { capture: true });
-    rootElement.addEventListener("click", handleClick, { capture: true });
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("mousemove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("mouseup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+  }
 
-    return () => {
-      rootElement.removeEventListener("pointerdown", handlePointerDown, { capture: true });
-      rootElement.removeEventListener("click", handleClick, { capture: true });
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
-    };
-  }, [diagram.nodes, editable, onNodeMove, onNodeSelect, onSelectedNodeAnchorChange]);
+  function handleClick(event: ReactMouseEvent<HTMLDivElement>) {
+    if (!editable) return;
 
-  return <div ref={rootRef} className={`diagram-root ${className ?? ""}`} />;
+    const nodeId = getEventNodeId(event.nativeEvent);
+    if (!nodeId) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    onNodeSelect?.(nodeId);
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      className={`diagram-root ${className ?? ""}`}
+      onClickCapture={handleClick}
+      onMouseDownCapture={handleNodePress}
+      onPointerDownCapture={handleNodePress}
+    />
+  );
 }
 
 function getEventNodeId(event: Event): string | null {
@@ -627,16 +640,41 @@ function getEventNodeId(event: Event): string | null {
   return target.closest("[data-node-id]")?.getAttribute("data-node-id") ?? null;
 }
 
-function getSvgClientScale(svg: SVGSVGElement): { x: number; y: number } {
-  const viewBox = svg.viewBox.baseVal;
+function getSvgPoint(svg: SVGSVGElement, clientX: number, clientY: number): DiagramNode["position"] {
+  if (typeof svg.createSVGPoint === "function") {
+    const matrix = svg.getScreenCTM();
+    if (matrix) {
+      const point = svg.createSVGPoint();
+      point.x = clientX;
+      point.y = clientY;
+      const svgPoint = point.matrixTransform(matrix.inverse());
+      return { x: svgPoint.x, y: svgPoint.y };
+    }
+  }
+
+  const viewBox = getSvgViewBox(svg);
   const rect = svg.getBoundingClientRect();
   const width = rect.width || svg.clientWidth || 1;
   const height = rect.height || svg.clientHeight || 1;
 
   return {
-    x: viewBox.width / width,
-    y: viewBox.height / height,
+    x: viewBox.x + ((clientX - rect.left) / width) * viewBox.width,
+    y: viewBox.y + ((clientY - rect.top) / height) * viewBox.height,
   };
+}
+
+function getSvgViewBox(svg: SVGSVGElement): DiagramNode["position"] & { width: number; height: number } {
+  if (svg.viewBox?.baseVal) {
+    return svg.viewBox.baseVal;
+  }
+
+  const values = svg.getAttribute("viewBox")?.split(" ").map(Number);
+  if (values?.length === 4 && values.every(Number.isFinite)) {
+    const [x, y, width, height] = values;
+    return { x, y, width, height };
+  }
+
+  return { x: 0, y: 0, width: svg.clientWidth || 1, height: svg.clientHeight || 1 };
 }
 
 function updateSelectedNodeAnchor(

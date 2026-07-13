@@ -528,8 +528,14 @@ dd {
   filter: drop-shadow(0 10px 18px rgba(31, 42, 68, 0.12));
 }
 
-.editor-diagram-root .node-card {
+.editor-diagram-root .node-card,
+.editor-diagram-root .node-card * {
   cursor: pointer;
+}
+
+.editor-diagram-root .node-selected,
+.editor-diagram-root .node-selected * {
+  cursor: move;
 }
 
 .editor-diagram-root .node-selected .node-box {

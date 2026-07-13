@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { App } from "./App";
 
@@ -97,6 +97,31 @@ describe("App", () => {
     expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("Customer");
     expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("api");
     expect((screen.getByLabelText("Node icon") as HTMLSelectElement).value).toBe("server");
+  });
+
+  it("only starts node dragging after the node is selected", async () => {
+    render(<App />);
+
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
+
+    const root = document.querySelector(".editor-diagram-root");
+    const browserNode = document.querySelector('[data-node-id="browser"]');
+    if (!root || !browserNode) {
+      throw new Error("Missing editor root or browser node");
+    }
+
+    fireEvent.mouseDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    expect(root.classList.contains("is-node-dragging")).toBe(false);
+
+    fireEvent.click(browserNode);
+    await waitFor(() => {
+      expect(browserNode.classList.contains("node-selected")).toBe(true);
+    });
+
+    fireEvent.mouseDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    expect(root.classList.contains("is-node-dragging")).toBe(true);
+    fireEvent.mouseUp(window);
   });
 
   it("returns from edit page to list view", () => {

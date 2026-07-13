@@ -53,6 +53,7 @@ type ResolvedDiagramRenderOptions = {
 
 export type DiagramRenderer = {
   destroy(): void;
+  setDiagram(diagram: DiagramDocument): void;
   setOptions(options: DiagramRenderOptions): void;
 };
 
@@ -103,7 +104,7 @@ class SvgDiagramRenderer implements DiagramRenderer {
 
   constructor(
     private readonly container: HTMLElement,
-    private readonly diagram: DiagramDocument,
+    private diagram: DiagramDocument,
     options: DiagramRenderOptions,
   ) {
     this.options = {
@@ -113,7 +114,14 @@ class SvgDiagramRenderer implements DiagramRenderer {
     };
   }
 
-  render(): void {
+  render({ preserveViewport = false }: { preserveViewport?: boolean } = {}): void {
+    const previousInitialViewBox = preserveViewport && this.state.initialViewBox
+      ? { ...this.state.initialViewBox }
+      : null;
+    const previousViewBox = preserveViewport && this.state.viewBox
+      ? { ...this.state.viewBox }
+      : null;
+
     this.container.replaceChildren();
     this.container.classList.toggle("animations-off", !this.options.animations);
     this.container.classList.toggle("labels-off", !this.options.labels);
@@ -130,8 +138,8 @@ class SvgDiagramRenderer implements DiagramRenderer {
       diagram.nodes.map((node) => [node.id, normalizeNode(node)]),
     );
     const bounds = getDiagramBounds([...nodesById.values()]);
-    this.state.initialViewBox = { ...bounds };
-    this.state.viewBox = { ...bounds };
+    this.state.initialViewBox = previousInitialViewBox ?? { ...bounds };
+    this.state.viewBox = previousViewBox ?? { ...bounds };
     const svg = createSvg("svg", {
       class: "diagram-svg",
       role: "img",
@@ -179,6 +187,11 @@ class SvgDiagramRenderer implements DiagramRenderer {
   destroy(): void {
     this.container.replaceChildren();
     this.svg = null;
+  }
+
+  setDiagram(diagram: DiagramDocument): void {
+    this.diagram = diagram;
+    this.render({ preserveViewport: true });
   }
 
   setOptions(options: DiagramRenderOptions): void {
