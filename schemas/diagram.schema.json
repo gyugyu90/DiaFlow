@@ -313,8 +313,18 @@
           "type": "string",
           "enum": ["center", "above", "below"],
           "default": "above"
+        },
+        "startMarker": {
+          "$ref": "#/$defs/edgeMarker"
+        },
+        "endMarker": {
+          "$ref": "#/$defs/edgeMarker"
         }
       }
+    },
+    "edgeMarker": {
+      "type": "string",
+      "enum": ["none", "arrow", "triangle", "circle"]
     },
     "group": {
       "type": "object",

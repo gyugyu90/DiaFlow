@@ -27,6 +27,20 @@ describe("diagramDocumentSchema", () => {
     expect(placements).toContain("below");
   });
 
+  it("accepts independent edge endpoint markers", () => {
+    const input = cloneSample();
+    Object.assign(input.edges[0].style, {
+      startMarker: "circle",
+      endMarker: "triangle",
+    });
+
+    const parsed = parseDiagramDocument(input);
+    expect(parsed.edges[0].style).toMatchObject({
+      startMarker: "circle",
+      endMarker: "triangle",
+    });
+  });
+
   it("accepts scene-based circuit breaker samples", () => {
     const diagram = parseDiagramDocument(circuitBreakerDiagram);
 
@@ -51,6 +65,13 @@ describe("diagramDocumentSchema", () => {
   it("rejects unsupported edge label placement values", () => {
     const invalid = cloneSample();
     invalid.edges[0].style.labelPlacement = "floating";
+
+    expect(() => parseDiagramDocument(invalid)).toThrow();
+  });
+
+  it("rejects unsupported edge marker values", () => {
+    const invalid = cloneSample();
+    Object.assign(invalid.edges[0].style, { endMarker: "diamond" });
 
     expect(() => parseDiagramDocument(invalid)).toThrow();
   });

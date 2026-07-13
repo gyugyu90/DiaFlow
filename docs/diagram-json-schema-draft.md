@@ -221,7 +221,9 @@ Edges represent relationships or communication paths between nodes.
     "line": "solid",
     "routing": "smooth",
     "color": "default",
-    "labelPlacement": "above"
+    "labelPlacement": "above",
+    "startMarker": "none",
+    "endMarker": "arrow"
   },
   "animationId": "anim_browser_lb_request",
   "data": {}
@@ -261,7 +263,9 @@ Direction is semantic. It does not automatically mean the edge is animated.
   "line": "solid",
   "routing": "smooth",
   "color": "default",
-  "labelPlacement": "above"
+  "labelPlacement": "above",
+  "startMarker": "none",
+  "endMarker": "arrow"
 }
 ```
 
@@ -271,12 +275,17 @@ Initial values:
 - `routing`: `straight`, `smooth`, `orthogonal`
 - `color`: `default`, `muted`, `accent`, or hex color
 - `labelPlacement`: `center`, `above`, `below`
+- `startMarker`: `none`, `arrow`, `triangle`, `circle`
+- `endMarker`: `none`, `arrow`, `triangle`, `circle`
 
 `labelPlacement` controls where the edge label is rendered:
 
 - `center`: label is placed on the edge and may visually cover the line.
 - `above`: label is offset above a horizontal edge. For vertical edges, it is offset to the right.
 - `below`: label is offset below a horizontal edge. For vertical edges, it is offset to the left.
+
+`startMarker` and `endMarker` control endpoint shapes independently. When they are omitted,
+the renderer derives arrow markers from `direction` for backward compatibility.
 
 Default value: `above`.
 

@@ -99,6 +99,37 @@ describe("App", () => {
     expect((screen.getByLabelText("Node icon") as HTMLSelectElement).value).toBe("server");
   });
 
+  it("opens an edge inspector and edits endpoint markers and line style", async () => {
+    render(<App />);
+
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
+
+    const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
+    if (!edgeHitArea) throw new Error("Missing edge hit area");
+    fireEvent.click(edgeHitArea);
+
+    const inspector = screen.getByRole("dialog", { name: "Edit edge Uses" });
+    fireEvent.change(within(inspector).getByLabelText("Edge label"), {
+      target: { value: "Opens" },
+    });
+    fireEvent.change(within(inspector).getByLabelText("Start marker"), {
+      target: { value: "circle" },
+    });
+    fireEvent.change(within(inspector).getByLabelText("End marker"), {
+      target: { value: "triangle" },
+    });
+    fireEvent.change(within(inspector).getByLabelText("Line"), {
+      target: { value: "dashed" },
+    });
+
+    const path = document.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
+    expect(screen.getByRole("dialog", { name: "Edit edge Opens" })).toBeTruthy();
+    expect(path?.getAttribute("marker-start")).toBe("url(#marker-circle-muted)");
+    expect(path?.getAttribute("marker-end")).toBe("url(#marker-triangle-muted)");
+    expect(path?.getAttribute("stroke-dasharray")).toBe("8 7");
+  });
+
   it("only starts node dragging after the node is selected", async () => {
     render(<App />);
 

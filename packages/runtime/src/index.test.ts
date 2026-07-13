@@ -102,6 +102,41 @@ describe("renderDiagram", () => {
     expect(placements).toEqual(["center", "above", "above", "above", "below"]);
   });
 
+  it("renders explicit endpoint markers and keeps direction-based arrow defaults", () => {
+    const markerDiagram = {
+      ...diagram,
+      edges: diagram.edges.map((edge, index) => index === 0 ? {
+        ...edge,
+        style: {
+          ...edge.style,
+          color: "accent",
+          startMarker: "circle" as const,
+          endMarker: "triangle" as const,
+        },
+      } : edge),
+    };
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    renderDiagram(container, markerDiagram);
+
+    const explicitPath = container.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
+    expect(explicitPath?.getAttribute("marker-start")).toBe("url(#marker-circle-accent)");
+    expect(explicitPath?.getAttribute("marker-end")).toBe("url(#marker-triangle-accent)");
+
+    const legacyPath = container.querySelector('[data-edge-id="edge_browser_lb"] .edge-path');
+    expect(legacyPath?.getAttribute("marker-start")).toBeNull();
+    expect(legacyPath?.getAttribute("marker-end")).toBe("url(#marker-arrow-accent)");
+  });
+
+  it("renders a wide edge hit area without intercepting runtime input", () => {
+    const { container } = renderSample();
+    const hitAreas = container.querySelectorAll(".edge-hit-area");
+
+    expect(hitAreas).toHaveLength(diagram.edges.length);
+    expect(hitAreas[0].getAttribute("stroke-width")).toBe("16");
+    expect(hitAreas[0].getAttribute("pointer-events")).toBe("none");
+  });
+
   it("toggles labels and animations without re-rendering the diagram", () => {
     const { container, renderer } = renderSample({ animations: false, labels: false });
 

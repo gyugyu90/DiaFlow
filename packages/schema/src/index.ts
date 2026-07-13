@@ -50,11 +50,15 @@ export const nodeSchema = z.object({
   data: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const edgeMarkerSchema = z.enum(["none", "arrow", "triangle", "circle"]);
+
 export const edgeStyleSchema = z.object({
   line: z.enum(["solid", "dashed", "dotted"]).default("solid").optional(),
   routing: z.enum(["straight", "smooth", "orthogonal"]).default("smooth").optional(),
   color: z.string().default("default").optional(),
   labelPlacement: z.enum(["center", "above", "below"]).default("above").optional(),
+  startMarker: edgeMarkerSchema.optional(),
+  endMarker: edgeMarkerSchema.optional(),
 });
 
 export const sceneToneSchema = z.enum(["normal", "active", "warning", "danger", "muted"]);
@@ -169,6 +173,7 @@ export type DiagramScene = z.infer<typeof sceneSchema>;
 export type DiagramSceneEdgeOverride = z.infer<typeof sceneEdgeOverrideSchema>;
 export type DiagramSceneNodeOverride = z.infer<typeof sceneNodeOverrideSchema>;
 export type EdgeLabelPlacement = NonNullable<DiagramEdge["style"]>["labelPlacement"];
+export type EdgeMarker = z.infer<typeof edgeMarkerSchema>;
 
 export function parseDiagramDocument(value: unknown): DiagramDocument {
   return diagramDocumentSchema.parse(value);

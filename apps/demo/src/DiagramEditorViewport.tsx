@@ -12,7 +12,7 @@ export function DiagramEditorViewport({
   diagram,
   onDiagramChange,
   onReady,
-  onSelectedNodeAnchorChange,
+  onSelectionAnchorChange,
   onStateChange,
   sceneId,
 }: {
@@ -20,7 +20,7 @@ export function DiagramEditorViewport({
   diagram: DiagramDocument;
   onDiagramChange: (diagram: DiagramDocument) => void;
   onReady: (editor: DiagramEditorController | null) => void;
-  onSelectedNodeAnchorChange: (position: InspectorPosition | null) => void;
+  onSelectionAnchorChange: (position: InspectorPosition | null) => void;
   onStateChange: (state: DiagramEditorState) => void;
   sceneId?: string | null;
 }) {
@@ -29,13 +29,13 @@ export function DiagramEditorViewport({
   const callbacksRef = useRef({
     onDiagramChange,
     onReady,
-    onSelectedNodeAnchorChange,
+    onSelectionAnchorChange,
     onStateChange,
   });
   callbacksRef.current = {
     onDiagramChange,
     onReady,
-    onSelectedNodeAnchorChange,
+    onSelectionAnchorChange,
     onStateChange,
   };
 
@@ -45,8 +45,8 @@ export function DiagramEditorViewport({
     const editor = createDiagramEditor(rootRef.current, diagram, {
       sceneId,
       onDiagramChange: (nextDiagram) => callbacksRef.current.onDiagramChange(nextDiagram),
-      onSelectedNodeAnchorChange: (position) =>
-        callbacksRef.current.onSelectedNodeAnchorChange(position),
+      onSelectionAnchorChange: (position) =>
+        callbacksRef.current.onSelectionAnchorChange(position),
       onStateChange: (state) => callbacksRef.current.onStateChange(state),
     });
     editorRef.current = editor;

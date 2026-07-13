@@ -14,6 +14,7 @@ import {
 import type {
   DiagramEditorController,
   DiagramEditorState,
+  EdgePatch,
   InspectorPosition,
   NodePatch,
 } from "@interactive-diagram/editor";
@@ -21,8 +22,10 @@ import {
   nodeTypeSchema,
   parseDiagramDocument,
   type DiagramDocument,
+  type DiagramEdge,
   type DiagramNode,
   type DiagramScene,
+  type EdgeMarker,
 } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
@@ -54,6 +57,18 @@ const initialDiagrams: DiagramListItem[] = [
 ];
 const nodeTypeOptions = nodeTypeSchema.options;
 const iconOptions = ["user", "browser", "network", "server", "database", "storage"];
+const edgeMarkerOptions: EdgeMarker[] = ["none", "arrow", "triangle", "circle"];
+const edgeLineOptions = ["solid", "dashed", "dotted"] as const;
+const edgeRoutingOptions = ["straight", "smooth", "orthogonal"] as const;
+const edgeColorOptions = ["default", "accent", "muted", "warning", "danger"] as const;
+const edgeLabelPlacementOptions = ["center", "above", "below"] as const;
+const edgeColorValues: Record<(typeof edgeColorOptions)[number], string> = {
+  default: "#7d8ca3",
+  accent: "#2f6fed",
+  muted: "#a1adbd",
+  warning: "#d18a00",
+  danger: "#cf3f3f",
+};
 
 export function App() {
   const [diagramItems, setDiagramItems] = useState(initialDiagrams);
@@ -257,22 +272,28 @@ function EditorPage({
   const scenes = item.diagram.scenes ?? [];
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [inspectorPosition, setInspectorPosition] = useState<InspectorPosition | null>(null);
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
   const scene = scenes[sceneIndex] ?? null;
   const selectedNode = selectedNodeId
     ? item.diagram.nodes.find((node) => node.id === selectedNodeId) ?? null
     : null;
+  const selectedEdge = selectedEdgeId
+    ? item.diagram.edges.find((edge) => edge.id === selectedEdgeId) ?? null
+    : null;
 
   useEffect(() => {
     setSceneIndex(0);
     setSelectedNodeId(null);
+    setSelectedEdgeId(null);
     setInspectorPosition(null);
     setHistoryState({ canUndo: false, canRedo: false });
   }, [item.id]);
 
   function handleEditorStateChange(state: DiagramEditorState) {
     setSelectedNodeId(state.selectedNodeId);
+    setSelectedEdgeId(state.selectedEdgeId);
     setHistoryState({ canUndo: state.canUndo, canRedo: state.canRedo });
   }
 
@@ -375,7 +396,7 @@ function EditorPage({
               onReady={(editor) => {
                 editorRef.current = editor;
               }}
-              onSelectedNodeAnchorChange={setInspectorPosition}
+              onSelectionAnchorChange={setInspectorPosition}
               onStateChange={handleEditorStateChange}
             />
             {selectedNode ? (
@@ -383,6 +404,16 @@ function EditorPage({
                 node={selectedNode}
                 position={inspectorPosition}
                 onChange={(patch) => editorRef.current?.updateNode(selectedNode.id, patch)}
+                onClose={() => {
+                  editorRef.current?.clearSelection();
+                }}
+              />
+            ) : null}
+            {selectedEdge ? (
+              <EdgeInspector
+                edge={selectedEdge}
+                position={inspectorPosition}
+                onChange={(patch) => editorRef.current?.updateEdge(selectedEdge.id, patch)}
                 onClose={() => {
                   editorRef.current?.clearSelection();
                 }}
@@ -474,6 +505,139 @@ function NodeInspector({
       </label>
     </section>
   );
+}
+
+function EdgeInspector({
+  edge,
+  onChange,
+  onClose,
+  position,
+}: {
+  edge: DiagramEdge;
+  onChange: (patch: EdgePatch) => void;
+  onClose: () => void;
+  position: InspectorPosition | null;
+}) {
+  if (!position) return null;
+
+  const startMarker = edge.style?.startMarker ?? getLegacyStartMarker(edge);
+  const endMarker = edge.style?.endMarker ?? getLegacyEndMarker(edge);
+  const color = getEdgeColorOption(edge.style?.color);
+
+  return (
+    <section
+      className="node-inspector edge-inspector"
+      style={{ left: position.left, top: position.top }}
+      role="dialog"
+      aria-label={`Edit edge ${edge.label || edge.id}`}
+    >
+      <header>
+        <div>
+          <p className="eyebrow">Edge</p>
+          <h3>{edge.label || edge.id}</h3>
+        </div>
+        <button className="icon-button" type="button" onClick={onClose} aria-label="Close edge editor">
+          <X size={16} aria-hidden="true" />
+        </button>
+      </header>
+
+      <label className="edge-label-field">
+        <span>Label</span>
+        <input
+          aria-label="Edge label"
+          value={edge.label ?? ""}
+          onChange={(event) => onChange({ label: event.target.value })}
+        />
+      </label>
+
+      <EdgeSelect
+        label="Start marker"
+        value={startMarker}
+        options={edgeMarkerOptions}
+        onChange={(value) => onChange({ style: { startMarker: value as EdgeMarker } })}
+      />
+      <EdgeSelect
+        label="End marker"
+        value={endMarker}
+        options={edgeMarkerOptions}
+        onChange={(value) => onChange({ style: { endMarker: value as EdgeMarker } })}
+      />
+      <EdgeSelect
+        label="Line"
+        value={edge.style?.line ?? "solid"}
+        options={edgeLineOptions}
+        onChange={(value) => onChange({
+          style: { line: value as NonNullable<DiagramEdge["style"]>["line"] },
+        })}
+      />
+      <EdgeSelect
+        label="Routing"
+        value={edge.style?.routing ?? "smooth"}
+        options={edgeRoutingOptions}
+        onChange={(value) => onChange({
+          style: { routing: value as NonNullable<DiagramEdge["style"]>["routing"] },
+        })}
+      />
+      <label>
+        <span>Color</span>
+        <div className="edge-color-control">
+          <i style={{ backgroundColor: edgeColorValues[color] }} aria-hidden="true" />
+          <select
+            aria-label="Edge color"
+            value={color}
+            onChange={(event) => onChange({ style: { color: event.target.value } })}
+          >
+            {edgeColorOptions.map((option) => <option key={option}>{option}</option>)}
+          </select>
+        </div>
+      </label>
+      <EdgeSelect
+        label="Label position"
+        value={edge.style?.labelPlacement ?? "above"}
+        options={edgeLabelPlacementOptions}
+        onChange={(value) => onChange({
+          style: {
+            labelPlacement: value as NonNullable<DiagramEdge["style"]>["labelPlacement"],
+          },
+        })}
+      />
+    </section>
+  );
+}
+
+function EdgeSelect({
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  options: readonly string[];
+  value: string;
+}) {
+  return (
+    <label>
+      <span>{label}</span>
+      <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
+        {options.map((option) => <option key={option}>{option}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function getLegacyStartMarker(edge: DiagramEdge): EdgeMarker {
+  return edge.direction === "backward" || edge.direction === "bidirectional" ? "arrow" : "none";
+}
+
+function getLegacyEndMarker(edge: DiagramEdge): EdgeMarker {
+  return edge.direction === "forward" || edge.direction === "bidirectional" ? "arrow" : "none";
+}
+
+function getEdgeColorOption(color: string | undefined): (typeof edgeColorOptions)[number] {
+  return edgeColorOptions.includes(color as (typeof edgeColorOptions)[number])
+    ? color as (typeof edgeColorOptions)[number]
+    : "default";
 }
 
 function SceneControls({

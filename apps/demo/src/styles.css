@@ -468,6 +468,44 @@ dd {
   padding: 0 8px;
 }
 
+.edge-inspector {
+  width: 300px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.edge-inspector header,
+.edge-inspector .edge-label-field {
+  grid-column: 1 / -1;
+}
+
+.edge-inspector h3 {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.edge-color-control {
+  position: relative;
+}
+
+.edge-color-control i {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 10px;
+  width: 10px;
+  height: 10px;
+  border: 1px solid rgba(31, 42, 68, 0.16);
+  border-radius: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.node-inspector .edge-color-control select {
+  padding-left: 28px;
+}
+
 .prompt-bar {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -546,6 +584,16 @@ dd {
 .editor-diagram-root .node-selected .node-box {
   stroke: #2f6fed;
   stroke-width: 2.8;
+}
+
+.editor-diagram-root .edge-hit-area {
+  cursor: pointer;
+  pointer-events: stroke !important;
+}
+
+.editor-diagram-root .edge-selected .edge-path {
+  filter: drop-shadow(0 0 3px rgba(47, 111, 237, 0.9));
+  stroke-width: 3.4;
 }
 
 .node-box {

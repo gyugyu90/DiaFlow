@@ -3,6 +3,7 @@ import type {
   DiagramEdge,
   DiagramGroup,
   EdgeLabelPlacement,
+  EdgeMarker,
 } from "@interactive-diagram/schema";
 import {
   getEdgeLabelAnchor,
@@ -53,28 +54,44 @@ export function createDefs(): SVGDefsElement {
     "vector-effect": "non-scaling-stroke",
   }));
 
-  defs.append(
-    grid,
-    createArrowMarker("arrow-forward", edgeColor.default),
-    createArrowMarker("arrow-accent", edgeColor.accent),
-    createArrowMarker("arrow-muted", edgeColor.muted),
-    createArrowMarker("arrow-warning", edgeColor.warning),
-    createArrowMarker("arrow-danger", edgeColor.danger),
-  );
+  defs.appendChild(grid);
+  for (const marker of ["arrow", "triangle", "circle"] as const) {
+    for (const color of ["default", "accent", "muted", "warning", "danger"] as const) {
+      defs.appendChild(createEdgeMarker(marker, color, edgeColor[color]));
+    }
+  }
   return defs;
 }
 
-function createArrowMarker(id: string, color: string): SVGMarkerElement {
+function createEdgeMarker(
+  shape: Exclude<EdgeMarker, "none">,
+  colorName: string,
+  color: string,
+): SVGMarkerElement {
   const marker = createSvg("marker", {
-    id,
+    id: `marker-${shape}-${colorName}`,
     markerWidth: 10,
     markerHeight: 10,
-    refX: 8,
+    refX: shape === "circle" ? 5 : 9,
     refY: 5,
-    orient: "auto",
+    orient: "auto-start-reverse",
     markerUnits: "strokeWidth",
   });
-  marker.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: color }));
+
+  if (shape === "arrow") {
+    marker.appendChild(createSvg("path", {
+      d: "M 1 1 L 9 5 L 1 9",
+      fill: "none",
+      stroke: color,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": 1.8,
+    }));
+  } else if (shape === "triangle") {
+    marker.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: color }));
+  } else {
+    marker.appendChild(createSvg("circle", { cx: 5, cy: 5, r: 3.5, fill: color }));
+  }
   return marker;
 }
 
@@ -149,15 +166,19 @@ export function renderEdge(
     stroke: color,
     "stroke-dasharray": getDashArray(edge.style?.line),
   });
+  const hitArea = createSvg("path", {
+    class: "edge-hit-area",
+    d: pathData,
+    fill: "none",
+    stroke: "transparent",
+    "stroke-width": 16,
+    "pointer-events": "none",
+  });
 
-  if (edge.direction === "forward" || edge.direction === "bidirectional") {
-    path.setAttribute("marker-end", `url(#${getMarkerId(edge.style?.color)})`);
-  }
-  if (edge.direction === "backward" || edge.direction === "bidirectional") {
-    path.setAttribute("marker-start", `url(#${getMarkerId(edge.style?.color)})`);
-  }
+  setMarker(path, "marker-start", resolveStartMarker(edge), edge.style?.color);
+  setMarker(path, "marker-end", resolveEndMarker(edge), edge.style?.color);
 
-  element.appendChild(path);
+  element.append(hitArea, path);
   if (edge.label) {
     element.appendChild(renderEdgeLabel(
       edge.label,
@@ -175,12 +196,30 @@ function resolveEdgeColor(color: string | undefined): string {
   return edgeColor[color] ?? color;
 }
 
-function getMarkerId(color: string | undefined): string {
-  if (color === "accent" || color === "active") return "arrow-accent";
-  if (color === "muted") return "arrow-muted";
-  if (color === "warning") return "arrow-warning";
-  if (color === "danger") return "arrow-danger";
-  return "arrow-forward";
+function setMarker(
+  path: SVGPathElement,
+  attribute: "marker-start" | "marker-end",
+  marker: EdgeMarker,
+  color: string | undefined,
+): void {
+  if (marker === "none") return;
+  path.setAttribute(attribute, `url(#marker-${marker}-${getMarkerColorName(color)})`);
+}
+
+function resolveStartMarker(edge: DiagramEdge): EdgeMarker {
+  if (edge.style?.startMarker !== undefined) return edge.style.startMarker;
+  return edge.direction === "backward" || edge.direction === "bidirectional" ? "arrow" : "none";
+}
+
+function resolveEndMarker(edge: DiagramEdge): EdgeMarker {
+  if (edge.style?.endMarker !== undefined) return edge.style.endMarker;
+  return edge.direction === "forward" || edge.direction === "bidirectional" ? "arrow" : "none";
+}
+
+function getMarkerColorName(color: string | undefined): string {
+  if (color === "accent" || color === "active") return "accent";
+  if (color === "muted" || color === "warning" || color === "danger") return color;
+  return "default";
 }
 
 function getDashArray(line: string | undefined): string | null {

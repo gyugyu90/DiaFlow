@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent } from "@testing-library/dom";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
-import { createDiagramEditor, updateDiagramNode } from "./index";
+import { createDiagramEditor, updateDiagramEdge, updateDiagramNode } from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);
 
@@ -43,9 +43,60 @@ describe("diagram editor model", () => {
     });
     expect(diagram.nodes.find((node) => node.id === "user")?.label).toBe("User");
   });
+
+  it("merges edge style updates without mutating the source document", () => {
+    const updated = updateDiagramEdge(diagram, "edge_user_browser", {
+      label: "Opens",
+      style: { startMarker: "circle", endMarker: "triangle" },
+    });
+
+    expect(updated).not.toBe(diagram);
+    expect(updated.edges.find((edge) => edge.id === "edge_user_browser")).toMatchObject({
+      label: "Opens",
+      style: {
+        line: "solid",
+        startMarker: "circle",
+        endMarker: "triangle",
+      },
+    });
+    expect(diagram.edges.find((edge) => edge.id === "edge_user_browser")?.label).toBe("Uses");
+  });
 });
 
 describe("createDiagramEditor", () => {
+  it("selects and edits an edge with undo and redo history", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const anchors: Array<{ left: number; top: number } | null> = [];
+    const editor = createDiagramEditor(container, diagram, {
+      onSelectionAnchorChange: (position) => anchors.push(position),
+    });
+    const edgeHitArea = container.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
+    if (!edgeHitArea) throw new Error("Missing edge hit area");
+
+    fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 100, clientY: 100 });
+
+    expect(editor.getState().selectedEdgeId).toBe("edge_user_browser");
+    expect(editor.getState().selectedNodeId).toBeNull();
+    expect(container.querySelector('[data-edge-id="edge_user_browser"]')?.classList.contains("edge-selected")).toBe(true);
+    expect(anchors.at(-1)).not.toBeNull();
+
+    editor.updateEdge("edge_user_browser", {
+      label: "Opens",
+      style: { startMarker: "circle", endMarker: "triangle" },
+    });
+    expect(editor.getState().diagram.edges[0]).toMatchObject({
+      label: "Opens",
+      style: { startMarker: "circle", endMarker: "triangle" },
+    });
+
+    editor.undo();
+    expect(editor.getState().diagram.edges[0].label).toBe("Uses");
+    editor.redo();
+    expect(editor.getState().diagram.edges[0].label).toBe("Opens");
+    editor.destroy();
+  });
+
   it("owns node edits and undo/redo history", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

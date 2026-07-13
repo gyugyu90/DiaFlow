@@ -5,16 +5,21 @@ import {
 } from "@interactive-diagram/runtime";
 import type { DiagramDocument, DiagramNode } from "@interactive-diagram/schema";
 import {
+  getEventEdgeId,
   getEventNodeId,
   getSvgPoint,
+  selectEdgeById,
   selectNodeById,
+  updateSelectedEdgeAnchor,
   updateSelectedNodeAnchor,
 } from "./dom.js";
-import { moveDiagramNode, updateDiagramNode } from "./model.js";
+import { moveDiagramNode, updateDiagramEdge, updateDiagramNode } from "./model.js";
 import type {
   DiagramEditorController,
   DiagramEditorOptions,
   DiagramEditorState,
+  EdgePatch,
+  InspectorPosition,
   NodePatch,
 } from "./types.js";
 
@@ -39,6 +44,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private diagram: DiagramDocument;
   private sceneId: string | null;
   private selectedNodeId: string | null = null;
+  private selectedEdgeId: string | null = null;
   private past: DiagramDocument[] = [];
   private future: DiagramDocument[] = [];
   private drag: DragState | null = null;
@@ -71,6 +77,7 @@ class DomDiagramEditor implements DiagramEditorController {
     return {
       diagram: this.diagram,
       selectedNodeId: this.selectedNodeId,
+      selectedEdgeId: this.selectedEdgeId,
       canUndo: this.past.length > 0,
       canRedo: this.future.length > 0,
     };
@@ -85,6 +92,9 @@ class DomDiagramEditor implements DiagramEditorController {
     if (!this.hasNode(this.selectedNodeId)) {
       this.selectedNodeId = null;
     }
+    if (!this.hasEdge(this.selectedEdgeId)) {
+      this.selectedEdgeId = null;
+    }
     this.renderer.setDiagram(diagram);
     this.refreshSelection();
     this.emitState();
@@ -98,21 +108,35 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   selectNode(nodeId: string): void {
-    if (!this.hasNode(nodeId) || nodeId === this.selectedNodeId) return;
+    if (!this.hasNode(nodeId) || (nodeId === this.selectedNodeId && !this.selectedEdgeId)) return;
     this.selectedNodeId = nodeId;
+    this.selectedEdgeId = null;
+    this.refreshSelection();
+    this.emitState();
+  }
+
+  selectEdge(edgeId: string): void {
+    if (!this.hasEdge(edgeId) || (edgeId === this.selectedEdgeId && !this.selectedNodeId)) return;
+    this.selectedEdgeId = edgeId;
+    this.selectedNodeId = null;
     this.refreshSelection();
     this.emitState();
   }
 
   clearSelection(): void {
-    if (!this.selectedNodeId) return;
+    if (!this.selectedNodeId && !this.selectedEdgeId) return;
     this.selectedNodeId = null;
+    this.selectedEdgeId = null;
     this.refreshSelection();
     this.emitState();
   }
 
   updateNode(nodeId: string, patch: NodePatch): void {
     this.commit(updateDiagramNode(this.diagram, nodeId, patch));
+  }
+
+  updateEdge(edgeId: string, patch: EdgePatch): void {
+    this.commit(updateDiagramEdge(this.diagram, edgeId, patch));
   }
 
   undo(): void {
@@ -152,7 +176,14 @@ class DomDiagramEditor implements DiagramEditorController {
 
     const nodeId = getEventNodeId(event);
     const node = this.diagram.nodes.find((candidate) => candidate.id === nodeId);
-    if (!nodeId || !node) return;
+    if (!nodeId || !node) {
+      const edgeId = getEventEdgeId(event);
+      if (!edgeId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.selectEdge(edgeId);
+      return;
+    }
 
     event.preventDefault();
     event.stopPropagation();
@@ -172,16 +203,18 @@ class DomDiagramEditor implements DiagramEditorController {
       startPosition: { ...node.position },
     };
     this.container.classList.add("is-node-dragging");
-    this.options.onSelectedNodeAnchorChange?.(null);
+    this.emitSelectionAnchor(null);
   };
 
   private readonly handleClick = (event: Event): void => {
     const nodeId = getEventNodeId(event);
-    if (!nodeId) return;
+    const edgeId = getEventEdgeId(event);
+    if (!nodeId && !edgeId) return;
 
     event.preventDefault();
     event.stopPropagation();
-    this.selectNode(nodeId);
+    if (nodeId) this.selectNode(nodeId);
+    else if (edgeId) this.selectEdge(edgeId);
   };
 
   private readonly handleMove = (event: MouseEvent | PointerEvent): void => {
@@ -219,7 +252,7 @@ class DomDiagramEditor implements DiagramEditorController {
     if (event.phase !== "end") {
       if (!this.viewportInteractionActive) {
         this.viewportInteractionActive = true;
-        this.options.onSelectedNodeAnchorChange?.(null);
+        this.emitSelectionAnchor(null);
       }
       return;
     }
@@ -247,17 +280,29 @@ class DomDiagramEditor implements DiagramEditorController {
     this.container.querySelectorAll(".node-selected").forEach((node) => {
       node.classList.remove("node-selected");
     });
+    this.container.querySelectorAll(".edge-selected").forEach((edge) => {
+      edge.classList.remove("edge-selected");
+    });
 
     if (this.selectedNodeId) {
       this.container.querySelector(selectNodeById(this.selectedNodeId))?.classList.add("node-selected");
     }
+    if (this.selectedEdgeId) {
+      this.container.querySelector(selectEdgeById(this.selectedEdgeId))?.classList.add("edge-selected");
+    }
     if (this.viewportInteractionActive || this.drag) {
-      this.options.onSelectedNodeAnchorChange?.(null);
+      this.emitSelectionAnchor(null);
+    } else if (this.selectedEdgeId) {
+      updateSelectedEdgeAnchor(
+        this.container,
+        this.selectedEdgeId,
+        this.getSelectionAnchorCallback(),
+      );
     } else {
       updateSelectedNodeAnchor(
         this.container,
         this.selectedNodeId,
-        this.options.onSelectedNodeAnchorChange,
+        this.getSelectionAnchorCallback(),
       );
     }
   }
@@ -268,5 +313,17 @@ class DomDiagramEditor implements DiagramEditorController {
 
   private hasNode(nodeId: string | null): boolean {
     return nodeId !== null && this.diagram.nodes.some((node) => node.id === nodeId);
+  }
+
+  private hasEdge(edgeId: string | null): boolean {
+    return edgeId !== null && this.diagram.edges.some((edge) => edge.id === edgeId);
+  }
+
+  private getSelectionAnchorCallback() {
+    return this.options.onSelectionAnchorChange ?? this.options.onSelectedNodeAnchorChange;
+  }
+
+  private emitSelectionAnchor(position: InspectorPosition | null): void {
+    this.getSelectionAnchorCallback()?.(position);
   }
 }
