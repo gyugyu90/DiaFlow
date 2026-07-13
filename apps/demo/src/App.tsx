@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertCircle,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  Download,
   Edit3,
   Eye,
+  FilePlus2,
+  FolderOpen,
   Maximize2,
   PlayCircle,
   Redo2,
@@ -41,11 +45,20 @@ import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import { DiagramEditorViewport } from "./DiagramEditorViewport";
 import { DiagramViewport } from "./DiagramViewport";
+import {
+  createEmptyDiagramDocument,
+  downloadDiagramFile,
+  formatDiagramFileError,
+  normalizeDiagramFileName,
+  readDiagramFile,
+} from "./document-files";
 
 type DiagramListItem = {
   id: string;
   title: string;
   description: string;
+  fileName: string;
+  isDirty: boolean;
   diagram: DiagramDocument;
 };
 
@@ -56,12 +69,16 @@ const initialDiagrams: DiagramListItem[] = [
     id: "basic-web-architecture",
     title: "Basic Web Architecture",
     description: "Browser traffic through a load balancer to app, database, and object storage.",
+    fileName: "basic-web-architecture.diagram.json",
+    isDirty: false,
     diagram: parseDiagramDocument(sampleDiagram),
   },
   {
     id: "circuit-breaker-scenes",
     title: "Circuit Breaker Scenes",
     description: "MSA circuit breaker behavior across normal traffic, failure propagation, open circuit, and recovery.",
+    fileName: "circuit-breaker-scenes.diagram.json",
+    isDirty: false,
     diagram: parseDiagramDocument(circuitBreakerDiagram),
   },
 ];
@@ -77,6 +94,9 @@ export function App() {
   const [mode, setMode] = useState<ViewMode>("list");
   const [selectedDiagramId, setSelectedDiagramId] = useState(initialDiagrams[0].id);
   const [viewingDiagramId, setViewingDiagramId] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const documentSequenceRef = useRef(0);
   const selectedDiagram = useMemo(
     () => diagramItems.find((diagram) => diagram.id === selectedDiagramId) ?? diagramItems[0],
     [diagramItems, selectedDiagramId],
@@ -84,16 +104,76 @@ export function App() {
   const viewingDiagram = viewingDiagramId
     ? diagramItems.find((diagram) => diagram.id === viewingDiagramId) ?? null
     : null;
+  const hasUnsavedChanges = diagramItems.some((item) => item.isDirty);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   function openEditor(diagramId: string) {
     setSelectedDiagramId(diagramId);
     setMode("edit");
   }
 
-  function updateDiagram(diagramId: string, updater: (diagram: DiagramDocument) => DiagramDocument) {
+  function updateDiagram(diagramId: string, diagram: DiagramDocument) {
     setDiagramItems((items) =>
-      items.map((item) => item.id === diagramId ? { ...item, diagram: updater(item.diagram) } : item),
+      items.map((item) => item.id === diagramId ? {
+        ...item,
+        title: diagram.metadata.title,
+        description: diagram.metadata.description ?? "No description",
+        isDirty: true,
+        diagram,
+      } : item),
     );
+  }
+
+  function addDocument(diagram: DiagramDocument, fileName: string, isDirty: boolean) {
+    documentSequenceRef.current += 1;
+    const item: DiagramListItem = {
+      id: `local-${documentSequenceRef.current}-${diagram.id}`,
+      title: diagram.metadata.title,
+      description: diagram.metadata.description ?? "No description",
+      fileName,
+      isDirty,
+      diagram,
+    };
+    setDiagramItems((items) => [...items, item]);
+    setSelectedDiagramId(item.id);
+    setMode("edit");
+  }
+
+  function createNewDiagram() {
+    setFileError(null);
+    addDocument(createEmptyDiagramDocument(), "untitled.diagram.json", true);
+  }
+
+  async function openDiagramFile(file: File) {
+    try {
+      const diagram = await readDiagramFile(file);
+      setFileError(null);
+      addDocument(diagram, file.name, false);
+    } catch (error) {
+      setFileError(formatDiagramFileError(error));
+    }
+  }
+
+  function saveDiagram(item: DiagramListItem) {
+    try {
+      downloadDiagramFile(item.diagram, item.fileName);
+      setFileError(null);
+      setDiagramItems((items) => items.map((candidate) => candidate.id === item.id
+        ? { ...candidate, fileName: normalizeDiagramFileName(candidate.fileName), isDirty: false }
+        : candidate));
+    } catch (error) {
+      setFileError(formatDiagramFileError(error));
+    }
   }
 
   if (mode === "edit") {
@@ -102,11 +182,11 @@ export function App() {
         <EditorPage
           item={selectedDiagram}
           onBack={() => setMode("list")}
+          onSave={() => saveDiagram(selectedDiagram)}
           onView={() => setViewingDiagramId(selectedDiagram.id)}
-          onDiagramChange={(diagram) =>
-            updateDiagram(selectedDiagram.id, () => diagram)
-          }
+          onDiagramChange={(diagram) => updateDiagram(selectedDiagram.id, diagram)}
         />
+        {fileError ? <FileErrorBanner message={fileError} onDismiss={() => setFileError(null)} /> : null}
         {viewingDiagram ? (
           <DiagramViewModal
             item={viewingDiagram}
@@ -126,7 +206,35 @@ export function App() {
             <p className="eyebrow">Interactive Diagram</p>
             <h1>Diagrams</h1>
           </div>
+          <div className="toolbar">
+            <input
+              ref={fileInputRef}
+              className="file-input"
+              type="file"
+              accept=".json,.diagram.json,application/json"
+              aria-label="Open diagram file"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void openDiagramFile(file);
+              }}
+            />
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <FolderOpen size={17} aria-hidden="true" />
+              <span>Open</span>
+            </button>
+            <button className="button button-primary" type="button" onClick={createNewDiagram}>
+              <FilePlus2 size={17} aria-hidden="true" />
+              <span>New diagram</span>
+            </button>
+          </div>
         </header>
+
+        {fileError ? <FileErrorBanner message={fileError} onDismiss={() => setFileError(null)} /> : null}
 
         <section className="diagram-list" aria-label="Diagram list">
           {diagramItems.map((item) => (
@@ -159,6 +267,18 @@ function BuildVersionBadge() {
   );
 }
 
+function FileErrorBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <section className="file-error" role="alert">
+      <AlertCircle size={18} aria-hidden="true" />
+      <p>{message}</p>
+      <button className="icon-button" type="button" onClick={onDismiss} aria-label="Dismiss file error">
+        <X size={16} aria-hidden="true" />
+      </button>
+    </section>
+  );
+}
+
 function DiagramCard({
   item,
   onEdit,
@@ -176,6 +296,10 @@ function DiagramCard({
           <h2>{item.title}</h2>
         </div>
         <p>{item.description}</p>
+        <p className="document-file-status">
+          <span>{item.fileName}</span>
+          {item.isDirty ? <strong>Unsaved changes</strong> : null}
+        </p>
       </div>
       <dl className="diagram-card-stats" aria-label={`${item.title} statistics`}>
         <div>
@@ -263,11 +387,13 @@ function EditorPage({
   item,
   onBack,
   onDiagramChange,
+  onSave,
   onView,
 }: {
   item: DiagramListItem;
   onBack: () => void;
   onDiagramChange: (diagram: DiagramDocument) => void;
+  onSave: () => void;
   onView: () => void;
 }) {
   const editorRef = useRef<DiagramEditorController | null>(null);
@@ -306,9 +432,15 @@ function EditorPage({
           <button className="icon-button" type="button" onClick={onBack} aria-label="Back to diagram list">
             <ArrowLeft size={18} aria-hidden="true" />
           </button>
-          <div>
+          <div className="editor-document-heading">
             <p className="eyebrow">Edit</p>
             <h1>{item.title}</h1>
+            <p className="document-file-status" aria-live="polite">
+              <span>{item.fileName}</span>
+              <strong className={item.isDirty ? "is-dirty" : ""}>
+                {item.isDirty ? "Unsaved changes" : "Saved"}
+              </strong>
+            </p>
           </div>
         </div>
         <div className="toolbar">
@@ -333,6 +465,10 @@ function EditorPage({
           <button className="button button-secondary" type="button" onClick={onView}>
             <Eye size={17} aria-hidden="true" />
             <span>View</span>
+          </button>
+          <button className="button button-primary" type="button" onClick={onSave}>
+            <Download size={17} aria-hidden="true" />
+            <span>Save as</span>
           </button>
         </div>
       </header>

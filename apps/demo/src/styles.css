@@ -66,6 +66,43 @@ button:disabled {
   gap: 16px;
 }
 
+.file-input {
+  display: none;
+}
+
+.file-error {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  z-index: 70;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: min(680px, calc(100vw - 28px));
+  padding: 10px 10px 10px 14px;
+  border: 1px solid #e7b8b8;
+  border-radius: 8px;
+  background: #fff7f7;
+  color: #9f2f2f;
+  box-shadow: var(--shadow);
+  transform: translateX(-50%);
+}
+
+.file-error p {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.file-error .icon-button {
+  width: 32px;
+  height: 32px;
+  border-color: transparent;
+  background: transparent;
+  color: inherit;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: var(--muted);
@@ -138,6 +175,60 @@ p {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
+}
+
+.document-file-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.document-file-status span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.document-file-status strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  color: var(--success);
+  font-size: 11px;
+}
+
+.document-file-status strong::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.document-file-status strong.is-dirty,
+.diagram-card-main .document-file-status strong {
+  color: #b86400;
+}
+
+.editor-document-heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.editor-document-heading h1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-document-heading .document-file-status {
+  margin-top: 3px;
 }
 
 .diagram-card-stats,
@@ -571,5 +662,11 @@ dd {
   .viewer-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .editor-topbar .toolbar,
+  .app-header .toolbar {
+    width: 100%;
+    flex-wrap: wrap;
   }
 }

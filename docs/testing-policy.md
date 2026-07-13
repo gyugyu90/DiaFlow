@@ -105,6 +105,23 @@ Use editor tests when changing:
 
 Editor tests should focus on user-visible behavior, not implementation details.
 
+### Local Document Tests
+
+Location:
+
+```txt
+apps/demo/src/document-files.test.ts
+apps/demo/src/App.test.tsx
+```
+
+Use local document tests when changing:
+
+- empty diagram creation
+- Diagram JSON file parsing and readable validation errors
+- JSON serialization and round-trip compatibility
+- file name normalization and download behavior
+- dirty state and unsaved-page warnings
+
 ## What Must Be Tested
 
 Add or update tests when a change affects:

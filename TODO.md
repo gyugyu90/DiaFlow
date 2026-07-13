@@ -9,7 +9,7 @@
 
 - [ ] 저장소를 처음 받은 사용자를 위한 `README.md` 작성
 - [ ] Node.js 버전, `npm install`, `npm run dev` 실행 절차 문서화
-- [ ] 샘플 없이 빈 다이어그램으로 시작하는 `New diagram` 기능 추가
+- [x] 샘플 없이 빈 다이어그램으로 시작하는 `New diagram` 기능 추가
 - [ ] 로컬 에디터와 샘플 데모의 진입 경로 분리
 - [ ] 최초 실행부터 에디터 진입까지의 smoke test 추가
 
@@ -17,15 +17,15 @@
 
 ### 2. Open, save, and edit Diagram JSON files
 
-- [ ] `.diagram.json` 파일을 선택해 여는 `Open` 기능 추가
-- [ ] 파일을 열 때 Diagram JSON Schema 검증 및 읽을 수 있는 오류 메시지 제공
-- [ ] 현재 문서를 새 `.diagram.json` 파일로 저장하는 `Save as` 기능 추가
+- [x] `.diagram.json` 파일을 선택해 여는 `Open` 기능 추가
+- [x] 파일을 열 때 Diagram JSON Schema 검증 및 읽을 수 있는 오류 메시지 제공
+- [x] 현재 문서를 새 `.diagram.json` 파일로 저장하는 `Save as` 기능 추가
 - [ ] File System Access API를 지원하는 브라우저에서 원본 파일에 저장하는 `Save` 기능 추가
-- [ ] File System Access API를 지원하지 않는 브라우저를 위한 업로드/다운로드 fallback 추가
-- [ ] 새 문서, 열린 파일명, 수정 여부(dirty state)를 에디터 상단에 표시
-- [ ] 저장하지 않은 변경사항이 있을 때 문서 이동 및 페이지 종료 경고 추가
+- [x] File System Access API를 지원하지 않는 브라우저를 위한 업로드/다운로드 fallback 추가
+- [x] 새 문서, 열린 파일명, 수정 여부(dirty state)를 에디터 상단에 표시
+- [x] 앱 내 이동 중 dirty 문서를 유지하고 페이지 종료 경고 추가
 - [ ] `schemaVersion`이 다른 파일을 위한 호환성 오류와 향후 migration 진입점 정의
-- [ ] 생성 -> 저장 -> 다시 열기 -> 수정 -> 재저장 round-trip 테스트 추가
+- [x] 생성 -> 저장 -> 다시 열기 -> 수정 -> 재저장 round-trip 테스트 추가
 
 완료 조건: 사용자가 로컬 파일을 유일한 원본으로 사용하면서 브라우저를 닫은 뒤에도 같은
 파일을 다시 열어 편집을 계속할 수 있다.
