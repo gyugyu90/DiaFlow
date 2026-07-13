@@ -13,6 +13,7 @@ export type InspectorPosition = {
 export type DiagramEditorState = {
   diagram: DiagramDocument;
   selectedNodeId: string | null;
+  selectedNodeIds: string[];
   selectedEdgeId: string | null;
   canUndo: boolean;
   canRedo: boolean;
@@ -35,6 +36,7 @@ export type DiagramEditorController = {
   selectNode(nodeId: string): void;
   setDiagram(diagram: DiagramDocument): void;
   setScene(sceneId: string | null): void;
+  toggleNodeSelection(nodeId: string): void;
   undo(): void;
   updateEdge(edgeId: string, patch: EdgePatch): void;
   updateNode(nodeId: string, patch: NodePatch): void;

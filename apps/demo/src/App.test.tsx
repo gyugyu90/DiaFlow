@@ -99,6 +99,33 @@ describe("App", () => {
     expect((screen.getByLabelText("Node icon") as HTMLSelectElement).value).toBe("server");
   });
 
+  it("shift-selects multiple nodes and hides the node inspector", async () => {
+    render(<App />);
+
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
+
+    const userNode = document.querySelector('[data-node-id="user"]');
+    const browserNode = document.querySelector('[data-node-id="browser"]');
+    if (!userNode || !browserNode) throw new Error("Missing nodes for multi-selection test");
+
+    fireEvent.click(userNode);
+    expect(screen.getByRole("dialog", { name: "Edit node User" })).toBeTruthy();
+
+    fireEvent.pointerDown(browserNode, {
+      button: 0,
+      clientX: 200,
+      clientY: 100,
+      shiftKey: true,
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Edit node User" })).toBeNull();
+    });
+    expect(userNode.classList.contains("node-selected")).toBe(true);
+    expect(browserNode.classList.contains("node-selected")).toBe(true);
+  });
+
   it("opens an edge inspector and edits endpoint markers and line style", async () => {
     render(<App />);
 

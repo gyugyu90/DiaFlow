@@ -12,6 +12,9 @@
 사용자가 이를 시각적으로 수정한 뒤,
 인터랙티브한 형태로 웹에 배포할 수 있는 플랫폼을 만드는 것을 목표로 한다.
 
+이 저장소는 누구나 로컬에서 실행하고 수정하며 직접 호스팅할 수 있는
+오픈소스 프로젝트로 개발한다.
+
 우리의 목표는 단순히 다이어그램을 그리는 것이 아니다.
 
 우리는
@@ -140,13 +143,13 @@ Request / Response
 
 지원 기능
 
-- Prompt → Diagram
+- LLM Skill → Diagram JSON
 - Visual Editing
 - Node Drag
 - Edge Editing
-- AI Layout
+- Local File Open / Save
 - Packet Animation
-- iframe Embed
+- Self-hosted iframe Embed
 
 지원하지 않는 기능
 
@@ -181,27 +184,19 @@ Secondary
 
 # 6. 시스템 구성
 
-Editor
+LLM Skill (Optional)
 
 ↓
 
-API
+Diagram JSON File
 
 ↓
 
-AI
+Local Editor
 
 ↓
 
-Diagram Store
-
-↓
-
-Publish
-
-↓
-
-Embed Runtime
+Renderer / Self-hosted Embed Runtime
 
 ---
 
@@ -310,7 +305,7 @@ Theme
 
 을 수정할 수 있어야 한다.
 
-Prompt와 Canvas는 항상 동기화된다.
+Diagram JSON과 Canvas는 항상 동기화된다.
 
 ---
 
@@ -328,33 +323,9 @@ Embed는
 
 MVP는 iframe만 지원한다.
 
----
+사용자는 Diagram JSON과 Embed Runtime을 직접 호스팅할 수 있어야 한다.
 
-Public Diagram
-
-↓
-
-Anyone
-
----
-
-Private Diagram
-
-↓
-
-Workspace Only
-
----
-
-Enterprise
-
-↓
-
-Signed Token
-
-↓
-
-Allowed Domain
+Embed Runtime은 특정 서버나 계정 시스템에 의존하지 않아야 한다.
 
 ---
 
@@ -362,15 +333,11 @@ Allowed Domain
 
 Diagram은
 
-JSON
+로컬 `.diagram.json` 파일
 
 으로 저장한다.
 
-별도로
-
-Version History
-
-를 저장한다.
+같은 파일을 다시 열어 편집을 계속할 수 있어야 한다.
 
 Export 결과는
 
@@ -587,3 +554,17 @@ AI가 생성하고
 사람이 다듬으며
 
 웹에서 살아 움직이는 다이어그램 플랫폼.
+
+---
+
+# 20. 오픈소스 원칙
+
+Schema, Runtime, Editor, Embed, 예제와 LLM Skill은 공개 저장소에서 함께 관리한다.
+
+핵심 기능은 로컬 실행과 self-hosting만으로 사용할 수 있어야 한다.
+
+공개 문서와 TODO는 사용자 기능, 기술적 품질, 호환성, 기여 방법에 집중한다.
+
+내부 작업 기록이 꼭 필요한 경우에만 git에서 제외된 `.codex/` 아래에 둔다.
+
+`.codex/`의 내용은 공개 문서나 제품 동작의 근거로 사용하지 않는다.

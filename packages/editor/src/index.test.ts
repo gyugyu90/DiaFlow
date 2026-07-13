@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent } from "@testing-library/dom";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
-import { createDiagramEditor, updateDiagramEdge, updateDiagramNode } from "./index";
+import {
+  createDiagramEditor,
+  moveDiagramNodes,
+  updateDiagramEdge,
+  updateDiagramNode,
+} from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);
 
@@ -61,9 +66,86 @@ describe("diagram editor model", () => {
     });
     expect(diagram.edges.find((edge) => edge.id === "edge_user_browser")?.label).toBe("Uses");
   });
+
+  it("moves only the selected nodes by the same delta", () => {
+    const updated = moveDiagramNodes(diagram, ["user", "browser"], { x: 35, y: -20 });
+    const getPosition = (document: typeof diagram, nodeId: string) =>
+      document.nodes.find((node) => node.id === nodeId)?.position;
+
+    expect(getPosition(updated, "user")).toEqual({
+      x: getPosition(diagram, "user")!.x + 35,
+      y: getPosition(diagram, "user")!.y - 20,
+    });
+    expect(getPosition(updated, "browser")).toEqual({
+      x: getPosition(diagram, "browser")!.x + 35,
+      y: getPosition(diagram, "browser")!.y - 20,
+    });
+    expect(getPosition(updated, "load_balancer")).toEqual(getPosition(diagram, "load_balancer"));
+    expect(getPosition(diagram, "user")).not.toEqual(getPosition(updated, "user"));
+  });
 });
 
 describe("createDiagramEditor", () => {
+  it("shift-selects nodes, hides the inspector, and moves the group as one history entry", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const anchors: Array<{ left: number; top: number } | null> = [];
+    const editor = createDiagramEditor(container, diagram, {
+      onSelectionAnchorChange: (position) => anchors.push(position),
+    });
+    const userNode = container.querySelector('[data-node-id="user"]');
+    const browserNode = container.querySelector('[data-node-id="browser"]');
+    const userPosition = diagram.nodes.find((node) => node.id === "user")?.position;
+    const browserPosition = diagram.nodes.find((node) => node.id === "browser")?.position;
+    if (!userNode || !browserNode || !userPosition || !browserPosition) {
+      throw new Error("Missing nodes for multi-selection test");
+    }
+
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+    expect(editor.getState().selectedNodeIds).toEqual(["user"]);
+    expect(anchors.at(-1)).not.toBeNull();
+
+    fireEvent.pointerDown(browserNode, {
+      button: 0,
+      clientX: 200,
+      clientY: 100,
+      shiftKey: true,
+    });
+    expect(editor.getState().selectedNodeIds).toEqual(["user", "browser"]);
+    expect(editor.getState().selectedNodeId).toBeNull();
+    expect(anchors.at(-1)).toBeNull();
+    expect(userNode.classList.contains("node-selected")).toBe(true);
+    expect(browserNode.classList.contains("node-selected")).toBe(true);
+
+    fireEvent.pointerDown(browserNode, { button: 0, clientX: 200, clientY: 100 });
+    fireEvent.pointerMove(window, { clientX: 290, clientY: 145 });
+    fireEvent.pointerUp(window);
+
+    const movedUser = editor.getState().diagram.nodes.find((node) => node.id === "user");
+    const movedBrowser = editor.getState().diagram.nodes.find((node) => node.id === "browser");
+    const dragDelta = {
+      x: (movedUser?.position.x ?? userPosition.x) - userPosition.x,
+      y: (movedUser?.position.y ?? userPosition.y) - userPosition.y,
+    };
+    expect(dragDelta.x).not.toBe(0);
+    expect(dragDelta.y).not.toBe(0);
+    expect(movedBrowser?.position).toEqual({
+      x: browserPosition.x + dragDelta.x,
+      y: browserPosition.y + dragDelta.y,
+    });
+    expect(editor.getState().canUndo).toBe(true);
+
+    editor.undo();
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.position).toEqual(
+      userPosition,
+    );
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "browser")?.position).toEqual(
+      browserPosition,
+    );
+    expect(editor.getState().canUndo).toBe(false);
+    editor.destroy();
+  });
+
   it("selects and edits an edge with undo and redo history", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

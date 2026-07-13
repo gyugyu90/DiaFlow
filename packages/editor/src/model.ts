@@ -54,6 +54,30 @@ export function moveDiagramNode(
   };
 }
 
+export function moveDiagramNodes(
+  diagram: DiagramDocument,
+  nodeIds: Iterable<string>,
+  delta: DiagramNode["position"],
+): DiagramDocument {
+  const selectedNodeIds = new Set(nodeIds);
+  if (selectedNodeIds.size === 0 || (delta.x === 0 && delta.y === 0)) return diagram;
+
+  let didMove = false;
+  const nodes = diagram.nodes.map((node) => {
+    if (!selectedNodeIds.has(node.id)) return node;
+    didMove = true;
+    return {
+      ...node,
+      position: {
+        x: node.position.x + delta.x,
+        y: node.position.y + delta.y,
+      },
+    };
+  });
+
+  return didMove ? { ...diagram, nodes } : diagram;
+}
+
 function isSamePatch(node: DiagramNode, patch: NodePatch): boolean {
   return Object.entries(patch).every(([key, value]) => node[key as keyof NodePatch] === value);
 }

@@ -13,7 +13,7 @@ import {
   updateSelectedEdgeAnchor,
   updateSelectedNodeAnchor,
 } from "./dom.js";
-import { moveDiagramNode, updateDiagramEdge, updateDiagramNode } from "./model.js";
+import { moveDiagramNodes, updateDiagramEdge, updateDiagramNode } from "./model.js";
 import type {
   DiagramEditorController,
   DiagramEditorOptions,
@@ -24,10 +24,9 @@ import type {
 } from "./types.js";
 
 type DragState = {
-  nodeId: string;
+  nodeIds: string[];
   originalDiagram: DiagramDocument;
   startPointer: DiagramNode["position"];
-  startPosition: DiagramNode["position"];
 };
 
 export function createDiagramEditor(
@@ -43,7 +42,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private readonly pressEventName: "pointerdown" | "mousedown";
   private diagram: DiagramDocument;
   private sceneId: string | null;
-  private selectedNodeId: string | null = null;
+  private selectedNodeIds = new Set<string>();
   private selectedEdgeId: string | null = null;
   private past: DiagramDocument[] = [];
   private future: DiagramDocument[] = [];
@@ -74,9 +73,11 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   getState(): DiagramEditorState {
+    const selectedNodeIds = [...this.selectedNodeIds];
     return {
       diagram: this.diagram,
-      selectedNodeId: this.selectedNodeId,
+      selectedNodeId: selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
+      selectedNodeIds,
       selectedEdgeId: this.selectedEdgeId,
       canUndo: this.past.length > 0,
       canRedo: this.future.length > 0,
@@ -89,9 +90,9 @@ class DomDiagramEditor implements DiagramEditorController {
     this.diagram = diagram;
     this.past = [];
     this.future = [];
-    if (!this.hasNode(this.selectedNodeId)) {
-      this.selectedNodeId = null;
-    }
+    this.selectedNodeIds = new Set(
+      [...this.selectedNodeIds].filter((nodeId) => this.hasNode(nodeId)),
+    );
     if (!this.hasEdge(this.selectedEdgeId)) {
       this.selectedEdgeId = null;
     }
@@ -108,24 +109,27 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   selectNode(nodeId: string): void {
-    if (!this.hasNode(nodeId) || (nodeId === this.selectedNodeId && !this.selectedEdgeId)) return;
-    this.selectedNodeId = nodeId;
+    if (
+      !this.hasNode(nodeId) ||
+      (this.selectedNodeIds.size === 1 && this.selectedNodeIds.has(nodeId) && !this.selectedEdgeId)
+    ) return;
+    this.selectedNodeIds = new Set([nodeId]);
     this.selectedEdgeId = null;
     this.refreshSelection();
     this.emitState();
   }
 
   selectEdge(edgeId: string): void {
-    if (!this.hasEdge(edgeId) || (edgeId === this.selectedEdgeId && !this.selectedNodeId)) return;
+    if (!this.hasEdge(edgeId) || (edgeId === this.selectedEdgeId && this.selectedNodeIds.size === 0)) return;
     this.selectedEdgeId = edgeId;
-    this.selectedNodeId = null;
+    this.selectedNodeIds.clear();
     this.refreshSelection();
     this.emitState();
   }
 
   clearSelection(): void {
-    if (!this.selectedNodeId && !this.selectedEdgeId) return;
-    this.selectedNodeId = null;
+    if (this.selectedNodeIds.size === 0 && !this.selectedEdgeId) return;
+    this.selectedNodeIds.clear();
     this.selectedEdgeId = null;
     this.refreshSelection();
     this.emitState();
@@ -133,6 +137,19 @@ class DomDiagramEditor implements DiagramEditorController {
 
   updateNode(nodeId: string, patch: NodePatch): void {
     this.commit(updateDiagramNode(this.diagram, nodeId, patch));
+  }
+
+  toggleNodeSelection(nodeId: string): void {
+    if (!this.hasNode(nodeId)) return;
+
+    if (this.selectedNodeIds.has(nodeId)) {
+      this.selectedNodeIds.delete(nodeId);
+    } else {
+      this.selectedNodeIds.add(nodeId);
+    }
+    this.selectedEdgeId = null;
+    this.refreshSelection();
+    this.emitState();
   }
 
   updateEdge(edgeId: string, patch: EdgePatch): void {
@@ -187,7 +204,11 @@ class DomDiagramEditor implements DiagramEditorController {
 
     event.preventDefault();
     event.stopPropagation();
-    if (nodeId !== this.selectedNodeId) {
+    if (pointerEvent.shiftKey) {
+      this.toggleNodeSelection(nodeId);
+      return;
+    }
+    if (!this.selectedNodeIds.has(nodeId)) {
       this.selectNode(nodeId);
       return;
     }
@@ -195,12 +216,11 @@ class DomDiagramEditor implements DiagramEditorController {
 
     const svg = this.container.querySelector(".diagram-svg") as SVGSVGElement | null;
     this.drag = {
-      nodeId,
+      nodeIds: [...this.selectedNodeIds],
       originalDiagram: this.diagram,
       startPointer: svg
         ? getSvgPoint(svg, pointerEvent.clientX, pointerEvent.clientY)
         : { x: pointerEvent.clientX, y: pointerEvent.clientY },
-      startPosition: { ...node.position },
     };
     this.container.classList.add("is-node-dragging");
     this.emitSelectionAnchor(null);
@@ -213,7 +233,9 @@ class DomDiagramEditor implements DiagramEditorController {
 
     event.preventDefault();
     event.stopPropagation();
-    if (nodeId) this.selectNode(nodeId);
+    if (nodeId && !(event as MouseEvent).shiftKey && !this.selectedNodeIds.has(nodeId)) {
+      this.selectNode(nodeId);
+    }
     else if (edgeId) this.selectEdge(edgeId);
   };
 
@@ -223,9 +245,9 @@ class DomDiagramEditor implements DiagramEditorController {
     const svg = this.container.querySelector(".diagram-svg") as SVGSVGElement | null;
     if (!svg) return;
     const pointer = getSvgPoint(svg, event.clientX, event.clientY);
-    const nextDiagram = moveDiagramNode(this.diagram, this.drag.nodeId, {
-      x: Math.round(this.drag.startPosition.x + pointer.x - this.drag.startPointer.x),
-      y: Math.round(this.drag.startPosition.y + pointer.y - this.drag.startPointer.y),
+    const nextDiagram = moveDiagramNodes(this.drag.originalDiagram, this.drag.nodeIds, {
+      x: Math.round(pointer.x - this.drag.startPointer.x),
+      y: Math.round(pointer.y - this.drag.startPointer.y),
     });
     if (nextDiagram === this.diagram) return;
 
@@ -284,8 +306,8 @@ class DomDiagramEditor implements DiagramEditorController {
       edge.classList.remove("edge-selected");
     });
 
-    if (this.selectedNodeId) {
-      this.container.querySelector(selectNodeById(this.selectedNodeId))?.classList.add("node-selected");
+    for (const nodeId of this.selectedNodeIds) {
+      this.container.querySelector(selectNodeById(nodeId))?.classList.add("node-selected");
     }
     if (this.selectedEdgeId) {
       this.container.querySelector(selectEdgeById(this.selectedEdgeId))?.classList.add("edge-selected");
@@ -298,12 +320,14 @@ class DomDiagramEditor implements DiagramEditorController {
         this.selectedEdgeId,
         this.getSelectionAnchorCallback(),
       );
-    } else {
+    } else if (this.selectedNodeIds.size === 1) {
       updateSelectedNodeAnchor(
         this.container,
-        this.selectedNodeId,
+        this.selectedNodeIds.values().next().value ?? null,
         this.getSelectionAnchorCallback(),
       );
+    } else {
+      this.emitSelectionAnchor(null);
     }
   }
 

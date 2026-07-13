@@ -271,13 +271,13 @@ function EditorPage({
   const editorRef = useRef<DiagramEditorController | null>(null);
   const scenes = item.diagram.scenes ?? [];
   const [sceneIndex, setSceneIndex] = useState(0);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [inspectorPosition, setInspectorPosition] = useState<InspectorPosition | null>(null);
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
   const scene = scenes[sceneIndex] ?? null;
-  const selectedNode = selectedNodeId
-    ? item.diagram.nodes.find((node) => node.id === selectedNodeId) ?? null
+  const selectedNode = selectedNodeIds.length === 1
+    ? item.diagram.nodes.find((node) => node.id === selectedNodeIds[0]) ?? null
     : null;
   const selectedEdge = selectedEdgeId
     ? item.diagram.edges.find((edge) => edge.id === selectedEdgeId) ?? null
@@ -285,14 +285,14 @@ function EditorPage({
 
   useEffect(() => {
     setSceneIndex(0);
-    setSelectedNodeId(null);
+    setSelectedNodeIds([]);
     setSelectedEdgeId(null);
     setInspectorPosition(null);
     setHistoryState({ canUndo: false, canRedo: false });
   }, [item.id]);
 
   function handleEditorStateChange(state: DiagramEditorState) {
-    setSelectedNodeId(state.selectedNodeId);
+    setSelectedNodeIds(state.selectedNodeIds);
     setSelectedEdgeId(state.selectedEdgeId);
     setHistoryState({ canUndo: state.canUndo, canRedo: state.canRedo });
   }
@@ -365,9 +365,13 @@ function EditorPage({
               {item.diagram.nodes.map((node) => (
                 <li key={node.id}>
                   <button
-                    className="node-list-button"
+                    className={`node-list-button ${selectedNodeIds.includes(node.id) ? "is-selected" : ""}`}
                     type="button"
-                    onClick={() => editorRef.current?.selectNode(node.id)}
+                    aria-pressed={selectedNodeIds.includes(node.id)}
+                    onClick={(event) => {
+                      if (event.shiftKey) editorRef.current?.toggleNodeSelection(node.id);
+                      else editorRef.current?.selectNode(node.id);
+                    }}
                   >
                     <span>{node.label}</span>
                     <small>{node.type.replaceAll("_", " ")}</small>

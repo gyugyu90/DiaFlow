@@ -1,5 +1,10 @@
 export { createDiagramEditor } from "./editor.js";
-export { moveDiagramNode, updateDiagramEdge, updateDiagramNode } from "./model.js";
+export {
+  moveDiagramNode,
+  moveDiagramNodes,
+  updateDiagramEdge,
+  updateDiagramNode,
+} from "./model.js";
 export type {
   DiagramEditorController,
   DiagramEditorOptions,
