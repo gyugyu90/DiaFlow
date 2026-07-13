@@ -67,6 +67,38 @@ describe("App", () => {
     expect(document.querySelector(".editor-diagram-root .diagram-svg")).toBeTruthy();
   });
 
+  it("opens a node inspector and edits node fields", async () => {
+    render(<App />);
+
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
+
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) {
+      throw new Error("Missing user node");
+    }
+
+    fireEvent.click(userNode);
+
+    const inspector = screen.getByRole("dialog", { name: "Edit node User" });
+    expect(within(inspector).getByLabelText("Node name")).toBeTruthy();
+
+    fireEvent.change(within(inspector).getByLabelText("Node name"), {
+      target: { value: "Customer" },
+    });
+    fireEvent.change(within(inspector).getByLabelText("Node type"), {
+      target: { value: "api" },
+    });
+    fireEvent.change(within(inspector).getByLabelText("Node icon"), {
+      target: { value: "server" },
+    });
+
+    expect(screen.getByRole("dialog", { name: "Edit node Customer" })).toBeTruthy();
+    expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("Customer");
+    expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("api");
+    expect((screen.getByLabelText("Node icon") as HTMLSelectElement).value).toBe("server");
+  });
+
   it("returns from edit page to list view", () => {
     render(<App />);
 
