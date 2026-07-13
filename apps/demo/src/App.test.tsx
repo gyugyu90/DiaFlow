@@ -78,7 +78,7 @@ describe("App", () => {
       throw new Error("Missing user node");
     }
 
-    fireEvent.click(userNode);
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
 
     const inspector = screen.getByRole("dialog", { name: "Edit node User" });
     expect(within(inspector).getByLabelText("Node name")).toBeTruthy();
@@ -109,7 +109,7 @@ describe("App", () => {
     const browserNode = document.querySelector('[data-node-id="browser"]');
     if (!userNode || !browserNode) throw new Error("Missing nodes for multi-selection test");
 
-    fireEvent.click(userNode);
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
     expect(screen.getByRole("dialog", { name: "Edit node User" })).toBeTruthy();
 
     fireEvent.pointerDown(browserNode, {
@@ -134,7 +134,7 @@ describe("App", () => {
 
     const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
     if (!edgeHitArea) throw new Error("Missing edge hit area");
-    fireEvent.click(edgeHitArea);
+    fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 100, clientY: 100 });
 
     const inspector = screen.getByRole("dialog", { name: "Edit edge Uses" });
     fireEvent.change(within(inspector).getByLabelText("Edge label"), {
@@ -152,8 +152,8 @@ describe("App", () => {
 
     const path = document.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
     expect(screen.getByRole("dialog", { name: "Edit edge Opens" })).toBeTruthy();
-    expect(path?.getAttribute("marker-start")).toBe("url(#marker-circle-muted)");
-    expect(path?.getAttribute("marker-end")).toBe("url(#marker-triangle-muted)");
+    expect(path?.getAttribute("marker-start")).toBe("url(#marker-circle)");
+    expect(path?.getAttribute("marker-end")).toBe("url(#marker-triangle)");
     expect(path?.getAttribute("stroke-dasharray")).toBe("8 7");
   });
 
@@ -172,7 +172,6 @@ describe("App", () => {
     fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
     expect(root.classList.contains("is-node-dragging")).toBe(false);
 
-    fireEvent.click(browserNode);
     await waitFor(() => {
       expect(browserNode.classList.contains("node-selected")).toBe(true);
     });
@@ -192,10 +191,12 @@ describe("App", () => {
     if (!userNode) {
       throw new Error("Missing user node");
     }
-    fireEvent.click(userNode);
-    fireEvent.change(screen.getByLabelText("Node name"), {
-      target: { value: "Customer" },
-    });
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+    const nodeName = screen.getByLabelText("Node name");
+    fireEvent.focus(nodeName);
+    fireEvent.change(nodeName, { target: { value: "C" } });
+    fireEvent.change(nodeName, { target: { value: "Customer" } });
+    fireEvent.blur(nodeName);
 
     const undo = screen.getByRole("button", { name: "Undo edit" });
     const redo = screen.getByRole("button", { name: "Redo edit" });

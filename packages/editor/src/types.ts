@@ -28,7 +28,10 @@ export type DiagramEditorOptions = {
 };
 
 export type DiagramEditorController = {
+  beginTransaction(): void;
+  cancelTransaction(): void;
   clearSelection(): void;
+  commitTransaction(): void;
   destroy(): void;
   getState(): DiagramEditorState;
   redo(): void;

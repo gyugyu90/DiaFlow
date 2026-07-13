@@ -11,11 +11,28 @@ export default defineConfig({
     __BUILD_VERSION__: JSON.stringify(buildVersion),
   },
   resolve: {
-    alias: {
-      "@interactive-diagram/editor": resolve(__dirname, "../../packages/editor/src/index.ts"),
-      "@interactive-diagram/runtime": resolve(__dirname, "../../packages/runtime/src/index.ts"),
-      "@interactive-diagram/schema": resolve(__dirname, "../../packages/schema/src/index.ts"),
-    },
+    alias: [
+      {
+        find: "@interactive-diagram/editor/styles.css",
+        replacement: resolve(__dirname, "../../packages/editor/styles.css"),
+      },
+      {
+        find: "@interactive-diagram/runtime/styles.css",
+        replacement: resolve(__dirname, "../../packages/runtime/styles.css"),
+      },
+      {
+        find: "@interactive-diagram/editor",
+        replacement: resolve(__dirname, "../../packages/editor/src/index.ts"),
+      },
+      {
+        find: "@interactive-diagram/runtime",
+        replacement: resolve(__dirname, "../../packages/runtime/src/index.ts"),
+      },
+      {
+        find: "@interactive-diagram/schema",
+        replacement: resolve(__dirname, "../../packages/schema/src/index.ts"),
+      },
+    ],
   },
   build: {
     outDir: "../../dist",

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const idSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/);
+
 export const nodeTypeSchema = z.enum([
   "user",
   "browser",
@@ -31,18 +33,18 @@ export const sizeSchema = z.object({
 });
 
 export const nodeSchema = z.object({
-  id: z.string().min(1),
+  id: idSchema,
   type: nodeTypeSchema,
   label: z.string().min(1),
   description: z.string().optional(),
   position: pointSchema,
   size: sizeSchema.optional(),
   icon: z.string().optional(),
-  groupId: z.string().optional(),
+  groupId: idSchema.optional(),
   ports: z
     .array(
       z.object({
-        id: z.string().min(1),
+        id: idSchema,
         side: z.enum(["top", "right", "bottom", "left"]),
       }),
     )
@@ -51,12 +53,15 @@ export const nodeSchema = z.object({
 });
 
 export const edgeMarkerSchema = z.enum(["none", "arrow", "triangle", "circle"]);
+export const edgeLineSchema = z.enum(["solid", "dashed", "dotted"]);
+export const edgeRoutingSchema = z.enum(["straight", "smooth", "orthogonal"]);
+export const edgeLabelPlacementSchema = z.enum(["center", "above", "below"]);
 
 export const edgeStyleSchema = z.object({
-  line: z.enum(["solid", "dashed", "dotted"]).default("solid").optional(),
-  routing: z.enum(["straight", "smooth", "orthogonal"]).default("smooth").optional(),
+  line: edgeLineSchema.default("solid").optional(),
+  routing: edgeRoutingSchema.default("smooth").optional(),
   color: z.string().default("default").optional(),
-  labelPlacement: z.enum(["center", "above", "below"]).default("above").optional(),
+  labelPlacement: edgeLabelPlacementSchema.default("above").optional(),
   startMarker: edgeMarkerSchema.optional(),
   endMarker: edgeMarkerSchema.optional(),
 });
@@ -64,25 +69,25 @@ export const edgeStyleSchema = z.object({
 export const sceneToneSchema = z.enum(["normal", "active", "warning", "danger", "muted"]);
 
 export const endpointSchema = z.object({
-  nodeId: z.string().min(1),
-  portId: z.string().optional(),
+  nodeId: idSchema,
+  portId: idSchema.optional(),
 });
 
 export const edgeSchema = z.object({
-  id: z.string().min(1),
+  id: idSchema,
   source: endpointSchema,
   target: endpointSchema,
   label: z.string().optional(),
   direction: z.enum(["none", "forward", "backward", "bidirectional"]).default("forward").optional(),
   style: edgeStyleSchema.optional(),
-  animationId: z.string().optional(),
+  animationId: idSchema.optional(),
   data: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const groupSchema = z.object({
-  id: z.string().min(1),
+  id: idSchema,
   label: z.string().min(1),
-  nodeIds: z.array(z.string().min(1)),
+  nodeIds: z.array(idSchema),
   style: z
     .object({
       variant: z.enum(["boundary", "lane", "none"]).default("boundary").optional(),
@@ -91,7 +96,7 @@ export const groupSchema = z.object({
 });
 
 export const animationSchema = z.object({
-  id: z.string().min(1),
+  id: idSchema,
   type: z.enum([
     "packet",
     "request",
@@ -103,7 +108,7 @@ export const animationSchema = z.object({
     "step_reveal",
     "none",
   ]),
-  edgeIds: z.array(z.string().min(1)).min(1),
+  edgeIds: z.array(idSchema).min(1),
   enabled: z.boolean(),
   direction: z.enum(["forward", "backward", "bidirectional"]).default("forward").optional(),
   speed: z.number().positive().default(1).optional(),
@@ -113,32 +118,32 @@ export const animationSchema = z.object({
 });
 
 export const sceneEdgeOverrideSchema = z.object({
-  edgeId: z.string().min(1),
+  edgeId: idSchema,
   label: z.string().optional(),
   disabled: z.boolean().optional(),
-  animationId: z.string().min(1).nullable().optional(),
+  animationId: idSchema.nullable().optional(),
   tone: sceneToneSchema.optional(),
   style: edgeStyleSchema.partial().optional(),
 });
 
 export const sceneNodeOverrideSchema = z.object({
-  nodeId: z.string().min(1),
+  nodeId: idSchema,
   tone: sceneToneSchema.optional(),
   status: z.string().optional(),
 });
 
 export const sceneSchema = z.object({
-  id: z.string().min(1),
+  id: idSchema,
   title: z.string().min(1),
   description: z.string().optional(),
-  animationIds: z.array(z.string().min(1)).optional(),
+  animationIds: z.array(idSchema).optional(),
   edgeOverrides: z.array(sceneEdgeOverrideSchema).optional(),
   nodeOverrides: z.array(sceneNodeOverrideSchema).optional(),
 });
 
 export const diagramDocumentSchema = z.object({
   schemaVersion: z.literal("0.1"),
-  id: z.string().min(1),
+  id: idSchema,
   kind: z.literal("architecture"),
   metadata: z.object({
     title: z.string().min(1),
@@ -175,6 +180,186 @@ export type DiagramSceneNodeOverride = z.infer<typeof sceneNodeOverrideSchema>;
 export type EdgeLabelPlacement = NonNullable<DiagramEdge["style"]>["labelPlacement"];
 export type EdgeMarker = z.infer<typeof edgeMarkerSchema>;
 
+export function resolveEdgeStartMarker(edge: DiagramEdge): EdgeMarker {
+  if (edge.style?.startMarker !== undefined) return edge.style.startMarker;
+  return edge.direction === "backward" || edge.direction === "bidirectional" ? "arrow" : "none";
+}
+
+export function resolveEdgeEndMarker(edge: DiagramEdge): EdgeMarker {
+  if (edge.style?.endMarker !== undefined) return edge.style.endMarker;
+  return edge.direction === "forward" || edge.direction === "bidirectional" ? "arrow" : "none";
+}
+
+export type DiagramIntegrityIssue = {
+  path: Array<string | number>;
+  message: string;
+};
+
+export class DiagramIntegrityError extends Error {
+  readonly issues: DiagramIntegrityIssue[];
+
+  constructor(issues: DiagramIntegrityIssue[]) {
+    super(issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("\n"));
+    this.name = "DiagramIntegrityError";
+    this.issues = issues;
+  }
+}
+
+export function validateDiagramIntegrity(diagram: DiagramDocument): DiagramIntegrityIssue[] {
+  const issues: DiagramIntegrityIssue[] = [];
+  const nodeIds = collectIds(diagram.nodes, "nodes", issues);
+  const edgeIds = collectIds(diagram.edges, "edges", issues);
+  const groupIds = collectIds(diagram.groups ?? [], "groups", issues);
+  const animationIds = collectIds(diagram.animations ?? [], "animations", issues);
+  collectIds(diagram.scenes ?? [], "scenes", issues);
+
+  diagram.nodes.forEach((node, nodeIndex) => {
+    if (node.groupId) {
+      requireReference(groupIds, node.groupId, ["nodes", nodeIndex, "groupId"], "group", issues);
+    }
+    const portIds = new Set<string>();
+    node.ports?.forEach((port, portIndex) => {
+      if (portIds.has(port.id)) {
+        issues.push({
+          path: ["nodes", nodeIndex, "ports", portIndex, "id"],
+          message: `Duplicate port id '${port.id}' on node '${node.id}'`,
+        });
+      }
+      portIds.add(port.id);
+    });
+  });
+
+  diagram.edges.forEach((edge, edgeIndex) => {
+    validateEndpoint(diagram, nodeIds, edge.source, ["edges", edgeIndex, "source"], issues);
+    validateEndpoint(diagram, nodeIds, edge.target, ["edges", edgeIndex, "target"], issues);
+    if (edge.animationId) {
+      requireReference(
+        animationIds,
+        edge.animationId,
+        ["edges", edgeIndex, "animationId"],
+        "animation",
+        issues,
+      );
+    }
+  });
+
+  (diagram.groups ?? []).forEach((group, groupIndex) => {
+    group.nodeIds.forEach((nodeId, nodeIdIndex) => {
+      requireReference(
+        nodeIds,
+        nodeId,
+        ["groups", groupIndex, "nodeIds", nodeIdIndex],
+        "node",
+        issues,
+      );
+    });
+  });
+
+  (diagram.animations ?? []).forEach((animation, animationIndex) => {
+    animation.edgeIds.forEach((edgeId, edgeIdIndex) => {
+      requireReference(
+        edgeIds,
+        edgeId,
+        ["animations", animationIndex, "edgeIds", edgeIdIndex],
+        "edge",
+        issues,
+      );
+    });
+  });
+
+  (diagram.scenes ?? []).forEach((scene, sceneIndex) => {
+    scene.animationIds?.forEach((animationId, animationIdIndex) => {
+      requireReference(
+        animationIds,
+        animationId,
+        ["scenes", sceneIndex, "animationIds", animationIdIndex],
+        "animation",
+        issues,
+      );
+    });
+    scene.nodeOverrides?.forEach((override, overrideIndex) => {
+      requireReference(
+        nodeIds,
+        override.nodeId,
+        ["scenes", sceneIndex, "nodeOverrides", overrideIndex, "nodeId"],
+        "node",
+        issues,
+      );
+    });
+    scene.edgeOverrides?.forEach((override, overrideIndex) => {
+      requireReference(
+        edgeIds,
+        override.edgeId,
+        ["scenes", sceneIndex, "edgeOverrides", overrideIndex, "edgeId"],
+        "edge",
+        issues,
+      );
+      if (override.animationId) {
+        requireReference(
+          animationIds,
+          override.animationId,
+          ["scenes", sceneIndex, "edgeOverrides", overrideIndex, "animationId"],
+          "animation",
+          issues,
+        );
+      }
+    });
+  });
+
+  return issues;
+}
+
+export function assertValidDiagramDocument(diagram: DiagramDocument): void {
+  const issues = validateDiagramIntegrity(diagram);
+  if (issues.length > 0) throw new DiagramIntegrityError(issues);
+}
+
 export function parseDiagramDocument(value: unknown): DiagramDocument {
-  return diagramDocumentSchema.parse(value);
+  const diagram = diagramDocumentSchema.parse(value);
+  assertValidDiagramDocument(diagram);
+  return diagram;
+}
+
+function collectIds(
+  items: Array<{ id: string }>,
+  collection: string,
+  issues: DiagramIntegrityIssue[],
+): Set<string> {
+  const ids = new Set<string>();
+  items.forEach((item, index) => {
+    if (ids.has(item.id)) {
+      issues.push({ path: [collection, index, "id"], message: `Duplicate ${collection} id '${item.id}'` });
+    }
+    ids.add(item.id);
+  });
+  return ids;
+}
+
+function requireReference(
+  ids: Set<string>,
+  id: string,
+  path: Array<string | number>,
+  kind: string,
+  issues: DiagramIntegrityIssue[],
+): void {
+  if (!ids.has(id)) issues.push({ path, message: `Unknown ${kind} id '${id}'` });
+}
+
+function validateEndpoint(
+  diagram: DiagramDocument,
+  nodeIds: Set<string>,
+  endpoint: DiagramEdge["source"],
+  path: Array<string | number>,
+  issues: DiagramIntegrityIssue[],
+): void {
+  requireReference(nodeIds, endpoint.nodeId, [...path, "nodeId"], "node", issues);
+  if (!endpoint.portId) return;
+
+  const node = diagram.nodes.find((candidate) => candidate.id === endpoint.nodeId);
+  if (node && !node.ports?.some((port) => port.id === endpoint.portId)) {
+    issues.push({
+      path: [...path, "portId"],
+      message: `Unknown port id '${endpoint.portId}' on node '${endpoint.nodeId}'`,
+    });
+  }
 }

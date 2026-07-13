@@ -1,5 +1,6 @@
 import {
   renderDiagram,
+  type DiagramChangeSet,
   type DiagramRenderer,
   type ViewportChangeEvent,
 } from "@interactive-diagram/runtime";
@@ -29,6 +30,10 @@ type DragState = {
   startPointer: DiagramNode["position"];
 };
 
+type EditTransaction = {
+  originalDiagram: DiagramDocument;
+};
+
 export function createDiagramEditor(
   container: HTMLElement,
   diagram: DiagramDocument,
@@ -47,6 +52,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private past: DiagramDocument[] = [];
   private future: DiagramDocument[] = [];
   private drag: DragState | null = null;
+  private transaction: EditTransaction | null = null;
   private viewportInteractionActive = false;
 
   constructor(
@@ -60,10 +66,10 @@ class DomDiagramEditor implements DiagramEditorController {
       sceneId: this.sceneId,
       onViewportChange: this.handleViewportChange,
     });
+    container.classList.add("interactive-diagram-editor");
     this.pressEventName = typeof window.PointerEvent === "function" ? "pointerdown" : "mousedown";
 
     container.addEventListener(this.pressEventName, this.handlePress, true);
-    container.addEventListener("click", this.handleClick, true);
     window.addEventListener("pointermove", this.handleMove);
     window.addEventListener("mousemove", this.handleMove);
     window.addEventListener("pointerup", this.handleRelease);
@@ -90,6 +96,7 @@ class DomDiagramEditor implements DiagramEditorController {
     this.diagram = diagram;
     this.past = [];
     this.future = [];
+    this.transaction = null;
     this.selectedNodeIds = new Set(
       [...this.selectedNodeIds].filter((nodeId) => this.hasNode(nodeId)),
     );
@@ -135,8 +142,34 @@ class DomDiagramEditor implements DiagramEditorController {
     this.emitState();
   }
 
+  beginTransaction(): void {
+    if (this.transaction) return;
+    this.transaction = { originalDiagram: this.diagram };
+  }
+
+  commitTransaction(): void {
+    const transaction = this.transaction;
+    if (!transaction) return;
+    this.transaction = null;
+    if (transaction.originalDiagram === this.diagram) return;
+
+    this.past.push(transaction.originalDiagram);
+    this.future = [];
+    this.emitState();
+  }
+
+  cancelTransaction(): void {
+    const transaction = this.transaction;
+    if (!transaction) return;
+    this.transaction = null;
+    if (transaction.originalDiagram === this.diagram) return;
+
+    this.applyDiagram(transaction.originalDiagram);
+    this.emitState();
+  }
+
   updateNode(nodeId: string, patch: NodePatch): void {
-    this.commit(updateDiagramNode(this.diagram, nodeId, patch));
+    this.commit(updateDiagramNode(this.diagram, nodeId, patch), { nodeIds: [nodeId] });
   }
 
   toggleNodeSelection(nodeId: string): void {
@@ -153,10 +186,11 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   updateEdge(edgeId: string, patch: EdgePatch): void {
-    this.commit(updateDiagramEdge(this.diagram, edgeId, patch));
+    this.commit(updateDiagramEdge(this.diagram, edgeId, patch), { edgeIds: [edgeId] });
   }
 
   undo(): void {
+    this.commitTransaction();
     const previous = this.past.pop();
     if (!previous) return;
 
@@ -166,6 +200,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   redo(): void {
+    this.commitTransaction();
     const next = this.future.pop();
     if (!next) return;
 
@@ -176,20 +211,22 @@ class DomDiagramEditor implements DiagramEditorController {
 
   destroy(): void {
     this.drag = null;
+    this.transaction = null;
     this.container.classList.remove("is-node-dragging");
     this.container.removeEventListener(this.pressEventName, this.handlePress, true);
-    this.container.removeEventListener("click", this.handleClick, true);
     window.removeEventListener("pointermove", this.handleMove);
     window.removeEventListener("mousemove", this.handleMove);
     window.removeEventListener("pointerup", this.handleRelease);
     window.removeEventListener("mouseup", this.handleRelease);
     window.removeEventListener("pointercancel", this.handleRelease);
     this.renderer.destroy();
+    this.container.classList.remove("interactive-diagram-editor");
   }
 
   private readonly handlePress = (event: Event): void => {
     const pointerEvent = event as MouseEvent | PointerEvent;
     if (pointerEvent.button !== 0) return;
+    this.commitTransaction();
 
     const nodeId = getEventNodeId(event);
     const node = this.diagram.nodes.find((candidate) => candidate.id === nodeId);
@@ -226,19 +263,6 @@ class DomDiagramEditor implements DiagramEditorController {
     this.emitSelectionAnchor(null);
   };
 
-  private readonly handleClick = (event: Event): void => {
-    const nodeId = getEventNodeId(event);
-    const edgeId = getEventEdgeId(event);
-    if (!nodeId && !edgeId) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    if (nodeId && !(event as MouseEvent).shiftKey && !this.selectedNodeIds.has(nodeId)) {
-      this.selectNode(nodeId);
-    }
-    else if (edgeId) this.selectEdge(edgeId);
-  };
-
   private readonly handleMove = (event: MouseEvent | PointerEvent): void => {
     if (!this.drag) return;
 
@@ -251,7 +275,7 @@ class DomDiagramEditor implements DiagramEditorController {
     });
     if (nextDiagram === this.diagram) return;
 
-    this.applyDiagram(nextDiagram);
+    this.applyDiagram(nextDiagram, { nodeIds: this.drag.nodeIds });
   };
 
   private readonly handleRelease = (): void => {
@@ -283,17 +307,22 @@ class DomDiagramEditor implements DiagramEditorController {
     this.refreshSelection();
   };
 
-  private commit(nextDiagram: DiagramDocument): void {
+  private commit(nextDiagram: DiagramDocument, changes?: DiagramChangeSet): void {
     if (nextDiagram === this.diagram) return;
+    if (this.transaction) {
+      this.applyDiagram(nextDiagram, changes);
+      this.emitState();
+      return;
+    }
     this.past.push(this.diagram);
     this.future = [];
-    this.applyDiagram(nextDiagram);
+    this.applyDiagram(nextDiagram, changes);
     this.emitState();
   }
 
-  private applyDiagram(diagram: DiagramDocument): void {
+  private applyDiagram(diagram: DiagramDocument, changes?: DiagramChangeSet): void {
     this.diagram = diagram;
-    this.renderer.setDiagram(diagram);
+    this.renderer.setDiagram(diagram, changes);
     this.refreshSelection();
     this.options.onDiagramChange?.(diagram);
   }

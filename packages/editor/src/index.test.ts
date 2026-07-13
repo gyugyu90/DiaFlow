@@ -93,8 +93,11 @@ describe("createDiagramEditor", () => {
     const editor = createDiagramEditor(container, diagram, {
       onSelectionAnchorChange: (position) => anchors.push(position),
     });
+    expect(container.classList.contains("interactive-diagram-editor")).toBe(true);
     const userNode = container.querySelector('[data-node-id="user"]');
     const browserNode = container.querySelector('[data-node-id="browser"]');
+    const svg = container.querySelector(".diagram-svg");
+    const untouchedNode = container.querySelector('[data-node-id="load_balancer"]');
     const userPosition = diagram.nodes.find((node) => node.id === "user")?.position;
     const browserPosition = diagram.nodes.find((node) => node.id === "browser")?.position;
     if (!userNode || !browserNode || !userPosition || !browserPosition) {
@@ -117,9 +120,15 @@ describe("createDiagramEditor", () => {
     expect(userNode.classList.contains("node-selected")).toBe(true);
     expect(browserNode.classList.contains("node-selected")).toBe(true);
 
+    fireEvent.click(browserNode);
+    expect(editor.getState().selectedNodeIds).toEqual(["user", "browser"]);
+
     fireEvent.pointerDown(browserNode, { button: 0, clientX: 200, clientY: 100 });
     fireEvent.pointerMove(window, { clientX: 290, clientY: 145 });
     fireEvent.pointerUp(window);
+
+    expect(container.querySelector(".diagram-svg")).toBe(svg);
+    expect(container.querySelector('[data-node-id="load_balancer"]')).toBe(untouchedNode);
 
     const movedUser = editor.getState().diagram.nodes.find((node) => node.id === "user");
     const movedBrowser = editor.getState().diagram.nodes.find((node) => node.id === "browser");
@@ -144,6 +153,7 @@ describe("createDiagramEditor", () => {
     );
     expect(editor.getState().canUndo).toBe(false);
     editor.destroy();
+    expect(container.classList.contains("interactive-diagram-editor")).toBe(false);
   });
 
   it("selects and edits an edge with undo and redo history", () => {
@@ -194,6 +204,41 @@ describe("createDiagramEditor", () => {
 
     editor.redo();
     expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.label).toBe("Customer");
+    editor.destroy();
+  });
+
+  it("coalesces multiple updates in one edit transaction", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+
+    editor.beginTransaction();
+    editor.updateNode("user", { label: "C" });
+    editor.updateNode("user", { label: "Customer" });
+    expect(editor.getState().canUndo).toBe(false);
+
+    editor.commitTransaction();
+    expect(editor.getState().canUndo).toBe(true);
+    editor.undo();
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.label).toBe("User");
+    expect(editor.getState().canUndo).toBe(false);
+    editor.destroy();
+  });
+
+  it("restores the original diagram when an edit transaction is canceled", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+
+    editor.beginTransaction();
+    editor.updateNode("user", { label: "Customer" });
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.label).toBe(
+      "Customer",
+    );
+
+    editor.cancelTransaction();
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.label).toBe("User");
+    expect(editor.getState().canUndo).toBe(false);
     editor.destroy();
   });
 

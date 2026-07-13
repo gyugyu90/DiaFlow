@@ -1,0 +1,28 @@
+.interactive-diagram-editor.is-node-dragging .diagram-svg {
+  cursor: move;
+}
+
+.interactive-diagram-editor .node-card,
+.interactive-diagram-editor .node-card * {
+  cursor: pointer;
+}
+
+.interactive-diagram-editor .node-selected,
+.interactive-diagram-editor .node-selected * {
+  cursor: move;
+}
+
+.interactive-diagram-editor .node-selected .node-box {
+  stroke: #2f6fed;
+  stroke-width: 2.8;
+}
+
+.interactive-diagram-editor .edge-hit-area {
+  cursor: pointer;
+  pointer-events: stroke !important;
+}
+
+.interactive-diagram-editor .edge-selected .edge-path {
+  filter: drop-shadow(0 0 3px rgba(47, 111, 237, 0.9));
+  stroke-width: 3.4;
+}

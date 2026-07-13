@@ -67,6 +67,7 @@ describe("renderDiagram", () => {
   it("renders the sample diagram as SVG nodes, edges, groups, labels, and packets", () => {
     const { container } = renderSample();
 
+    expect(container.classList.contains("interactive-diagram")).toBe(true);
     expect(container.querySelector(".diagram-svg")).toBeTruthy();
     expect(container.querySelectorAll("[data-node-id]")).toHaveLength(6);
     expect(container.querySelectorAll("[data-edge-id]")).toHaveLength(5);
@@ -120,12 +121,32 @@ describe("renderDiagram", () => {
     renderDiagram(container, markerDiagram);
 
     const explicitPath = container.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
-    expect(explicitPath?.getAttribute("marker-start")).toBe("url(#marker-circle-accent)");
-    expect(explicitPath?.getAttribute("marker-end")).toBe("url(#marker-triangle-accent)");
+    expect(explicitPath?.getAttribute("marker-start")).toBe("url(#marker-circle)");
+    expect(explicitPath?.getAttribute("marker-end")).toBe("url(#marker-triangle)");
 
     const legacyPath = container.querySelector('[data-edge-id="edge_browser_lb"] .edge-path');
     expect(legacyPath?.getAttribute("marker-start")).toBeNull();
-    expect(legacyPath?.getAttribute("marker-end")).toBe("url(#marker-arrow-accent)");
+    expect(legacyPath?.getAttribute("marker-end")).toBe("url(#marker-arrow)");
+  });
+
+  it("uses the edge stroke color for custom-color markers", () => {
+    const customColorDiagram = {
+      ...diagram,
+      edges: diagram.edges.map((edge, index) => index === 0 ? {
+        ...edge,
+        style: { ...edge.style, color: "#19a974", endMarker: "triangle" as const },
+      } : edge),
+    };
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    renderDiagram(container, customColorDiagram);
+
+    const path = container.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
+    expect(path?.getAttribute("stroke")).toBe("#19a974");
+    expect(path?.getAttribute("marker-end")).toBe("url(#marker-triangle)");
+    expect(container.querySelector("#marker-triangle path")?.getAttribute("fill")).toBe(
+      "context-stroke",
+    );
   });
 
   it("renders a wide edge hit area without intercepting runtime input", () => {
@@ -201,6 +222,55 @@ describe("renderDiagram", () => {
     expect(getViewBox(updatedSvg)).toEqual(zoomedViewBox);
   });
 
+  it("patches changed nodes and connected edges without replacing the SVG", () => {
+    const { container, renderer, svg } = renderSample();
+    const originalUser = container.querySelector('[data-node-id="user"]');
+    const originalBrowser = container.querySelector('[data-node-id="browser"]');
+    const originalEdge = container.querySelector('[data-edge-id="edge_browser_lb"]');
+    const updatedDiagram = {
+      ...diagram,
+      nodes: diagram.nodes.map((node) => node.id === "browser" ? {
+        ...node,
+        label: "Client Browser",
+        position: { x: node.position.x + 40, y: node.position.y + 20 },
+      } : node),
+    };
+
+    renderer.setDiagram(updatedDiagram, { nodeIds: ["browser"] });
+
+    expect(container.querySelector(".diagram-svg")).toBe(svg);
+    expect(container.querySelector('[data-node-id="user"]')).toBe(originalUser);
+    expect(container.querySelector('[data-node-id="browser"]')).not.toBe(originalBrowser);
+    expect(container.querySelector('[data-edge-id="edge_browser_lb"]')).not.toBe(originalEdge);
+    expect(container.querySelector('[data-node-id="browser"]')?.textContent).toContain(
+      "Client Browser",
+    );
+  });
+
+  it("patches one edge without replacing unrelated diagram elements", () => {
+    const { container, renderer, svg } = renderSample();
+    const originalUser = container.querySelector('[data-node-id="user"]');
+    const originalEdge = container.querySelector('[data-edge-id="edge_user_browser"]');
+    const untouchedEdge = container.querySelector('[data-edge-id="edge_browser_lb"]');
+    const updatedDiagram = {
+      ...diagram,
+      edges: diagram.edges.map((edge) => edge.id === "edge_user_browser" ? {
+        ...edge,
+        label: "Opens",
+      } : edge),
+    };
+
+    renderer.setDiagram(updatedDiagram, { edgeIds: ["edge_user_browser"] });
+
+    expect(container.querySelector(".diagram-svg")).toBe(svg);
+    expect(container.querySelector('[data-node-id="user"]')).toBe(originalUser);
+    expect(container.querySelector('[data-edge-id="edge_user_browser"]')).not.toBe(originalEdge);
+    expect(container.querySelector('[data-edge-id="edge_browser_lb"]')).toBe(untouchedEdge);
+    expect(container.querySelector('[data-edge-id="edge_user_browser"]')?.textContent).toContain(
+      "Opens",
+    );
+  });
+
   it("clamps wheel zoom to the configured limits", () => {
     const { svg } = renderSample();
     configureSvgViewport(svg);
@@ -259,5 +329,6 @@ describe("renderDiagram", () => {
     renderer.destroy();
 
     expect(container.children).toHaveLength(0);
+    expect(container.classList.contains("interactive-diagram")).toBe(false);
   });
 });

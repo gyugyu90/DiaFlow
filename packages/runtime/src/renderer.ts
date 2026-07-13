@@ -11,6 +11,7 @@ import { getDiagramBounds, normalizeNode } from "./geometry.js";
 import { applyScene, getScene } from "./scene.js";
 import { createSvg } from "./svg.js";
 import type {
+  DiagramChangeSet,
   DiagramRenderer,
   DiagramRenderOptions,
   RenderedEdge,
@@ -21,12 +22,16 @@ import { ViewportController } from "./viewport.js";
 export class SvgDiagramRenderer implements DiagramRenderer {
   private options: ResolvedDiagramRenderOptions;
   private viewport: ViewportController | null = null;
+  private groupLayer: SVGGElement | null = null;
+  private edgeLayer: SVGGElement | null = null;
+  private nodeLayer: SVGGElement | null = null;
 
   constructor(
     private readonly container: HTMLElement,
     private diagram: DiagramDocument,
     options: DiagramRenderOptions,
   ) {
+    this.container.classList.add("interactive-diagram");
     this.options = {
       animations: options.animations ?? true,
       labels: options.labels ?? true,
@@ -69,6 +74,9 @@ export class SvgDiagramRenderer implements DiagramRenderer {
     const edgeLayer = createSvg("g", { class: "edges" });
     const animationLayer = createSvg("g", { class: "animations" });
     const nodeLayer = createSvg("g", { class: "nodes" });
+    this.groupLayer = groupLayer;
+    this.edgeLayer = edgeLayer;
+    this.nodeLayer = nodeLayer;
 
     gridLayer.appendChild(renderGrid());
 
@@ -107,12 +115,72 @@ export class SvgDiagramRenderer implements DiagramRenderer {
   destroy(): void {
     this.viewport?.destroy();
     this.viewport = null;
+    this.groupLayer = null;
+    this.edgeLayer = null;
+    this.nodeLayer = null;
     this.container.replaceChildren();
+    this.container.classList.remove("interactive-diagram");
   }
 
-  setDiagram(diagram: DiagramDocument): void {
+  setDiagram(diagram: DiagramDocument, changes?: DiagramChangeSet): void {
+    const previousDiagram = this.diagram;
     this.diagram = diagram;
+    if (changes && this.patchDiagram(previousDiagram, changes)) return;
     this.render({ preserveViewport: true });
+  }
+
+  private patchDiagram(previousSource: DiagramDocument, changes: DiagramChangeSet): boolean {
+    if (!this.groupLayer || !this.edgeLayer || !this.nodeLayer) return false;
+
+    const previousDiagram = applyScene(
+      previousSource,
+      getScene(previousSource, this.options.sceneId),
+    );
+    const diagram = applyScene(this.diagram, getScene(this.diagram, this.options.sceneId));
+    const nodesById = new Map(diagram.nodes.map((node) => [node.id, normalizeNode(node)]));
+    const changedNodeIds = new Set(changes.nodeIds ?? []);
+    const changedEdgeIds = new Set(changes.edgeIds ?? []);
+
+    for (const edge of [...previousDiagram.edges, ...diagram.edges]) {
+      if (changedNodeIds.has(edge.source.nodeId) || changedNodeIds.has(edge.target.nodeId)) {
+        changedEdgeIds.add(edge.id);
+      }
+    }
+
+    for (const nodeId of changedNodeIds) {
+      const current = findDirectChild(this.nodeLayer, "data-node-id", nodeId);
+      const node = nodesById.get(nodeId);
+      if (!node) {
+        current?.remove();
+      } else if (current) {
+        current.replaceWith(renderNode(node));
+      } else {
+        this.nodeLayer.appendChild(renderNode(node));
+      }
+    }
+
+    if (changedNodeIds.size > 0) {
+      this.groupLayer.replaceChildren();
+      for (const group of diagram.groups ?? []) {
+        this.groupLayer.appendChild(renderGroup(group, nodesById));
+      }
+    }
+
+    const edgesById = new Map(diagram.edges.map((edge) => [edge.id, edge]));
+    for (const edgeId of changedEdgeIds) {
+      const current = findDirectChild(this.edgeLayer, "data-edge-id", edgeId);
+      const edge = edgesById.get(edgeId);
+      const rendered = edge ? renderEdge(edge, nodesById) : null;
+      if (!rendered) {
+        current?.remove();
+      } else if (current) {
+        current.replaceWith(rendered.element);
+      } else {
+        this.edgeLayer.appendChild(rendered.element);
+      }
+    }
+
+    return true;
   }
 
   setOptions(options: DiagramRenderOptions): void {
@@ -137,4 +205,12 @@ export class SvgDiagramRenderer implements DiagramRenderer {
     this.container.classList.toggle("animations-off", !this.options.animations);
     this.container.classList.toggle("labels-off", !this.options.labels);
   }
+}
+
+function findDirectChild(
+  layer: SVGGElement,
+  attribute: string,
+  value: string,
+): Element | null {
+  return Array.from(layer.children).find((child) => child.getAttribute(attribute) === value) ?? null;
 }

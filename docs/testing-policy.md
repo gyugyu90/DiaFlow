@@ -38,6 +38,7 @@ Use schema tests when changing:
 - edge style options
 - animation options
 - validation rules
+- duplicate IDs and cross-document reference integrity
 - sample diagram compatibility
 
 Schema tests should verify both accepted and rejected examples.
@@ -66,6 +67,7 @@ Use runtime tests when changing:
 - grid behavior
 - zoom/pan behavior
 - renderer options
+- partial node and edge rendering
 - lifecycle behavior such as `destroy()`
 
 Runtime tests should verify DOM structure and stable SVG attributes. They should not depend on screenshots.
@@ -83,7 +85,8 @@ Examples:
 Location:
 
 ```txt
-apps/editor/src/*.test.tsx
+packages/editor/src/*.test.ts
+apps/demo/src/*.test.tsx
 ```
 
 Editor tests should be added when the React editor gains real user workflows.
@@ -94,6 +97,8 @@ Use editor tests when changing:
 - side panels
 - prompt input
 - node/edge editing UI
+- edit transaction and Undo/Redo boundaries
+- single and multi-selection behavior
 - publish flow
 - embed code generation
 - validation messages

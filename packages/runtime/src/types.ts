@@ -24,6 +24,11 @@ export type DiagramRenderOptions = {
   sceneId?: string | null;
 };
 
+export type DiagramChangeSet = {
+  nodeIds?: readonly string[];
+  edgeIds?: readonly string[];
+};
+
 export type ResolvedDiagramRenderOptions = {
   animations: boolean;
   labels: boolean;
@@ -33,6 +38,6 @@ export type ResolvedDiagramRenderOptions = {
 
 export type DiagramRenderer = {
   destroy(): void;
-  setDiagram(diagram: DiagramDocument): void;
+  setDiagram(diagram: DiagramDocument, changes?: DiagramChangeSet): void;
   setOptions(options: DiagramRenderOptions): void;
 };

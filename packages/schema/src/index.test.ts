@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
-import { parseDiagramDocument } from "./index";
+import {
+  DiagramIntegrityError,
+  diagramDocumentSchema,
+  parseDiagramDocument,
+  validateDiagramIntegrity,
+} from "./index";
 
 function cloneSample() {
   return structuredClone(sampleDiagram);
@@ -81,5 +86,74 @@ describe("diagramDocumentSchema", () => {
     invalid.kind = "workflow";
 
     expect(() => parseDiagramDocument(invalid)).toThrow();
+  });
+
+  it("uses the same stable id format as the published JSON Schema", () => {
+    const invalid = cloneSample();
+    invalid.nodes[0].id = "invalid id";
+
+    expect(() => parseDiagramDocument(invalid)).toThrow();
+  });
+
+  it("rejects duplicate ids and missing references with document paths", () => {
+    const invalid = cloneSample();
+    invalid.nodes[1].id = invalid.nodes[0].id;
+    invalid.edges[0].target.nodeId = "missing_node";
+
+    expect(() => parseDiagramDocument(invalid)).toThrow(DiagramIntegrityError);
+    expect(validateDiagramIntegrity(diagramDocumentSchema.parse(invalid))).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: ["nodes", 1, "id"] }),
+      expect.objectContaining({ path: ["edges", 0, "target", "nodeId"] }),
+    ]));
+  });
+
+  it("validates animation, group, port, and scene references", () => {
+    const invalid = parseDiagramDocument(cloneSample());
+    const issues = validateDiagramIntegrity({
+      ...invalid,
+      edges: invalid.edges.map((edge, index) => index === 0 ? {
+        ...edge,
+        source: { ...edge.source, portId: "missing_port" },
+      } : edge),
+      groups: [{ id: "broken_group", label: "Broken", nodeIds: ["missing_node"] }],
+      animations: invalid.animations?.map((animation) => ({
+        ...animation,
+        edgeIds: ["missing_edge"],
+      })),
+      scenes: [{
+        id: "broken_scene",
+        title: "Broken",
+        animationIds: ["missing_animation"],
+        nodeOverrides: [{ nodeId: "missing_node" }],
+        edgeOverrides: [{ edgeId: "missing_edge" }],
+      }],
+    });
+
+    expect(issues.map((issue) => issue.path.join("."))).toEqual(expect.arrayContaining([
+      "edges.0.source.portId",
+      "groups.0.nodeIds.0",
+      "animations.0.edgeIds.0",
+      "scenes.0.animationIds.0",
+      "scenes.0.nodeOverrides.0.nodeId",
+      "scenes.0.edgeOverrides.0.edgeId",
+    ]));
+  });
+
+  it("rejects duplicate port ids within a node", () => {
+    const invalid = parseDiagramDocument(cloneSample());
+    const issues = validateDiagramIntegrity({
+      ...invalid,
+      nodes: invalid.nodes.map((node, index) => index === 0 ? {
+        ...node,
+        ports: [
+          { id: "output", side: "right" as const },
+          { id: "output", side: "left" as const },
+        ],
+      } : node),
+    });
+
+    expect(issues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: ["nodes", 0, "ports", 1, "id"] }),
+    ]));
   });
 });

@@ -6,6 +6,11 @@ import type {
   EdgeMarker,
 } from "@interactive-diagram/schema";
 import {
+  resolveEdgeEndMarker,
+  resolveEdgeStartMarker,
+} from "@interactive-diagram/schema";
+import { resolveEdgeColor } from "./edge-style.js";
+import {
   getEdgeLabelAnchor,
   getGroupBounds,
   getPathData,
@@ -17,15 +22,6 @@ import type { NormalizedNode, Point, RenderedEdge } from "./types.js";
 
 const GRID_SIZE = 32;
 const MAJOR_GRID_SIZE = GRID_SIZE * 5;
-
-const edgeColor: Record<string, string> = {
-  default: "#7d8ca3",
-  muted: "#a1adbd",
-  accent: "#2f6fed",
-  active: "#2f6fed",
-  warning: "#d18a00",
-  danger: "#cf3f3f",
-};
 
 export function createDefs(): SVGDefsElement {
   const defs = createSvg("defs");
@@ -56,20 +52,16 @@ export function createDefs(): SVGDefsElement {
 
   defs.appendChild(grid);
   for (const marker of ["arrow", "triangle", "circle"] as const) {
-    for (const color of ["default", "accent", "muted", "warning", "danger"] as const) {
-      defs.appendChild(createEdgeMarker(marker, color, edgeColor[color]));
-    }
+    defs.appendChild(createEdgeMarker(marker));
   }
   return defs;
 }
 
 function createEdgeMarker(
   shape: Exclude<EdgeMarker, "none">,
-  colorName: string,
-  color: string,
 ): SVGMarkerElement {
   const marker = createSvg("marker", {
-    id: `marker-${shape}-${colorName}`,
+    id: `marker-${shape}`,
     markerWidth: 10,
     markerHeight: 10,
     refX: shape === "circle" ? 5 : 9,
@@ -82,15 +74,23 @@ function createEdgeMarker(
     marker.appendChild(createSvg("path", {
       d: "M 1 1 L 9 5 L 1 9",
       fill: "none",
-      stroke: color,
+      stroke: "context-stroke",
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
       "stroke-width": 1.8,
     }));
   } else if (shape === "triangle") {
-    marker.appendChild(createSvg("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: color }));
+    marker.appendChild(createSvg("path", {
+      d: "M 0 0 L 10 5 L 0 10 z",
+      fill: "context-stroke",
+    }));
   } else {
-    marker.appendChild(createSvg("circle", { cx: 5, cy: 5, r: 3.5, fill: color }));
+    marker.appendChild(createSvg("circle", {
+      cx: 5,
+      cy: 5,
+      r: 3.5,
+      fill: "context-stroke",
+    }));
   }
   return marker;
 }
@@ -175,8 +175,8 @@ export function renderEdge(
     "pointer-events": "none",
   });
 
-  setMarker(path, "marker-start", resolveStartMarker(edge), edge.style?.color);
-  setMarker(path, "marker-end", resolveEndMarker(edge), edge.style?.color);
+  setMarker(path, "marker-start", resolveEdgeStartMarker(edge));
+  setMarker(path, "marker-end", resolveEdgeEndMarker(edge));
 
   element.append(hitArea, path);
   if (edge.label) {
@@ -191,35 +191,13 @@ export function renderEdge(
   return { element, sourcePoint, targetPoint, pathData };
 }
 
-function resolveEdgeColor(color: string | undefined): string {
-  if (!color || color === "default") return edgeColor.default;
-  return edgeColor[color] ?? color;
-}
-
 function setMarker(
   path: SVGPathElement,
   attribute: "marker-start" | "marker-end",
   marker: EdgeMarker,
-  color: string | undefined,
 ): void {
   if (marker === "none") return;
-  path.setAttribute(attribute, `url(#marker-${marker}-${getMarkerColorName(color)})`);
-}
-
-function resolveStartMarker(edge: DiagramEdge): EdgeMarker {
-  if (edge.style?.startMarker !== undefined) return edge.style.startMarker;
-  return edge.direction === "backward" || edge.direction === "bidirectional" ? "arrow" : "none";
-}
-
-function resolveEndMarker(edge: DiagramEdge): EdgeMarker {
-  if (edge.style?.endMarker !== undefined) return edge.style.endMarker;
-  return edge.direction === "forward" || edge.direction === "bidirectional" ? "arrow" : "none";
-}
-
-function getMarkerColorName(color: string | undefined): string {
-  if (color === "accent" || color === "active") return "accent";
-  if (color === "muted" || color === "warning" || color === "danger") return color;
-  return "default";
+  path.setAttribute(attribute, `url(#marker-${marker})`);
 }
 
 function getDashArray(line: string | undefined): string | null {

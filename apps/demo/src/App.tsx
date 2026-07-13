@@ -19,13 +19,23 @@ import type {
   NodePatch,
 } from "@interactive-diagram/editor";
 import {
+  EDGE_COLOR_OPTIONS,
+  EDGE_COLOR_PALETTE,
+  isEdgeColorPreset,
+} from "@interactive-diagram/runtime";
+import {
+  edgeLabelPlacementSchema,
+  edgeLineSchema,
+  edgeMarkerSchema,
+  edgeRoutingSchema,
   nodeTypeSchema,
   parseDiagramDocument,
+  resolveEdgeEndMarker,
+  resolveEdgeStartMarker,
   type DiagramDocument,
   type DiagramEdge,
   type DiagramNode,
   type DiagramScene,
-  type EdgeMarker,
 } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
@@ -57,18 +67,10 @@ const initialDiagrams: DiagramListItem[] = [
 ];
 const nodeTypeOptions = nodeTypeSchema.options;
 const iconOptions = ["user", "browser", "network", "server", "database", "storage"];
-const edgeMarkerOptions: EdgeMarker[] = ["none", "arrow", "triangle", "circle"];
-const edgeLineOptions = ["solid", "dashed", "dotted"] as const;
-const edgeRoutingOptions = ["straight", "smooth", "orthogonal"] as const;
-const edgeColorOptions = ["default", "accent", "muted", "warning", "danger"] as const;
-const edgeLabelPlacementOptions = ["center", "above", "below"] as const;
-const edgeColorValues: Record<(typeof edgeColorOptions)[number], string> = {
-  default: "#7d8ca3",
-  accent: "#2f6fed",
-  muted: "#a1adbd",
-  warning: "#d18a00",
-  danger: "#cf3f3f",
-};
+const edgeMarkerOptions = edgeMarkerSchema.options;
+const edgeLineOptions = edgeLineSchema.options;
+const edgeRoutingOptions = edgeRoutingSchema.options;
+const edgeLabelPlacementOptions = edgeLabelPlacementSchema.options;
 
 export function App() {
   const [diagramItems, setDiagramItems] = useState(initialDiagrams);
@@ -407,6 +409,8 @@ function EditorPage({
               <NodeInspector
                 node={selectedNode}
                 position={inspectorPosition}
+                onEditStart={() => editorRef.current?.beginTransaction()}
+                onEditEnd={() => editorRef.current?.commitTransaction()}
                 onChange={(patch) => editorRef.current?.updateNode(selectedNode.id, patch)}
                 onClose={() => {
                   editorRef.current?.clearSelection();
@@ -417,6 +421,8 @@ function EditorPage({
               <EdgeInspector
                 edge={selectedEdge}
                 position={inspectorPosition}
+                onEditStart={() => editorRef.current?.beginTransaction()}
+                onEditEnd={() => editorRef.current?.commitTransaction()}
                 onChange={(patch) => editorRef.current?.updateEdge(selectedEdge.id, patch)}
                 onClose={() => {
                   editorRef.current?.clearSelection();
@@ -442,11 +448,15 @@ function NodeInspector({
   node,
   onChange,
   onClose,
+  onEditEnd,
+  onEditStart,
   position,
 }: {
   node: DiagramNode;
   onChange: (patch: NodePatch) => void;
   onClose: () => void;
+  onEditEnd: () => void;
+  onEditStart: () => void;
   position: InspectorPosition | null;
 }) {
   if (!position) return null;
@@ -473,7 +483,9 @@ function NodeInspector({
         <input
           aria-label="Node name"
           value={node.label}
+          onBlur={onEditEnd}
           onChange={(event) => onChange({ label: event.target.value })}
+          onFocus={onEditStart}
         />
       </label>
 
@@ -515,17 +527,21 @@ function EdgeInspector({
   edge,
   onChange,
   onClose,
+  onEditEnd,
+  onEditStart,
   position,
 }: {
   edge: DiagramEdge;
   onChange: (patch: EdgePatch) => void;
   onClose: () => void;
+  onEditEnd: () => void;
+  onEditStart: () => void;
   position: InspectorPosition | null;
 }) {
   if (!position) return null;
 
-  const startMarker = edge.style?.startMarker ?? getLegacyStartMarker(edge);
-  const endMarker = edge.style?.endMarker ?? getLegacyEndMarker(edge);
+  const startMarker = resolveEdgeStartMarker(edge);
+  const endMarker = resolveEdgeEndMarker(edge);
   const color = getEdgeColorOption(edge.style?.color);
 
   return (
@@ -550,7 +566,9 @@ function EdgeInspector({
         <input
           aria-label="Edge label"
           value={edge.label ?? ""}
+          onBlur={onEditEnd}
           onChange={(event) => onChange({ label: event.target.value })}
+          onFocus={onEditStart}
         />
       </label>
 
@@ -558,13 +576,13 @@ function EdgeInspector({
         label="Start marker"
         value={startMarker}
         options={edgeMarkerOptions}
-        onChange={(value) => onChange({ style: { startMarker: value as EdgeMarker } })}
+        onChange={(value) => onChange({ style: { startMarker: edgeMarkerSchema.parse(value) } })}
       />
       <EdgeSelect
         label="End marker"
         value={endMarker}
         options={edgeMarkerOptions}
-        onChange={(value) => onChange({ style: { endMarker: value as EdgeMarker } })}
+        onChange={(value) => onChange({ style: { endMarker: edgeMarkerSchema.parse(value) } })}
       />
       <EdgeSelect
         label="Line"
@@ -585,13 +603,13 @@ function EdgeInspector({
       <label>
         <span>Color</span>
         <div className="edge-color-control">
-          <i style={{ backgroundColor: edgeColorValues[color] }} aria-hidden="true" />
+          <i style={{ backgroundColor: EDGE_COLOR_PALETTE[color] }} aria-hidden="true" />
           <select
             aria-label="Edge color"
             value={color}
             onChange={(event) => onChange({ style: { color: event.target.value } })}
           >
-            {edgeColorOptions.map((option) => <option key={option}>{option}</option>)}
+            {EDGE_COLOR_OPTIONS.map((option) => <option key={option}>{option}</option>)}
           </select>
         </div>
       </label>
@@ -630,18 +648,8 @@ function EdgeSelect({
   );
 }
 
-function getLegacyStartMarker(edge: DiagramEdge): EdgeMarker {
-  return edge.direction === "backward" || edge.direction === "bidirectional" ? "arrow" : "none";
-}
-
-function getLegacyEndMarker(edge: DiagramEdge): EdgeMarker {
-  return edge.direction === "forward" || edge.direction === "bidirectional" ? "arrow" : "none";
-}
-
-function getEdgeColorOption(color: string | undefined): (typeof edgeColorOptions)[number] {
-  return edgeColorOptions.includes(color as (typeof edgeColorOptions)[number])
-    ? color as (typeof edgeColorOptions)[number]
-    : "default";
+function getEdgeColorOption(color: string | undefined): (typeof EDGE_COLOR_OPTIONS)[number] {
+  return isEdgeColorPreset(color) ? color : "default";
 }
 
 function SceneControls({
