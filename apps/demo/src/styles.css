@@ -537,7 +537,7 @@ p {
   height: 32px;
 }
 
-.node-actions .delete-button:not(:disabled) {
+.delete-button:not(:disabled) {
   color: #b42318;
 }
 
@@ -667,6 +667,27 @@ p {
   gap: 10px;
 }
 
+.node-inspector header > div:first-child {
+  min-width: 0;
+}
+
+.node-inspector h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspector-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.inspector-actions .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
 .node-inspector label {
   display: grid;
   gap: 6px;
@@ -698,6 +719,16 @@ p {
 
 .node-inspector select {
   padding: 0 8px;
+}
+
+.edge-create-control {
+  display: grid;
+  gap: 8px;
+}
+
+.edge-create-control .button {
+  justify-content: center;
+  width: 100%;
 }
 
 .edge-inspector {

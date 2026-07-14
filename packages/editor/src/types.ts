@@ -35,7 +35,10 @@ export type DiagramEditorController = {
   cancelTransaction(): void;
   clearSelection(): void;
   commitTransaction(): void;
+  createEdge(sourceNodeId: string, targetNodeId: string): string | null;
   createNode(): string;
+  deleteEdge(edgeId: string): void;
+  deleteSelectedEdge(): void;
   deleteSelectedNodes(): void;
   destroy(): void;
   getState(): DiagramEditorState;

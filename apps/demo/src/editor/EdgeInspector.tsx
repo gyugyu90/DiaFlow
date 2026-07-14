@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import type { EdgePatch, InspectorPosition } from "@interactive-diagram/editor";
 import {
   EDGE_COLOR_OPTIONS,
@@ -24,6 +24,7 @@ export function EdgeInspector({
   edge,
   onChange,
   onClose,
+  onDelete,
   onEditEnd,
   onEditStart,
   position,
@@ -31,6 +32,7 @@ export function EdgeInspector({
   edge: DiagramEdge;
   onChange: (patch: EdgePatch) => void;
   onClose: () => void;
+  onDelete: () => void;
   onEditEnd: () => void;
   onEditStart: () => void;
   position: InspectorPosition | null;
@@ -53,9 +55,20 @@ export function EdgeInspector({
           <p className="eyebrow">Edge</p>
           <h3>{edge.label || edge.id}</h3>
         </div>
-        <button className="icon-button" type="button" onClick={onClose} aria-label="Close edge editor">
-          <X size={16} aria-hidden="true" />
-        </button>
+        <div className="inspector-actions">
+          <button
+            className="icon-button delete-button"
+            type="button"
+            onClick={onDelete}
+            aria-label={`Delete edge ${edge.label || edge.id}`}
+            title="Delete edge"
+          >
+            <Trash2 size={16} aria-hidden="true" />
+          </button>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close edge editor">
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       <label className="edge-label-field">

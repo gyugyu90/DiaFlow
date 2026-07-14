@@ -141,10 +141,15 @@ export function EditorPage({
             {selectedNode ? (
               <NodeInspector
                 node={selectedNode}
+                nodes={item.diagram.nodes}
                 position={inspectorPosition}
                 onEditStart={() => editorRef.current?.beginTransaction()}
                 onEditEnd={() => editorRef.current?.commitTransaction()}
                 onChange={(patch) => editorRef.current?.updateNode(selectedNode.id, patch)}
+                onCreateEdge={(targetNodeId) =>
+                  editorRef.current?.createEdge(selectedNode.id, targetNodeId)
+                }
+                onDelete={() => editorRef.current?.deleteSelectedNodes()}
                 onClose={() => editorRef.current?.clearSelection()}
               />
             ) : null}
@@ -155,6 +160,7 @@ export function EditorPage({
                 onEditStart={() => editorRef.current?.beginTransaction()}
                 onEditEnd={() => editorRef.current?.commitTransaction()}
                 onChange={(patch) => editorRef.current?.updateEdge(selectedEdge.id, patch)}
+                onDelete={() => editorRef.current?.deleteEdge(selectedEdge.id)}
                 onClose={() => editorRef.current?.clearSelection()}
               />
             ) : null}

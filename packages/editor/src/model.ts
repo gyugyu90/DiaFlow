@@ -2,10 +2,20 @@ import type { DiagramDocument, DiagramEdge, DiagramNode } from "@interactive-dia
 import type { DiagramMetadataPatch, EdgePatch, NodePatch } from "./types.js";
 
 export type NewNodeInput = Partial<Pick<DiagramNode, "label" | "type" | "icon" | "position">>;
+export type NewEdgeInput = {
+  label?: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+};
 
 export type AddDiagramNodeResult = {
   diagram: DiagramDocument;
   node: DiagramNode;
+};
+
+export type AddDiagramEdgeResult = {
+  diagram: DiagramDocument;
+  edge: DiagramEdge;
 };
 
 export function addDiagramNode(
@@ -24,6 +34,36 @@ export function addDiagramNode(
   return {
     diagram: { ...diagram, nodes: [...diagram.nodes, node] },
     node,
+  };
+}
+
+export function addDiagramEdge(
+  diagram: DiagramDocument,
+  input: NewEdgeInput,
+): AddDiagramEdgeResult {
+  const hasSource = diagram.nodes.some((node) => node.id === input.sourceNodeId);
+  const hasTarget = diagram.nodes.some((node) => node.id === input.targetNodeId);
+  if (!hasSource || !hasTarget) {
+    throw new Error("Edge endpoints must reference existing nodes.");
+  }
+
+  const edge: DiagramEdge = {
+    id: getNextEdgeId(diagram, input.sourceNodeId, input.targetNodeId),
+    source: { nodeId: input.sourceNodeId },
+    target: { nodeId: input.targetNodeId },
+    label: input.label ?? "Connects",
+    direction: "forward",
+    style: {
+      line: "solid",
+      routing: "smooth",
+      color: "accent",
+      labelPlacement: "above",
+    },
+  };
+
+  return {
+    diagram: { ...diagram, edges: [...diagram.edges, edge] },
+    edge,
   };
 }
 
@@ -65,6 +105,38 @@ export function deleteDiagramNodes(
       ),
       nodeOverrides: scene.nodeOverrides?.filter((override) =>
         !deletedNodeIds.has(override.nodeId)
+      ),
+      edgeOverrides: scene.edgeOverrides?.filter((override) =>
+        !deletedEdgeIds.has(override.edgeId)
+      ),
+    })),
+  };
+}
+
+export function deleteDiagramEdges(
+  diagram: DiagramDocument,
+  edgeIds: Iterable<string>,
+): DiagramDocument {
+  const requestedEdgeIds = new Set(edgeIds);
+  const deletedEdgeIds = new Set(
+    diagram.edges.filter((edge) => requestedEdgeIds.has(edge.id)).map((edge) => edge.id),
+  );
+  if (deletedEdgeIds.size === 0) return diagram;
+
+  const animations = diagram.animations?.map((animation) => ({
+    ...animation,
+    edgeIds: animation.edgeIds.filter((edgeId) => !deletedEdgeIds.has(edgeId)),
+  })).filter((animation) => animation.edgeIds.length > 0);
+  const remainingAnimationIds = new Set(animations?.map((animation) => animation.id) ?? []);
+
+  return {
+    ...diagram,
+    edges: diagram.edges.filter((edge) => !deletedEdgeIds.has(edge.id)),
+    animations,
+    scenes: diagram.scenes?.map((scene) => ({
+      ...scene,
+      animationIds: scene.animationIds?.filter((animationId) =>
+        remainingAnimationIds.has(animationId)
       ),
       edgeOverrides: scene.edgeOverrides?.filter((override) =>
         !deletedEdgeIds.has(override.edgeId)
@@ -174,6 +246,20 @@ function getNextNodeSequence(diagram: DiagramDocument): number {
   let sequence = 1;
   while (nodeIds.has(`node_${sequence}`)) sequence += 1;
   return sequence;
+}
+
+function getNextEdgeId(
+  diagram: DiagramDocument,
+  sourceNodeId: string,
+  targetNodeId: string,
+): string {
+  const edgeIds = new Set(diagram.edges.map((edge) => edge.id));
+  const baseId = `edge_${sourceNodeId}_${targetNodeId}`;
+  if (!edgeIds.has(baseId)) return baseId;
+
+  let sequence = 2;
+  while (edgeIds.has(`${baseId}_${sequence}`)) sequence += 1;
+  return `${baseId}_${sequence}`;
 }
 
 function getNewNodePosition(nodes: DiagramNode[]): DiagramNode["position"] {

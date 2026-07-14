@@ -3,8 +3,10 @@ import { fireEvent } from "@testing-library/dom";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import {
+  addDiagramEdge,
   addDiagramNode,
   createDiagramEditor,
+  deleteDiagramEdges,
   deleteDiagramNodes,
   moveDiagramNodes,
   updateDiagramEdge,
@@ -97,6 +99,65 @@ describe("diagram editor model", () => {
     expect(updated.scenes?.[0]).toMatchObject({
       animationIds: [],
       nodeOverrides: [],
+      edgeOverrides: [{ edgeId: "edge_app_db" }],
+    });
+    expect(() => parseDiagramDocument(updated)).not.toThrow();
+  });
+
+  it("adds edges with stable unique ids", () => {
+    const first = addDiagramEdge(diagram, {
+      sourceNodeId: "user",
+      targetNodeId: "browser",
+    });
+    const second = addDiagramEdge(first.diagram, {
+      sourceNodeId: "user",
+      targetNodeId: "browser",
+    });
+
+    expect(first.edge).toMatchObject({
+      id: "edge_user_browser_2",
+      source: { nodeId: "user" },
+      target: { nodeId: "browser" },
+      label: "Connects",
+      direction: "forward",
+      style: {
+        line: "solid",
+        routing: "smooth",
+        color: "accent",
+        labelPlacement: "above",
+      },
+    });
+    expect(second.edge.id).toBe("edge_user_browser_3");
+    expect(diagram.edges).toHaveLength(5);
+    expect(() => parseDiagramDocument(second.diagram)).not.toThrow();
+  });
+
+  it("deletes edges and cleans every dependent reference", () => {
+    const cascadingDiagram = parseDiagramDocument({
+      ...diagram,
+      animations: [{
+        id: "anim_removed",
+        type: "packet",
+        edgeIds: ["edge_user_browser"],
+        enabled: true,
+      }],
+      scenes: [{
+        id: "scene_delete_edge",
+        title: "Delete edge references",
+        animationIds: ["anim_removed"],
+        edgeOverrides: [
+          { edgeId: "edge_user_browser" },
+          { edgeId: "edge_app_db" },
+        ],
+      }],
+    });
+
+    const updated = deleteDiagramEdges(cascadingDiagram, ["edge_user_browser"]);
+
+    expect(updated.edges.some((edge) => edge.id === "edge_user_browser")).toBe(false);
+    expect(updated.animations).toEqual([]);
+    expect(updated.scenes?.[0]).toMatchObject({
+      animationIds: [],
       edgeOverrides: [{ edgeId: "edge_app_db" }],
     });
     expect(() => parseDiagramDocument(updated)).not.toThrow();
@@ -310,6 +371,27 @@ describe("createDiagramEditor", () => {
     expect(editor.getState().diagram.edges[0].label).toBe("Uses");
     editor.redo();
     expect(editor.getState().diagram.edges[0].label).toBe("Opens");
+    editor.destroy();
+  });
+
+  it("creates, selects, deletes, and restores an edge through history", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+
+    const edgeId = editor.createEdge("browser", "database");
+    expect(edgeId).toBe("edge_browser_database");
+    expect(editor.getState().selectedEdgeId).toBe("edge_browser_database");
+    expect(container.querySelector('[data-edge-id="edge_browser_database"]')).toBeTruthy();
+
+    editor.deleteSelectedEdge();
+    expect(container.querySelector('[data-edge-id="edge_browser_database"]')).toBeNull();
+    expect(editor.getState().selectedEdgeId).toBeNull();
+
+    editor.undo();
+    expect(container.querySelector('[data-edge-id="edge_browser_database"]')).toBeTruthy();
+    editor.undo();
+    expect(container.querySelector('[data-edge-id="edge_browser_database"]')).toBeNull();
     editor.destroy();
   });
 

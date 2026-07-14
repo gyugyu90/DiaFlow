@@ -15,7 +15,9 @@ import {
   updateSelectedNodeAnchor,
 } from "./dom.js";
 import {
+  addDiagramEdge,
   addDiagramNode,
+  deleteDiagramEdges,
   deleteDiagramNodes,
   moveDiagramNodes,
   updateDiagramEdge,
@@ -186,6 +188,32 @@ class DomDiagramEditor implements DiagramEditorController {
     return result.node.id;
   }
 
+  createEdge(sourceNodeId: string, targetNodeId: string): string | null {
+    this.commitTransaction();
+    if (!this.hasNode(sourceNodeId) || !this.hasNode(targetNodeId)) return null;
+
+    const result = addDiagramEdge(this.diagram, { sourceNodeId, targetNodeId });
+    this.selectedNodeIds.clear();
+    this.selectedEdgeId = result.edge.id;
+    this.commit(result.diagram, { edgeIds: [result.edge.id] });
+    return result.edge.id;
+  }
+
+  deleteEdge(edgeId: string): void {
+    this.commitTransaction();
+    const nextDiagram = deleteDiagramEdges(this.diagram, [edgeId]);
+    if (nextDiagram === this.diagram) return;
+    if (this.selectedEdgeId === edgeId) {
+      this.selectedEdgeId = null;
+    }
+    this.commit(nextDiagram);
+  }
+
+  deleteSelectedEdge(): void {
+    if (!this.selectedEdgeId) return;
+    this.deleteEdge(this.selectedEdgeId);
+  }
+
   deleteSelectedNodes(): void {
     this.commitTransaction();
     if (this.selectedNodeIds.size === 0) return;
@@ -331,13 +359,14 @@ class DomDiagramEditor implements DiagramEditorController {
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
     if (
       (event.key !== "Delete" && event.key !== "Backspace") ||
-      this.selectedNodeIds.size === 0 ||
+      (this.selectedNodeIds.size === 0 && !this.selectedEdgeId) ||
       isTextInput(event.target) ||
       hasOpenModalOutside(this.container)
     ) return;
 
     event.preventDefault();
-    this.deleteSelectedNodes();
+    if (this.selectedNodeIds.size > 0) this.deleteSelectedNodes();
+    else this.deleteSelectedEdge();
   };
 
   private readonly handleViewportChange = (event: ViewportChangeEvent): void => {

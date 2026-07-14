@@ -170,6 +170,41 @@ describe("EditorPage", () => {
     expect((screen.getByLabelText("Node icon") as HTMLSelectElement).value).toBe("server");
   });
 
+  it("creates an edge from the node inspector", async () => {
+    renderBasicDiagram();
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) throw new Error("Missing user node");
+    expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
+
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+    const inspector = screen.getByRole("dialog", { name: "Edit node User" });
+    fireEvent.change(within(inspector).getByLabelText("Edge target node"), {
+      target: { value: "database" },
+    });
+    fireEvent.click(within(inspector).getByRole("button", { name: "Create edge" }));
+
+    expect(document.querySelector('[data-edge-id="edge_user_database"]')).toBeTruthy();
+    expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(6);
+    expect(screen.getByRole("dialog", { name: "Edit edge Connects" })).toBeTruthy();
+  });
+
+  it("deletes a node from the node inspector and restores it with undo", async () => {
+    renderBasicDiagram();
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) throw new Error("Missing user node");
+
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.click(screen.getByRole("button", { name: "Delete node User" }));
+
+    expect(document.querySelector('[data-node-id="user"]')).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Edit node User" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect(document.querySelector('[data-node-id="user"]')).toBeTruthy();
+  });
+
   it("shift-selects multiple nodes and hides the node inspector", async () => {
     renderBasicDiagram();
     await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
@@ -219,6 +254,22 @@ describe("EditorPage", () => {
     expect(path?.getAttribute("marker-start")).toBe("url(#marker-circle)");
     expect(path?.getAttribute("marker-end")).toBe("url(#marker-triangle)");
     expect(path?.getAttribute("stroke-dasharray")).toBe("8 7");
+  });
+
+  it("deletes an edge from the edge inspector and restores it with undo", async () => {
+    renderBasicDiagram();
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
+    if (!edgeHitArea) throw new Error("Missing edge hit area");
+
+    fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.click(screen.getByRole("button", { name: "Delete edge Uses" }));
+
+    expect(document.querySelector('[data-edge-id="edge_user_browser"]')).toBeNull();
+    expect(screen.queryByRole("dialog", { name: "Edit edge Uses" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect(document.querySelector('[data-edge-id="edge_user_browser"]')).toBeTruthy();
   });
 
   it("only starts node dragging after the node is selected", async () => {
