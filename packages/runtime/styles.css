@@ -20,6 +20,11 @@
   cursor: grabbing;
 }
 
+.interactive-diagram.is-static .diagram-svg {
+  cursor: default;
+  touch-action: auto;
+}
+
 .interactive-diagram .grid-layer {
   pointer-events: none;
 }

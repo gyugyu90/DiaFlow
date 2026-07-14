@@ -168,10 +168,10 @@ p {
 
 .diagram-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) 280px auto;
   align-items: center;
   gap: 18px;
-  min-height: 132px;
+  min-height: 192px;
   padding: 18px;
   border: 1px solid var(--line-soft);
   border-radius: 8px;
@@ -246,36 +246,22 @@ p {
   margin-top: 3px;
 }
 
-.diagram-card-stats,
-.side-stats {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.diagram-card-stats div,
-.side-stats div {
-  min-width: 74px;
-  padding: 9px 10px;
+.diagram-card-thumbnail {
+  width: 280px;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
   border: 1px solid var(--line-soft);
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--surface-soft);
+  overflow: hidden;
+  pointer-events: none;
 }
 
-dt {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-dd {
-  margin: 2px 0 0;
-  color: var(--text);
-  font-size: 17px;
-  font-weight: 800;
+.diagram-card-thumbnail .diagram-svg {
+  height: 100%;
+  min-height: 0;
+  cursor: default;
 }
 
 .card-actions,
@@ -451,18 +437,6 @@ dd {
 
 .node-actions .delete-button:not(:disabled) {
   color: #b42318;
-}
-
-.side-stats {
-  align-items: stretch;
-  flex-direction: column;
-}
-
-.side-stats div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .node-list {
@@ -712,9 +686,12 @@ dd {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .diagram-card-stats,
   .card-actions {
     justify-content: flex-start;
+  }
+
+  .diagram-card-thumbnail {
+    width: 100%;
   }
 
   .editor-layout {

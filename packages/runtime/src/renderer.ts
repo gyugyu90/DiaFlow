@@ -34,9 +34,11 @@ export class SvgDiagramRenderer implements DiagramRenderer {
     this.container.classList.add("interactive-diagram");
     this.options = {
       animations: options.animations ?? true,
+      interactive: options.interactive ?? true,
       labels: options.labels ?? true,
       onViewportChange: options.onViewportChange,
       sceneId: options.sceneId ?? null,
+      viewBox: options.viewBox,
     };
   }
 
@@ -47,6 +49,7 @@ export class SvgDiagramRenderer implements DiagramRenderer {
 
     this.container.replaceChildren();
     this.container.classList.toggle("animations-off", !this.options.animations);
+    this.container.classList.toggle("is-static", !this.options.interactive);
     this.container.classList.toggle("labels-off", !this.options.labels);
 
     const scene = getScene(this.diagram, this.options.sceneId);
@@ -103,13 +106,18 @@ export class SvgDiagramRenderer implements DiagramRenderer {
 
     svg.append(gridLayer, groupLayer, edgeLayer, animationLayer, nodeLayer);
     this.container.appendChild(svg);
-    this.viewport = new ViewportController(
-      this.container,
-      svg,
-      previousViewport?.initialViewBox ?? bounds,
-      previousViewport?.viewBox ?? bounds,
-      this.options.onViewportChange,
-    );
+    const initialViewBox = this.options.viewBox ?? bounds;
+    if (this.options.interactive) {
+      this.viewport = new ViewportController(
+        this.container,
+        svg,
+        previousViewport?.initialViewBox ?? initialViewBox,
+        previousViewport?.viewBox ?? initialViewBox,
+        this.options.onViewportChange,
+      );
+    } else {
+      svg.setAttribute("viewBox", formatViewBox(initialViewBox));
+    }
   }
 
   destroy(): void {
@@ -120,6 +128,7 @@ export class SvgDiagramRenderer implements DiagramRenderer {
     this.nodeLayer = null;
     this.container.replaceChildren();
     this.container.classList.remove("interactive-diagram");
+    this.container.classList.remove("is-static");
   }
 
   setDiagram(diagram: DiagramDocument, changes?: DiagramChangeSet): void {
@@ -189,12 +198,14 @@ export class SvgDiagramRenderer implements DiagramRenderer {
       ...options,
     };
     const sceneChanged = nextOptions.sceneId !== this.options.sceneId;
+    const interactionChanged = nextOptions.interactive !== this.options.interactive;
+    const viewBoxChanged = !isSameViewBox(nextOptions.viewBox, this.options.viewBox);
     const viewportHandlerChanged = nextOptions.onViewportChange !== this.options.onViewportChange;
     this.options = {
       ...nextOptions,
       sceneId: nextOptions.sceneId ?? null,
     };
-    if (sceneChanged) {
+    if (sceneChanged || interactionChanged || viewBoxChanged) {
       this.render();
       return;
     }
@@ -205,6 +216,21 @@ export class SvgDiagramRenderer implements DiagramRenderer {
     this.container.classList.toggle("animations-off", !this.options.animations);
     this.container.classList.toggle("labels-off", !this.options.labels);
   }
+}
+
+function formatViewBox(viewBox: NonNullable<ResolvedDiagramRenderOptions["viewBox"]>): string {
+  return `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`;
+}
+
+function isSameViewBox(
+  first: ResolvedDiagramRenderOptions["viewBox"],
+  second: ResolvedDiagramRenderOptions["viewBox"],
+): boolean {
+  if (!first || !second) return first === second;
+  return first.x === second.x
+    && first.y === second.y
+    && first.width === second.width
+    && first.height === second.height;
 }
 
 function findDirectChild(

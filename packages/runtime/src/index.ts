@@ -14,6 +14,7 @@ export type {
   DiagramChangeSet,
   DiagramRenderer,
   DiagramRenderOptions,
+  ViewBox,
   ViewportChangeEvent,
 } from "./types.js";
 

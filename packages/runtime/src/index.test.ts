@@ -76,6 +76,17 @@ describe("renderDiagram", () => {
     expect(container.querySelectorAll(".packet")).toHaveLength(2);
   });
 
+  it("renders a fixed viewBox without viewport interactions in static mode", () => {
+    const viewBox = { x: 20, y: 40, width: 640, height: 360 };
+    const { container, svg } = renderSample({ interactive: false, viewBox });
+
+    expect(container.classList.contains("is-static")).toBe(true);
+    expect(getViewBox(svg)).toEqual(viewBox);
+
+    dispatchWheel(svg, -240);
+    expect(getViewBox(svg)).toEqual(viewBox);
+  });
+
   it("keeps packets hidden until their motion begins", () => {
     const { container } = renderSample();
     const packets = Array.from(container.querySelectorAll(".packet"));

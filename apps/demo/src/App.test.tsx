@@ -30,6 +30,9 @@ describe("App", () => {
     expect(within(list).getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
     expect(within(list).getAllByRole("button", { name: "View" })).toHaveLength(2);
     expect(within(list).getAllByRole("button", { name: "Edit" })).toHaveLength(2);
+    expect(within(list).queryByText("Nodes")).toBeNull();
+    expect(list.querySelectorAll(".diagram-card-thumbnail.is-static")).toHaveLength(2);
+    expect(list.querySelectorAll(".diagram-card-thumbnail .diagram-svg")).toHaveLength(2);
     expect(screen.getByLabelText("Build version").textContent).toBe("Build test-build");
   });
 
@@ -155,6 +158,7 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
     const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    expect(within(sideView).queryByRole("heading", { name: "Overview" })).toBeNull();
     expect(canvas.classList.contains("has-scene-controls")).toBe(true);
     expect(within(canvas).getByRole("region", { name: "Scene controls" })).toBeTruthy();
     expect(within(canvas).getByRole("heading", { name: "Default Scene" })).toBeTruthy();

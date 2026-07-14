@@ -19,9 +19,11 @@ export type ViewportChangeEvent = {
 
 export type DiagramRenderOptions = {
   animations?: boolean;
+  interactive?: boolean;
   labels?: boolean;
   onViewportChange?: (event: ViewportChangeEvent) => void;
   sceneId?: string | null;
+  viewBox?: ViewBox;
 };
 
 export type DiagramChangeSet = {
@@ -31,9 +33,11 @@ export type DiagramChangeSet = {
 
 export type ResolvedDiagramRenderOptions = {
   animations: boolean;
+  interactive: boolean;
   labels: boolean;
   onViewportChange?: (event: ViewportChangeEvent) => void;
   sceneId: string | null;
+  viewBox?: ViewBox;
 };
 
 export type DiagramRenderer = {

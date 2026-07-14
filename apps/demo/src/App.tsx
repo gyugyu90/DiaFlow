@@ -46,6 +46,7 @@ import {
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import { DiagramEditorViewport } from "./DiagramEditorViewport";
+import { DiagramThumbnail } from "./DiagramThumbnail";
 import { DiagramViewport } from "./DiagramViewport";
 import {
   createEmptyDiagramDocument,
@@ -336,24 +337,7 @@ function DiagramCard({
           {item.isDirty ? <strong>Unsaved changes</strong> : null}
         </p>
       </div>
-      <dl className="diagram-card-stats" aria-label={`${item.title} statistics`}>
-        <div>
-          <dt>Nodes</dt>
-          <dd>{item.diagram.nodes.length}</dd>
-        </div>
-        <div>
-          <dt>Edges</dt>
-          <dd>{item.diagram.edges.length}</dd>
-        </div>
-        <div>
-          <dt>Animations</dt>
-          <dd>{item.diagram.animations?.length ?? 0}</dd>
-        </div>
-        <div>
-          <dt>Scenes</dt>
-          <dd>{item.diagram.scenes?.length ?? 0}</dd>
-        </div>
-      </dl>
+      <DiagramThumbnail diagram={item.diagram} />
       <div className="card-actions">
         <button className="button button-secondary" type="button" onClick={onView}>
           <Eye size={17} aria-hidden="true" />
@@ -511,28 +495,6 @@ function EditorPage({
       <section className="editor-layout">
         <aside className="side-panel" aria-label="Diagram side view">
           <div className="side-panel-scroll">
-            <section>
-              <h2>Overview</h2>
-              <dl className="side-stats">
-                <div>
-                  <dt>Nodes</dt>
-                  <dd>{item.diagram.nodes.length}</dd>
-                </div>
-                <div>
-                  <dt>Edges</dt>
-                  <dd>{item.diagram.edges.length}</dd>
-                </div>
-                <div>
-                  <dt>Animations</dt>
-                  <dd>{item.diagram.animations?.length ?? 0}</dd>
-                </div>
-                <div>
-                  <dt>Scenes</dt>
-                  <dd>{item.diagram.scenes?.length ?? 0}</dd>
-                </div>
-              </dl>
-            </section>
-
             <section>
               <div className="side-section-heading">
                 <h2>Nodes</h2>
