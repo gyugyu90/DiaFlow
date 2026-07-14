@@ -141,6 +141,26 @@ npm run preview  # Preview the production build locally
 Changes to the schema, renderer output, editor behavior, or local document workflow should include
 regression tests. See the [testing policy](docs/testing-policy.md) for the expected test layers.
 
+## 🚀 Deployment
+
+The gallery is served at `/`, while each bundled diagram editor uses
+`/diagrams/:diagramId/edit`. Static hosts must rewrite client-side routes to `index.html`.
+
+For AWS Amplify Hosting, add the following 200 rewrite under **Rewrites and redirects** so direct
+editor links and browser refreshes continue to load the application while static assets remain
+untouched:
+
+```json
+[
+  {
+    "source": "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>",
+    "status": "200",
+    "target": "/index.html",
+    "condition": null
+  }
+]
+```
+
 ## 🚧 Good to Know
 
 - The editor cannot yet create or delete edges from the UI.

@@ -54,6 +54,13 @@ import {
   normalizeDiagramFileName,
   readDiagramFile,
 } from "./document-files";
+import {
+  editRoute,
+  formatAppRoute,
+  listRoute,
+  parseAppRoute,
+  type AppRoute,
+} from "./routes";
 
 type DiagramListItem = {
   id: string;
@@ -63,8 +70,6 @@ type DiagramListItem = {
   isDirty: boolean;
   diagram: DiagramDocument;
 };
-
-type ViewMode = "list" | "edit";
 
 const initialDiagrams: DiagramListItem[] = [
   {
@@ -93,20 +98,41 @@ const edgeLabelPlacementOptions = edgeLabelPlacementSchema.options;
 
 export function App() {
   const [diagramItems, setDiagramItems] = useState(initialDiagrams);
-  const [mode, setMode] = useState<ViewMode>("list");
-  const [selectedDiagramId, setSelectedDiagramId] = useState(initialDiagrams[0].id);
+  const [route, setRoute] = useState(() => parseAppRoute(window.location.pathname));
   const [viewingDiagramId, setViewingDiagramId] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const documentSequenceRef = useRef(0);
-  const selectedDiagram = useMemo(
-    () => diagramItems.find((diagram) => diagram.id === selectedDiagramId) ?? diagramItems[0],
-    [diagramItems, selectedDiagramId],
-  );
+  const selectedDiagram = useMemo(() => route.view === "edit"
+    ? diagramItems.find((diagram) => diagram.id === route.diagramId) ?? null
+    : null, [diagramItems, route]);
   const viewingDiagram = viewingDiagramId
     ? diagramItems.find((diagram) => diagram.id === viewingDiagramId) ?? null
     : null;
   const hasUnsavedChanges = diagramItems.some((item) => item.isDirty);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoute(parseAppRoute(window.location.pathname));
+      setViewingDiagramId(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (route.view === "edit" && !selectedDiagram) {
+      window.history.replaceState(null, "", formatAppRoute(listRoute));
+      setViewingDiagramId(null);
+      setRoute(listRoute);
+      return;
+    }
+
+    const canonicalPath = formatAppRoute(route);
+    if (window.location.pathname !== canonicalPath) {
+      window.history.replaceState(null, "", canonicalPath);
+    }
+  }, [route, selectedDiagram]);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -119,9 +145,17 @@ export function App() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  function navigate(nextRoute: AppRoute, replace = false) {
+    const nextPath = formatAppRoute(nextRoute);
+    if (window.location.pathname !== nextPath) {
+      window.history[replace ? "replaceState" : "pushState"](null, "", nextPath);
+    }
+    setViewingDiagramId(null);
+    setRoute(nextRoute);
+  }
+
   function openEditor(diagramId: string) {
-    setSelectedDiagramId(diagramId);
-    setMode("edit");
+    navigate(editRoute(diagramId));
   }
 
   function updateDiagram(diagramId: string, diagram: DiagramDocument) {
@@ -147,8 +181,7 @@ export function App() {
       diagram,
     };
     setDiagramItems((items) => [...items, item]);
-    setSelectedDiagramId(item.id);
-    setMode("edit");
+    navigate(editRoute(item.id));
   }
 
   function createNewDiagram() {
@@ -178,12 +211,12 @@ export function App() {
     }
   }
 
-  if (mode === "edit") {
+  if (selectedDiagram) {
     return (
       <>
         <EditorPage
           item={selectedDiagram}
-          onBack={() => setMode("list")}
+          onBack={() => navigate(listRoute)}
           onSave={() => saveDiagram(selectedDiagram)}
           onView={() => setViewingDiagramId(selectedDiagram.id)}
           onDiagramChange={(diagram) => updateDiagram(selectedDiagram.id, diagram)}

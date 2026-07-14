@@ -5,6 +5,7 @@ import { App } from "./App";
 
 afterEach(() => {
   cleanup();
+  window.history.replaceState(null, "", "/");
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -150,12 +151,46 @@ describe("App", () => {
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
 
+    expect(window.location.pathname).toBe("/diagrams/basic-web-architecture/edit");
     expect(screen.getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
     const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
     expect(within(sideView).getByLabelText("Diagram prompt")).toBeTruthy();
     expect(within(canvas).queryByLabelText("Diagram prompt")).toBeNull();
     expect(document.querySelector(".editor-diagram-root .diagram-svg")).toBeTruthy();
+  });
+
+  it("opens an edit route directly and returns to the list route", () => {
+    window.history.replaceState(null, "", "/diagrams/circuit-breaker-scenes/edit");
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Back to diagram list" }));
+
+    expect(window.location.pathname).toBe("/");
+    expect(screen.getByRole("region", { name: "Diagram list" })).toBeTruthy();
+  });
+
+  it("follows browser history between list and edit routes", async () => {
+    render(<App />);
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+
+    window.history.back();
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/");
+      expect(screen.getByRole("region", { name: "Diagram list" })).toBeTruthy();
+    });
+  });
+
+  it("returns unknown diagram edit routes to the list", async () => {
+    window.history.replaceState(null, "", "/diagrams/not-found/edit");
+    render(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/");
+      expect(screen.getByRole("region", { name: "Diagram list" })).toBeTruthy();
+    });
   });
 
   it("opens a node inspector and edits node fields", async () => {
