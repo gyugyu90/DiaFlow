@@ -28,6 +28,7 @@ describe("App", () => {
     const list = screen.getByRole("region", { name: "Diagram list" });
     expect(within(list).getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     expect(within(list).getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
+    expect(within(list).queryByText("Architecture")).toBeNull();
     expect(within(list).getAllByRole("button", { name: "View" })).toHaveLength(2);
     expect(within(list).getAllByRole("button", { name: "Edit" })).toHaveLength(2);
     expect(within(list).queryByText("Nodes")).toBeNull();
@@ -165,6 +166,34 @@ describe("App", () => {
     expect(within(sideView).getByLabelText("Diagram prompt")).toBeTruthy();
     expect(within(canvas).queryByLabelText("Diagram prompt")).toBeNull();
     expect(document.querySelector(".editor-diagram-root .diagram-svg")).toBeTruthy();
+  });
+
+  it("edits title and optional description with undo history", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "New diagram" }));
+
+    const titleInput = screen.getByLabelText("Diagram title") as HTMLInputElement;
+    const descriptionInput = screen.getByLabelText("Diagram description") as HTMLTextAreaElement;
+    expect(titleInput.value).toBe("Untitled Diagram");
+    expect(descriptionInput.value).toBe("");
+
+    fireEvent.focus(titleInput);
+    fireEvent.change(titleInput, { target: { value: "Checkout Flow" } });
+    fireEvent.blur(titleInput);
+    expect(screen.getByRole("heading", { name: "Checkout Flow" })).toBeTruthy();
+
+    fireEvent.focus(descriptionInput);
+    fireEvent.change(descriptionInput, { target: { value: "Customer checkout services" } });
+    fireEvent.blur(descriptionInput);
+    expect((screen.getByLabelText("Diagram description") as HTMLTextAreaElement).value)
+      .toBe("Customer checkout services");
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect((screen.getByLabelText("Diagram description") as HTMLTextAreaElement).value).toBe("");
+    expect(screen.getByRole("heading", { name: "Checkout Flow" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect(screen.getByRole("heading", { name: "Untitled Diagram" })).toBeTruthy();
   });
 
   it("opens an edit route directly and returns to the list route", () => {

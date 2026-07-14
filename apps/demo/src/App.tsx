@@ -66,7 +66,7 @@ import {
 type DiagramListItem = {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   fileName: string;
   isDirty: boolean;
   diagram: DiagramDocument;
@@ -164,7 +164,7 @@ export function App() {
       items.map((item) => item.id === diagramId ? {
         ...item,
         title: diagram.metadata.title,
-        description: diagram.metadata.description ?? "No description",
+        description: diagram.metadata.description,
         isDirty: true,
         diagram,
       } : item),
@@ -176,7 +176,7 @@ export function App() {
     const item: DiagramListItem = {
       id: `local-${documentSequenceRef.current}-${diagram.id}`,
       title: diagram.metadata.title,
-      description: diagram.metadata.description ?? "No description",
+      description: diagram.metadata.description,
       fileName,
       isDirty,
       diagram,
@@ -327,11 +327,8 @@ function DiagramCard({
   return (
     <article className="diagram-card">
       <div className="diagram-card-main">
-        <div>
-          <p className="eyebrow">Architecture</p>
-          <h2>{item.title}</h2>
-        </div>
-        <p>{item.description}</p>
+        <h2>{item.title}</h2>
+        {item.description ? <p className="diagram-card-description">{item.description}</p> : null}
         <p className="document-file-status">
           <span>{item.fileName}</span>
           {item.isDirty ? <strong>Unsaved changes</strong> : null}
@@ -495,6 +492,44 @@ function EditorPage({
       <section className="editor-layout">
         <aside className="side-panel" aria-label="Diagram side view">
           <div className="side-panel-scroll">
+            <section className="diagram-details">
+              <h2>Details</h2>
+              <label>
+                <span>Title</span>
+                <input
+                  aria-label="Diagram title"
+                  required
+                  type="text"
+                  value={item.diagram.metadata.title}
+                  onBlur={(event) => {
+                    const title = event.currentTarget.value.trim() || "Untitled Diagram";
+                    editorRef.current?.updateMetadata({ title });
+                    editorRef.current?.commitTransaction();
+                  }}
+                  onChange={(event) => {
+                    editorRef.current?.updateMetadata({ title: event.target.value });
+                  }}
+                  onFocus={() => editorRef.current?.beginTransaction()}
+                />
+              </label>
+              <label>
+                <span>Description</span>
+                <textarea
+                  aria-label="Diagram description"
+                  placeholder="Optional description"
+                  rows={3}
+                  value={item.diagram.metadata.description ?? ""}
+                  onBlur={() => editorRef.current?.commitTransaction()}
+                  onChange={(event) => {
+                    editorRef.current?.updateMetadata({
+                      description: event.target.value || undefined,
+                    });
+                  }}
+                  onFocus={() => editorRef.current?.beginTransaction()}
+                />
+              </label>
+            </section>
+
             <section>
               <div className="side-section-heading">
                 <h2>Nodes</h2>

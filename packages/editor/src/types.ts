@@ -1,6 +1,9 @@
 import type { DiagramDocument, DiagramEdge, DiagramNode } from "@interactive-diagram/schema";
 
 export type NodePatch = Partial<Pick<DiagramNode, "label" | "type" | "icon">>;
+export type DiagramMetadataPatch = Partial<
+  Pick<DiagramDocument["metadata"], "title" | "description">
+>;
 export type EdgePatch = Partial<Pick<DiagramEdge, "label">> & {
   style?: Partial<NonNullable<DiagramEdge["style"]>>;
 };
@@ -44,5 +47,6 @@ export type DiagramEditorController = {
   toggleNodeSelection(nodeId: string): void;
   undo(): void;
   updateEdge(edgeId: string, patch: EdgePatch): void;
+  updateMetadata(patch: DiagramMetadataPatch): void;
   updateNode(nodeId: string, patch: NodePatch): void;
 };

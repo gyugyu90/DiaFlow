@@ -1,5 +1,5 @@
 import type { DiagramDocument, DiagramEdge, DiagramNode } from "@interactive-diagram/schema";
-import type { EdgePatch, NodePatch } from "./types.js";
+import type { DiagramMetadataPatch, EdgePatch, NodePatch } from "./types.js";
 
 export type NewNodeInput = Partial<Pick<DiagramNode, "label" | "type" | "icon" | "position">>;
 
@@ -96,6 +96,25 @@ export function updateDiagramEdge(
     ...diagram,
     edges: diagram.edges.map((candidate) => candidate.id === edgeId ? nextEdge : candidate),
   };
+}
+
+export function updateDiagramMetadata(
+  diagram: DiagramDocument,
+  patch: DiagramMetadataPatch,
+): DiagramDocument {
+  const metadata = { ...diagram.metadata };
+  if (patch.title !== undefined) metadata.title = patch.title;
+  if (Object.hasOwn(patch, "description")) {
+    if (patch.description === undefined) delete metadata.description;
+    else metadata.description = patch.description;
+  }
+
+  if (
+    metadata.title === diagram.metadata.title
+    && metadata.description === diagram.metadata.description
+  ) return diagram;
+
+  return { ...diagram, metadata };
 }
 
 export function updateDiagramNode(

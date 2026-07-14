@@ -34,7 +34,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -185,7 +186,7 @@ p {
   min-width: 0;
 }
 
-.diagram-card-main p:last-child {
+.diagram-card-description {
   max-width: 680px;
   color: var(--muted);
   font-size: 14px;
@@ -419,6 +420,47 @@ p {
 .node-actions {
   display: flex;
   align-items: center;
+}
+
+.diagram-details label {
+  display: grid;
+  gap: 6px;
+}
+
+.diagram-details label span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.diagram-details input,
+.diagram-details textarea {
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.diagram-details input {
+  min-height: 38px;
+  padding: 0 10px;
+}
+
+.diagram-details textarea {
+  min-height: 76px;
+  padding: 9px 10px;
+  resize: vertical;
+}
+
+.diagram-details input:focus,
+.diagram-details textarea:focus {
+  border-color: var(--line-strong);
+  outline: 2px solid rgba(47, 111, 237, 0.14);
+  outline-offset: 0;
 }
 
 .side-section-heading {

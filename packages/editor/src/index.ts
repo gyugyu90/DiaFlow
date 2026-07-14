@@ -5,6 +5,7 @@ export {
   moveDiagramNode,
   moveDiagramNodes,
   updateDiagramEdge,
+  updateDiagramMetadata,
   updateDiagramNode,
 } from "./model.js";
 export type { AddDiagramNodeResult, NewNodeInput } from "./model.js";
@@ -12,6 +13,7 @@ export type {
   DiagramEditorController,
   DiagramEditorOptions,
   DiagramEditorState,
+  DiagramMetadataPatch,
   EdgePatch,
   InspectorPosition,
   NodePatch,

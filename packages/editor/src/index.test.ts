@@ -8,6 +8,7 @@ import {
   deleteDiagramNodes,
   moveDiagramNodes,
   updateDiagramEdge,
+  updateDiagramMetadata,
   updateDiagramNode,
 } from "./index";
 
@@ -117,6 +118,19 @@ describe("diagram editor model", () => {
       type: "api",
     });
     expect(diagram.nodes.find((node) => node.id === "user")?.label).toBe("User");
+  });
+
+  it("updates title and optional description without mutating metadata", () => {
+    const updated = updateDiagramMetadata(diagram, {
+      title: "Updated Architecture",
+      description: undefined,
+    });
+
+    expect(updated).not.toBe(diagram);
+    expect(updated.metadata.title).toBe("Updated Architecture");
+    expect(updated.metadata.description).toBeUndefined();
+    expect(diagram.metadata.title).toBe("Basic Web Architecture");
+    expect(diagram.metadata.description).toBeTruthy();
   });
 
   it("merges edge style updates without mutating the source document", () => {
@@ -318,6 +332,28 @@ describe("createDiagramEditor", () => {
 
     editor.redo();
     expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.label).toBe("Customer");
+    editor.destroy();
+  });
+
+  it("owns metadata edits and undo/redo history", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+
+    editor.beginTransaction();
+    editor.updateMetadata({ title: "Edited Architecture" });
+    editor.updateMetadata({ description: undefined });
+    editor.commitTransaction();
+    expect(editor.getState().diagram.metadata).toMatchObject({
+      title: "Edited Architecture",
+    });
+    expect(editor.getState().diagram.metadata.description).toBeUndefined();
+
+    editor.undo();
+    expect(editor.getState().diagram.metadata.title).toBe("Basic Web Architecture");
+    expect(editor.getState().diagram.metadata.description).toBeTruthy();
+    editor.redo();
+    expect(editor.getState().diagram.metadata.title).toBe("Edited Architecture");
     editor.destroy();
   });
 

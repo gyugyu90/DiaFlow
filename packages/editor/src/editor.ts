@@ -19,12 +19,14 @@ import {
   deleteDiagramNodes,
   moveDiagramNodes,
   updateDiagramEdge,
+  updateDiagramMetadata,
   updateDiagramNode,
 } from "./model.js";
 import type {
   DiagramEditorController,
   DiagramEditorOptions,
   DiagramEditorState,
+  DiagramMetadataPatch,
   EdgePatch,
   InspectorPosition,
   NodePatch,
@@ -214,6 +216,10 @@ class DomDiagramEditor implements DiagramEditorController {
 
   updateEdge(edgeId: string, patch: EdgePatch): void {
     this.commit(updateDiagramEdge(this.diagram, edgeId, patch), { edgeIds: [edgeId] });
+  }
+
+  updateMetadata(patch: DiagramMetadataPatch): void {
+    this.commit(updateDiagramMetadata(this.diagram, patch));
   }
 
   undo(): void {
