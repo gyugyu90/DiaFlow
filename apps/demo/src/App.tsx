@@ -477,72 +477,83 @@ function EditorPage({
 
       <section className="editor-layout">
         <aside className="side-panel" aria-label="Diagram side view">
-          <section>
-            <h2>Overview</h2>
-            <dl className="side-stats">
-              <div>
-                <dt>Nodes</dt>
-                <dd>{item.diagram.nodes.length}</dd>
-              </div>
-              <div>
-                <dt>Edges</dt>
-                <dd>{item.diagram.edges.length}</dd>
-              </div>
-              <div>
-                <dt>Animations</dt>
-                <dd>{item.diagram.animations?.length ?? 0}</dd>
-              </div>
-              <div>
-                <dt>Scenes</dt>
-                <dd>{item.diagram.scenes?.length ?? 0}</dd>
-              </div>
-            </dl>
-          </section>
+          <div className="side-panel-scroll">
+            <section>
+              <h2>Overview</h2>
+              <dl className="side-stats">
+                <div>
+                  <dt>Nodes</dt>
+                  <dd>{item.diagram.nodes.length}</dd>
+                </div>
+                <div>
+                  <dt>Edges</dt>
+                  <dd>{item.diagram.edges.length}</dd>
+                </div>
+                <div>
+                  <dt>Animations</dt>
+                  <dd>{item.diagram.animations?.length ?? 0}</dd>
+                </div>
+                <div>
+                  <dt>Scenes</dt>
+                  <dd>{item.diagram.scenes?.length ?? 0}</dd>
+                </div>
+              </dl>
+            </section>
 
-          <section>
-            <div className="side-section-heading">
-              <h2>Nodes</h2>
-              <div className="node-actions">
-                <button
-                  className="icon-button"
-                  type="button"
-                  onClick={() => editorRef.current?.createNode()}
-                  aria-label="Add node"
-                  title="Add node"
-                >
-                  <Plus size={16} aria-hidden="true" />
-                </button>
-                <button
-                  className="icon-button delete-button"
-                  type="button"
-                  onClick={() => editorRef.current?.deleteSelectedNodes()}
-                  disabled={selectedNodeIds.length === 0}
-                  aria-label="Delete selected nodes"
-                  title="Delete selected nodes"
-                >
-                  <Trash2 size={16} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
-            <ol className="node-list">
-              {item.diagram.nodes.map((node) => (
-                <li key={node.id}>
+            <section>
+              <div className="side-section-heading">
+                <h2>Nodes</h2>
+                <div className="node-actions">
                   <button
-                    className={`node-list-button ${selectedNodeIds.includes(node.id) ? "is-selected" : ""}`}
+                    className="icon-button"
                     type="button"
-                    aria-pressed={selectedNodeIds.includes(node.id)}
-                    onClick={(event) => {
-                      if (event.shiftKey) editorRef.current?.toggleNodeSelection(node.id);
-                      else editorRef.current?.selectNode(node.id);
-                    }}
+                    onClick={() => editorRef.current?.createNode()}
+                    aria-label="Add node"
+                    title="Add node"
                   >
-                    <span>{node.label}</span>
-                    <small>{node.type.replaceAll("_", " ")}</small>
+                    <Plus size={16} aria-hidden="true" />
                   </button>
-                </li>
-              ))}
-            </ol>
-          </section>
+                  <button
+                    className="icon-button delete-button"
+                    type="button"
+                    onClick={() => editorRef.current?.deleteSelectedNodes()}
+                    disabled={selectedNodeIds.length === 0}
+                    aria-label="Delete selected nodes"
+                    title="Delete selected nodes"
+                  >
+                    <Trash2 size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+              <ol className="node-list">
+                {item.diagram.nodes.map((node) => (
+                  <li key={node.id}>
+                    <button
+                      className={`node-list-button ${selectedNodeIds.includes(node.id) ? "is-selected" : ""}`}
+                      type="button"
+                      aria-pressed={selectedNodeIds.includes(node.id)}
+                      onClick={(event) => {
+                        if (event.shiftKey) editorRef.current?.toggleNodeSelection(node.id);
+                        else editorRef.current?.selectNode(node.id);
+                      }}
+                    >
+                      <span>{node.label}</span>
+                      <small>{node.type.replaceAll("_", " ")}</small>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+
+          <form className="prompt-bar">
+            <PlayCircle size={18} aria-hidden="true" />
+            <input
+              aria-label="Diagram prompt"
+              placeholder="Describe a change"
+              type="text"
+            />
+          </form>
         </aside>
 
         <section className="editor-workspace" aria-label="Diagram editor canvas">
@@ -591,14 +602,6 @@ function EditorPage({
               />
             ) : null}
           </div>
-          <form className="prompt-bar">
-            <PlayCircle size={18} aria-hidden="true" />
-            <input
-              aria-label="Diagram prompt"
-              placeholder="Describe a change to this diagram"
-              type="text"
-            />
-          </form>
         </section>
       </section>
     </main>

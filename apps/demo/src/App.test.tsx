@@ -145,15 +145,16 @@ describe("App", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("opens the edit page with side view, canvas, and prompt input", () => {
+  it("opens the edit page with the prompt fixed in the side view", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
 
     expect(screen.getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
-    expect(screen.getByRole("complementary", { name: "Diagram side view" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Diagram editor canvas" })).toBeTruthy();
-    expect(screen.getByLabelText("Diagram prompt")).toBeTruthy();
+    const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
+    const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    expect(within(sideView).getByLabelText("Diagram prompt")).toBeTruthy();
+    expect(within(canvas).queryByLabelText("Diagram prompt")).toBeNull();
     expect(document.querySelector(".editor-diagram-root .diagram-svg")).toBeTruthy();
   });
 
