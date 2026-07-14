@@ -7,8 +7,9 @@
 
 ### 1. Run the editor locally
 
-- [ ] 저장소를 처음 받은 사용자를 위한 `README.md` 작성
-- [ ] Node.js 버전, `npm install`, `npm run dev` 실행 절차 문서화
+- [x] 저장소를 처음 받은 사용자를 위한 `README.md` 작성
+- [x] Node.js 버전, `npm install`, `npm run dev` 실행 절차 문서화
+- [ ] 공개 기여와 재사용을 위한 오픈소스 `LICENSE` 선택 및 추가
 - [x] 샘플 없이 빈 다이어그램으로 시작하는 `New diagram` 기능 추가
 - [ ] 로컬 에디터와 샘플 데모의 진입 경로 분리
 - [ ] 최초 실행부터 에디터 진입까지의 smoke test 추가
