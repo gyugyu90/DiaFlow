@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create DiaFlow Diagram"
+  short_description: "Create valid DiaFlow Diagram JSON files"
+  default_prompt: "Use $create-diagram to create a schema-valid DiaFlow diagram from my description."

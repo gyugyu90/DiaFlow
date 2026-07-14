@@ -17,7 +17,7 @@
     "preview": "vite preview --config apps/demo/vite.config.ts --host 127.0.0.1",
     "schema:generate": "npm run build --workspace @interactive-diagram/schema && node scripts/generate-diagram-schema.mjs",
     "schema:check": "npm run build --workspace @interactive-diagram/schema && node scripts/generate-diagram-schema.mjs --check",
-    "diagrams:validate": "npm run build --workspace @interactive-diagram/schema && node scripts/validate-diagrams.mjs examples",
+    "diagrams:validate": "npm run build --workspace @interactive-diagram/schema && node scripts/validate-diagrams.mjs",
     "test": "vitest run --config vitest.config.ts",
     "check": "npm run schema:check && npm run diagrams:validate && npm test && npm run build"
   },

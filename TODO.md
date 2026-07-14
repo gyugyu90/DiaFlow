@@ -51,20 +51,21 @@
 ### 4. Provide an LLM skill
 
 Diagram JSON을 생성하고 수정하는 공개 LLM 스킬은 Schema와 함께 변경하고 검증할 수 있도록
-이 저장소의 `skills/diaflow/`에서 관리한다. 스킬은 특정 AI 서비스나 인증 정보에
+이 저장소의 `skills/create-diagram/`과 `skills/update-diagram/`에서 관리한다. 스킬은 특정 AI 서비스나 인증 정보에
 의존하지 않고, 로컬 파일과 공개된 Schema만으로 사용할 수 있어야 한다.
 
-- [ ] 스킬의 책임을 Diagram JSON 생성, 수정, 설명, 검증으로 제한
-- [ ] `skills/diaflow/SKILL.md`에 실행 절차와 출력 규칙 작성
-- [ ] LLM이 SVG, HTML, Canvas 대신 Diagram JSON만 생성하도록 명시
-- [ ] 현재 `schemaVersion`과 지원하는 node, edge, marker, animation, scene 목록 문서화
+- [x] 스킬의 책임을 Diagram JSON 생성, 수정, 설명, 검증으로 제한
+- [x] `create-diagram`, `update-diagram` 스킬에 실행 절차와 출력 규칙 작성
+- [x] LLM이 SVG, HTML, Canvas 대신 Diagram JSON만 생성하도록 명시
+- [x] 현재 `schemaVersion`과 지원하는 node, edge, marker, animation, scene 계약 참조
 - [ ] 작은 시스템 구성도와 scene 기반 구성도를 위한 예제 요청 및 기대 결과 추가
-- [ ] 기존 Diagram JSON을 부분 수정할 때 ID와 참조 관계를 보존하는 규칙 작성
-- [ ] 생성 결과를 `@interactive-diagram/schema`로 검증하는 로컬 validation script 추가
+- [x] 기존 Diagram JSON을 부분 수정할 때 ID와 참조 관계를 보존하는 규칙 작성
+- [x] 생성 및 수정 결과를 `@interactive-diagram/schema`로 검증하는 로컬 명령 연결
+- [x] path, filename, title, 자연어 요청으로 수정 대상 파일을 찾는 resolver 추가
 - [ ] Schema 변경 시 스킬 문서와 예제를 함께 갱신하도록 체크리스트 추가
 - [ ] 스킬 예제 출력에 대한 Schema validation test 추가
-- [ ] 저장소에서 스킬을 설치하거나 참조하는 방법을 `README.md`에 문서화
-- [ ] 스킬 버전과 호환되는 Diagram `schemaVersion`을 명시하는 정책 정의
+- [x] 저장소에서 스킬을 설치하거나 참조하는 방법을 `README.md`에 문서화
+- [x] 스킬 버전과 호환되는 Diagram `schemaVersion`을 명시하는 정책 정의
 - [ ] Codex 외 LLM에서도 재사용할 수 있도록 핵심 지침과 도구별 설치 지침 분리
 
 완료 조건: LLM이 자연어 요청과 기존 Diagram JSON을 입력받아, 현재 Schema를 통과하고 로컬

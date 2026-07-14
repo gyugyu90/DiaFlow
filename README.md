@@ -29,7 +29,8 @@ turns that data into an interactive SVG experience in the browser.
   one explicit format they can all inspect and modify.
 
 These principles describe the product direction. The local editor and scene runtime already cover
-part of this experience; standalone embedding and the public LLM skill remain roadmap work.
+part of this experience; standalone embedding remains roadmap work, while the first public LLM
+skills are available for local use.
 
 ## ✨ What Works Today
 
@@ -118,6 +119,32 @@ npm run schema:check        # Fail when the generated file is out of sync
 npm run diagrams:validate   # Run structural and reference-integrity checks on examples
 ```
 
+## 🤖 LLM Skills
+
+DiaFlow includes two service-neutral skills that work with local files and the repository schema:
+
+- [`create-diagram`](skills/create-diagram/SKILL.md) creates a new schema-valid Diagram JSON file
+  from an architecture or scenario description.
+- [`update-diagram`](skills/update-diagram/SKILL.md) locates an existing diagram by exact path,
+  filename, metadata title, or a title mentioned in the prompt, then updates it without breaking
+  IDs and references.
+
+Codex users can symlink the skills into their personal skill directory while keeping them connected
+to the cloned repository:
+
+```sh
+mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
+ln -s "$PWD/skills/create-diagram" "${CODEX_HOME:-$HOME/.codex}/skills/create-diagram"
+ln -s "$PWD/skills/update-diagram" "${CODEX_HOME:-$HOME/.codex}/skills/update-diagram"
+```
+
+Invoke them explicitly with prompts such as `$create-diagram Draw a web checkout architecture` or
+`$update-diagram title: "Web Checkout" Add a retry queue after the worker`. Other LLM tools can use
+the instructions in each `SKILL.md` without authentication or a hosted DiaFlow service.
+
+Both skills target `schemaVersion: "0.2"` and run the repository validator before completing a
+change. Keep the skills, examples, and schema documentation synchronized when the contract changes.
+
 ## 🏗️ Project Structure
 
 ```txt
@@ -132,6 +159,7 @@ packages/
 examples/     Example .diagram.json documents
 schemas/      Generated public JSON Schema
 scripts/      Schema generation and Diagram JSON validation tools
+skills/       LLM skills for creating and updating Diagram JSON
 docs/         Format and testing documentation
 ```
 
@@ -190,7 +218,7 @@ Here is what comes next for the local-first experience:
 3. Separate the local editor from the sample gallery entry point.
 4. Produce a standalone read-only iframe viewer.
 5. Document self-hosted embedding for blogs and documentation sites.
-6. Provide an LLM skill that generates and edits schema-valid Diagram JSON.
+6. Expand the LLM skills with validated scenario examples and broader agent installation guidance.
 
 The detailed working list is maintained in [TODO.md](TODO.md).
 

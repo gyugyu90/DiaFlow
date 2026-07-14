@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update DiaFlow Diagram"
+  short_description: "Find and safely update DiaFlow Diagram JSON"
+  default_prompt: "Use $update-diagram to find and update an existing DiaFlow diagram."
