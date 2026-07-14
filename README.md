@@ -179,5 +179,4 @@ Before submitting a change:
 
 ## 📄 License
 
-An open-source license has not been selected yet. Until a `LICENSE` file is added, the repository is
-publicly visible but is not licensed for reuse or redistribution.
+DiaFlow is available under the [MIT License](LICENSE).
