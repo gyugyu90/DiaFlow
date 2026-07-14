@@ -18,14 +18,23 @@ export function applyScene(diagram: DiagramDocument, scene: DiagramScene | null)
   const edgeOverrides = new Map(scene.edgeOverrides?.map((override) => [override.edgeId, override]) ?? []);
   const nodeOverrides = new Map(scene.nodeOverrides?.map((override) => [override.nodeId, override]) ?? []);
   const animationIds = scene.animationIds ? new Set(scene.animationIds) : null;
+  const disabledEdgeIds = new Set(
+    [...edgeOverrides.values()]
+      .filter((override) => override.disabled)
+      .map((override) => override.edgeId),
+  );
 
   return {
     ...diagram,
     nodes: diagram.nodes.map((node) => applyNodeOverride(node, nodeOverrides.get(node.id))),
     edges: diagram.edges.map((edge) => applyEdgeOverride(edge, edgeOverrides.get(edge.id))),
-    animations: (diagram.animations ?? []).filter(
-      (animation) => !animationIds || animationIds.has(animation.id),
-    ),
+    animations: (diagram.animations ?? [])
+      .filter((animation) => !animationIds || animationIds.has(animation.id))
+      .map((animation) => ({
+        ...animation,
+        edgeIds: animation.edgeIds.filter((edgeId) => !disabledEdgeIds.has(edgeId)),
+      }))
+      .filter((animation) => animation.edgeIds.length > 0),
   };
 }
 
@@ -66,7 +75,6 @@ function applyEdgeOverride(
     ...edge,
     label: override.label ?? edge.label,
     direction: override.disabled ? "none" : edge.direction,
-    animationId: override.animationId === null ? undefined : override.animationId ?? edge.animationId,
     style,
     data: {
       ...edge.data,

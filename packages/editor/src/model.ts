@@ -52,9 +52,7 @@ export function deleteDiagramNodes(
   return {
     ...diagram,
     nodes: diagram.nodes.filter((node) => !deletedNodeIds.has(node.id)),
-    edges: remainingEdges.map((edge) => edge.animationId && !remainingAnimationIds.has(edge.animationId)
-      ? { ...edge, animationId: undefined }
-      : edge),
+    edges: remainingEdges,
     groups: diagram.groups?.map((group) => ({
       ...group,
       nodeIds: group.nodeIds.filter((nodeId) => !deletedNodeIds.has(nodeId)),
@@ -70,9 +68,7 @@ export function deleteDiagramNodes(
       ),
       edgeOverrides: scene.edgeOverrides?.filter((override) =>
         !deletedEdgeIds.has(override.edgeId)
-      ).map((override) => override.animationId && !remainingAnimationIds.has(override.animationId)
-        ? { ...override, animationId: null }
-        : override),
+      ),
     })),
   };
 }

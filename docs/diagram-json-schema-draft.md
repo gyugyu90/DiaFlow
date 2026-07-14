@@ -53,7 +53,7 @@ Out of scope for the first schema version:
 
 ```json
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "id": "diagram_web_architecture",
   "kind": "architecture",
   "metadata": {},
@@ -74,8 +74,17 @@ Out of scope for the first schema version:
 Schema version used to interpret the document.
 
 ```json
-"schemaVersion": "0.1"
+"schemaVersion": "0.2"
 ```
+
+Version `0.2` makes collection membership single-directional:
+
+- Groups own membership through `Group.nodeIds`; remove `Node.groupId`.
+- Animations own membership through `Animation.edgeIds`; remove `Edge.animationId`.
+- Scenes select animations through `Scene.animationIds`; remove `animationId` from edge overrides.
+
+When migrating a `0.1` document, copy any inverse references into the owning ID arrays before
+removing the deprecated fields and changing `schemaVersion` to `0.2`.
 
 ### `id`
 
@@ -152,7 +161,6 @@ Nodes represent architecture components.
   "position": { "x": 520, "y": 240 },
   "size": { "width": 160, "height": 80 },
   "icon": "server",
-  "groupId": "backend",
   "ports": [
     { "id": "in", "side": "left" },
     { "id": "out", "side": "right" }
@@ -172,7 +180,6 @@ Nodes represent architecture components.
 | `position` | yes | Absolute canvas position. |
 | `size` | no | Node size. Renderer may use defaults. |
 | `icon` | no | Icon hint. |
-| `groupId` | no | Parent group identifier. |
 | `ports` | no | Optional connection points. |
 | `data` | no | Extension object for product-specific metadata. |
 
@@ -225,7 +232,6 @@ Edges represent relationships or communication paths between nodes.
     "startMarker": "none",
     "endMarker": "arrow"
   },
-  "animationId": "anim_browser_lb_request",
   "data": {}
 }
 ```
@@ -242,7 +248,6 @@ Edges represent relationships or communication paths between nodes.
 | `label` | no | Display label. |
 | `direction` | no | Direction semantics. |
 | `style` | no | Static visual styling. |
-| `animationId` | no | Linked animation definition. |
 | `data` | no | Extension object. |
 
 ### Edge Direction
@@ -363,8 +368,7 @@ New documents start with one `scene_default` scene. The `scenes` field remains o
       "edgeId": "edge_order_payment",
       "label": "Circuit open",
       "disabled": true,
-      "tone": "muted",
-      "animationId": null
+      "tone": "muted"
     }
   ],
   "nodeOverrides": [
@@ -384,7 +388,7 @@ New documents start with one `scene_default` scene. The `scenes` field remains o
 | `title` | yes | Human-facing scene name. |
 | `description` | no | Short explanation for viewer/editor UI. |
 | `animationIds` | no | Animation IDs active in this scene. If omitted, all enabled animations are rendered. |
-| `edgeOverrides` | no | Per-edge label, style, tone, animation, or disabled-state changes. |
+| `edgeOverrides` | no | Per-edge label, style, tone, or disabled-state changes. |
 | `nodeOverrides` | no | Per-node visual tone or status changes. |
 
 Initial scene tones:
@@ -398,6 +402,7 @@ muted
 ```
 
 Scenes are useful for explaining changing runtime behavior without moving the architecture itself.
+When a scene disables an edge, that edge is also excluded from active animations for the scene.
 
 ## Group
 
@@ -414,13 +419,13 @@ Groups organize nodes without becoming a freeform whiteboard feature.
 }
 ```
 
-Groups are optional. Nodes can reference groups with `groupId`, and groups can list node IDs. The renderer should tolerate either representation.
+Groups are optional. Group membership is defined only by `Group.nodeIds`.
 
 ## Complete MVP Example
 
 ```json
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "id": "diagram_basic_web_architecture",
   "kind": "architecture",
   "metadata": {
@@ -471,8 +476,7 @@ Groups are optional. Nodes can reference groups with `groupId`, and groups can l
       "label": "App Server",
       "position": { "x": 740, "y": 160 },
       "size": { "width": 160, "height": 80 },
-      "icon": "server",
-      "groupId": "backend"
+      "icon": "server"
     },
     {
       "id": "database",
@@ -480,8 +484,7 @@ Groups are optional. Nodes can reference groups with `groupId`, and groups can l
       "label": "Database",
       "position": { "x": 980, "y": 120 },
       "size": { "width": 160, "height": 80 },
-      "icon": "database",
-      "groupId": "data"
+      "icon": "database"
     },
     {
       "id": "storage",
@@ -489,8 +492,7 @@ Groups are optional. Nodes can reference groups with `groupId`, and groups can l
       "label": "Object Storage",
       "position": { "x": 980, "y": 280 },
       "size": { "width": 160, "height": 80 },
-      "icon": "storage",
-      "groupId": "data"
+      "icon": "storage"
     }
   ],
   "edges": [
@@ -508,8 +510,7 @@ Groups are optional. Nodes can reference groups with `groupId`, and groups can l
       "target": { "nodeId": "load_balancer" },
       "label": "HTTPS",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above" },
-      "animationId": "anim_request"
+      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above" }
     },
     {
       "id": "edge_lb_app",
@@ -517,8 +518,7 @@ Groups are optional. Nodes can reference groups with `groupId`, and groups can l
       "target": { "nodeId": "app_server" },
       "label": "HTTP",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent" },
-      "animationId": "anim_request"
+      "style": { "line": "solid", "routing": "smooth", "color": "accent" }
     },
     {
       "id": "edge_app_db",
@@ -600,7 +600,7 @@ JSONL is better suited for events:
 {"type":"node.add","nodeId":"api","node":{"type":"api","label":"API"}}
 {"type":"node.move","nodeId":"api","position":{"x":400,"y":200}}
 {"type":"edge.add","edgeId":"edge_browser_api","source":"browser","target":"api"}
-{"type":"animation.set","edgeId":"edge_browser_api","animationId":"anim_request"}
+{"type":"animation.update","id":"anim_request","edgeIds":["edge_browser_api"]}
 ```
 
 Recommended separation:

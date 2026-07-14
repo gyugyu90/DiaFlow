@@ -63,9 +63,6 @@ describe("diagram editor model", () => {
   it("deletes connected edges and cleans every dependent reference", () => {
     const cascadingDiagram = parseDiagramDocument({
       ...diagram,
-      edges: diagram.edges.map((edge) => edge.id === "edge_app_db"
-        ? { ...edge, animationId: "anim_removed" }
-        : { ...edge, animationId: undefined }),
       groups: [
         ...(diagram.groups ?? []),
         { id: "clients", label: "Clients", nodeIds: ["user", "browser"] },
@@ -82,8 +79,8 @@ describe("diagram editor model", () => {
         animationIds: ["anim_removed"],
         nodeOverrides: [{ nodeId: "browser", tone: "active" }],
         edgeOverrides: [
-          { edgeId: "edge_user_browser", animationId: "anim_removed" },
-          { edgeId: "edge_app_db", animationId: "anim_removed" },
+          { edgeId: "edge_user_browser" },
+          { edgeId: "edge_app_db" },
         ],
       }],
     });
@@ -96,12 +93,11 @@ describe("diagram editor model", () => {
     )).toBe(false);
     expect(updated.edges).toHaveLength(cascadingDiagram.edges.length - 2);
     expect(updated.animations).toEqual([]);
-    expect(updated.edges.find((edge) => edge.id === "edge_app_db")?.animationId).toBeUndefined();
     expect(updated.groups?.find((group) => group.id === "clients")?.nodeIds).toEqual(["user"]);
     expect(updated.scenes?.[0]).toMatchObject({
       animationIds: [],
       nodeOverrides: [],
-      edgeOverrides: [{ edgeId: "edge_app_db", animationId: null }],
+      edgeOverrides: [{ edgeId: "edge_app_db" }],
     });
     expect(() => parseDiagramDocument(updated)).not.toThrow();
   });

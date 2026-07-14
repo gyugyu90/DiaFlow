@@ -40,7 +40,7 @@ describe("diagram document files", () => {
 
     expect(reopenedAgain.metadata.title).toBe("Local Architecture");
     expect(reopenedAgain.id).toBe(created.id);
-    expect(reopenedAgain.schemaVersion).toBe("0.1");
+    expect(reopenedAgain.schemaVersion).toBe("0.2");
   });
 
   it("normalizes downloaded files to the diagram JSON suffix", () => {
@@ -61,7 +61,7 @@ describe("diagram document files", () => {
       throw new Error("Expected schema validation to fail");
     } catch (error) {
       expect(formatDiagramFileError(error)).toContain(
-        "Diagram JSON does not match schema 0.1",
+        "Diagram JSON does not match schema 0.2",
       );
       expect(formatDiagramFileError(error)).toContain("schemaVersion");
     }

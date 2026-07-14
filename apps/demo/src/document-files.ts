@@ -11,7 +11,7 @@ export function createEmptyDiagramDocument(now = new Date()): DiagramDocument {
   const idTimestamp = timestamp.replaceAll(/[^0-9]/g, "");
 
   return {
-    schemaVersion: "0.1",
+    schemaVersion: "0.2",
     id: `diagram_${idTimestamp}`,
     kind: "architecture",
     metadata: {
@@ -81,7 +81,7 @@ export function formatDiagramFileError(error: unknown): string {
   }
 
   if (hasIssues(error)) {
-    return `Diagram JSON does not match schema 0.1. ${formatIssues(error.issues)}`;
+    return `Diagram JSON does not match schema 0.2. ${formatIssues(error.issues)}`;
   }
 
   return error instanceof Error ? error.message : "The diagram file could not be opened.";

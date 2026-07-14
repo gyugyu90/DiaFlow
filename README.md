@@ -10,7 +10,7 @@ Every diagram is saved as structured `Diagram JSON`, so it stays editable and po
 turns that data into an interactive SVG experience in the browser.
 
 > 🚧 **Project status:** DiaFlow is an early public prototype. Diagram JSON currently uses
-> `schemaVersion: "0.1"`, and its APIs and file format may change before the first stable release.
+> `schemaVersion: "0.2"`, and its APIs and file format may change before the first stable release.
 
 ## 🌟 Why DiaFlow?
 
@@ -109,6 +109,15 @@ See the following resources:
 - [Basic web architecture example](examples/basic-web-architecture.diagram.json)
 - [Circuit breaker scenes example](examples/circuit-breaker-scenes.diagram.json)
 
+The Zod definition in `packages/schema/src/index.ts` is the schema source of truth.
+`schemas/diagram.schema.json` is generated from it and should not be edited by hand.
+
+```sh
+npm run schema:generate     # Regenerate the public JSON Schema
+npm run schema:check        # Fail when the generated file is out of sync
+npm run diagrams:validate   # Run structural and reference-integrity checks on examples
+```
+
 ## 🏗️ Project Structure
 
 ```txt
@@ -121,7 +130,8 @@ packages/
   editor/     Selection, dragging, property editing, and edit history
 
 examples/     Example .diagram.json documents
-schemas/      Published JSON Schema source
+schemas/      Generated public JSON Schema
+scripts/      Schema generation and Diagram JSON validation tools
 docs/         Format and testing documentation
 ```
 
@@ -134,7 +144,7 @@ packages and are not yet documented as a stable public npm API.
 npm run dev      # Start the local Vite development server
 npm test         # Run the Vitest suite
 npm run build    # Type-check packages and build the demo
-npm run check    # Run tests, then create a production build
+npm run check    # Check schema sync, validate examples, test, and build
 npm run preview  # Preview the production build locally
 ```
 

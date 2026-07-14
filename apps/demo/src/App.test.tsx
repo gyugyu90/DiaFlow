@@ -66,6 +66,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Opened Architecture" })).toBeTruthy();
     expect(screen.getByText("opened-architecture.diagram.json")).toBeTruthy();
     expect(screen.getByText("Saved")).toBeTruthy();
+    await screen.findByRole("img", { name: "Opened Architecture: Default Scene" });
     expect(document.querySelectorAll("[data-node-id]")).toHaveLength(6);
   });
 

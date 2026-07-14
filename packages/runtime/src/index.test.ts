@@ -198,6 +198,26 @@ describe("renderDiagram", () => {
     expect(container.querySelector('[data-animation-id="anim_fallback_response"]')).toBeTruthy();
   });
 
+  it("does not animate edges disabled by a scene", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const diagramWithDisabledAnimatedEdge = parseDiagramDocument({
+      ...circuitDiagram,
+      scenes: [{
+        id: "scene_disable_payment",
+        title: "Disable payment",
+        animationIds: ["anim_normal_request"],
+        edgeOverrides: [{ edgeId: "edge_order_payment", disabled: true }],
+      }],
+    });
+
+    renderDiagram(container, diagramWithDisabledAnimatedEdge, { sceneId: "scene_disable_payment" });
+
+    const animation = container.querySelector('[data-animation-id="anim_normal_request"]');
+    expect(animation?.querySelectorAll(".packet")).toHaveLength(4);
+    expect(animation?.querySelector('mpath[href="#path-edge_order_payment"]')).toBeNull();
+  });
+
   it("re-renders when switching scenes through renderer options", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

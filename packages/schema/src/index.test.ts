@@ -16,7 +16,7 @@ describe("diagramDocumentSchema", () => {
   it("accepts the basic web architecture sample", () => {
     const diagram = parseDiagramDocument(sampleDiagram);
 
-    expect(diagram.schemaVersion).toBe("0.1");
+    expect(diagram.schemaVersion).toBe("0.2");
     expect(diagram.kind).toBe("architecture");
     expect(diagram.nodes).toHaveLength(6);
     expect(diagram.edges).toHaveLength(5);
@@ -87,6 +87,25 @@ describe("diagramDocumentSchema", () => {
     invalid.kind = "workflow";
 
     expect(() => parseDiagramDocument(invalid)).toThrow();
+  });
+
+  it("rejects deprecated inverse group and animation references", () => {
+    const nodeWithGroupId = cloneSample() as unknown as Record<string, unknown>;
+    const node = (nodeWithGroupId.nodes as Array<Record<string, unknown>>)[0];
+    node.groupId = "backend";
+
+    const edgeWithAnimationId = cloneSample() as unknown as Record<string, unknown>;
+    const edge = (edgeWithAnimationId.edges as Array<Record<string, unknown>>)[0];
+    edge.animationId = "anim_request";
+
+    const overrideWithAnimationId = structuredClone(circuitBreakerDiagram) as unknown as Record<string, unknown>;
+    const scene = (overrideWithAnimationId.scenes as Array<Record<string, unknown>>)[0];
+    const override = (scene.edgeOverrides as Array<Record<string, unknown>>)[0];
+    override.animationId = null;
+
+    expect(() => parseDiagramDocument(nodeWithGroupId)).toThrow();
+    expect(() => parseDiagramDocument(edgeWithAnimationId)).toThrow();
+    expect(() => parseDiagramDocument(overrideWithAnimationId)).toThrow();
   });
 
   it("uses the same stable id format as the published JSON Schema", () => {

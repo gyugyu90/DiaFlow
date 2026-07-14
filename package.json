@@ -15,8 +15,11 @@
     "dev": "vite --config apps/demo/vite.config.ts --host 127.0.0.1",
     "build": "tsc -b && vite build --config apps/demo/vite.config.ts",
     "preview": "vite preview --config apps/demo/vite.config.ts --host 127.0.0.1",
+    "schema:generate": "npm run build --workspace @interactive-diagram/schema && node scripts/generate-diagram-schema.mjs",
+    "schema:check": "npm run build --workspace @interactive-diagram/schema && node scripts/generate-diagram-schema.mjs --check",
+    "diagrams:validate": "npm run build --workspace @interactive-diagram/schema && node scripts/validate-diagrams.mjs examples",
     "test": "vitest run --config vitest.config.ts",
-    "check": "npm test && npm run build"
+    "check": "npm run schema:check && npm run diagrams:validate && npm test && npm run build"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
@@ -25,9 +28,12 @@
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "jsdom": "^29.1.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "zod-to-json-schema": "^3.24.5"
   }
 }

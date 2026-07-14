@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "id": "diagram_basic_web_architecture",
   "kind": "architecture",
   "metadata": {
@@ -50,8 +50,7 @@
       "label": "App Server",
       "position": { "x": 740, "y": 160 },
       "size": { "width": 160, "height": 80 },
-      "icon": "server",
-      "groupId": "backend"
+      "icon": "server"
     },
     {
       "id": "database",
@@ -59,8 +58,7 @@
       "label": "Database",
       "position": { "x": 980, "y": 120 },
       "size": { "width": 160, "height": 80 },
-      "icon": "database",
-      "groupId": "data"
+      "icon": "database"
     },
     {
       "id": "storage",
@@ -68,8 +66,7 @@
       "label": "Object Storage",
       "position": { "x": 980, "y": 280 },
       "size": { "width": 160, "height": 80 },
-      "icon": "storage",
-      "groupId": "data"
+      "icon": "storage"
     }
   ],
   "edges": [
@@ -97,8 +94,7 @@
         "routing": "smooth",
         "color": "accent",
         "labelPlacement": "above"
-      },
-      "animationId": "anim_request"
+      }
     },
     {
       "id": "edge_lb_app",
@@ -110,8 +106,7 @@
         "line": "solid",
         "routing": "smooth",
         "color": "accent"
-      },
-      "animationId": "anim_request"
+      }
     },
     {
       "id": "edge_app_db",
