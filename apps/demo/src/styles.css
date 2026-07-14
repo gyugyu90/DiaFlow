@@ -418,6 +418,30 @@ dd {
   gap: 10px;
 }
 
+.side-section-heading,
+.node-actions {
+  display: flex;
+  align-items: center;
+}
+
+.side-section-heading {
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.node-actions {
+  gap: 6px;
+}
+
+.node-actions .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.node-actions .delete-button:not(:disabled) {
+  color: #b42318;
+}
+
 .side-stats {
   align-items: stretch;
   flex-direction: column;

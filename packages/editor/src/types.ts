@@ -32,6 +32,8 @@ export type DiagramEditorController = {
   cancelTransaction(): void;
   clearSelection(): void;
   commitTransaction(): void;
+  createNode(): string;
+  deleteSelectedNodes(): void;
   destroy(): void;
   getState(): DiagramEditorState;
   redo(): void;

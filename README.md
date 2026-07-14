@@ -36,7 +36,7 @@ part of this experience; standalone embedding and the public LLM skill remain ro
 - Schema-validated Diagram JSON with semantic reference checks
 - Deterministic SVG rendering from Diagram JSON
 - Pan, zoom, and an adaptive canvas grid
-- Node selection, editing, dragging, and Shift-based multi-selection
+- Node creation, cascading deletion, selection, editing, dragging, and Shift-based multi-selection
 - Edge selection and editing, including markers, routing, line styles, colors, and labels
 - Scene playback and animated data-flow examples
 - Local `New diagram`, `Open`, and `Save as` workflows
@@ -72,7 +72,7 @@ The first screen contains the bundled examples and actions for opening an existi
 
 1. Select **Open** to load an existing `.diagram.json` file, or select **New diagram** to create
    an empty schema-valid document.
-2. Edit supported node and edge properties on the canvas.
+2. Add, select, move, edit, or delete nodes and edit supported edge properties on the canvas.
 3. Select **Save as** to download the current document as a `.diagram.json` file.
 4. Reopen that file later to continue editing.
 
@@ -143,8 +143,8 @@ regression tests. See the [testing policy](docs/testing-policy.md) for the expec
 
 ## 🚧 Good to Know
 
-- The editor cannot yet create or delete nodes and edges from the UI.
-- A new diagram starts as an empty document intended for upcoming authoring controls.
+- The editor cannot yet create or delete edges from the UI.
+- Deleting a node also deletes every edge connected to it.
 - Direct `Save` through the File System Access API is not available.
 - Group and scene authoring are not available in the editor.
 - The prompt field does not call an AI service.
@@ -155,7 +155,7 @@ regression tests. See the [testing policy](docs/testing-policy.md) for the expec
 
 Here is what comes next for the local-first experience:
 
-1. Add node and edge creation and deletion.
+1. Add edge creation and deletion.
 2. Support direct file saving where the browser permits it.
 3. Separate the local editor from the sample gallery entry point.
 4. Produce a standalone read-only iframe viewer.

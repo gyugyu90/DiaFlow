@@ -11,7 +11,9 @@ import {
   FolderOpen,
   Maximize2,
   PlayCircle,
+  Plus,
   Redo2,
+  Trash2,
   Undo2,
   X,
 } from "lucide-react";
@@ -498,7 +500,30 @@ function EditorPage({
           </section>
 
           <section>
-            <h2>Nodes</h2>
+            <div className="side-section-heading">
+              <h2>Nodes</h2>
+              <div className="node-actions">
+                <button
+                  className="icon-button"
+                  type="button"
+                  onClick={() => editorRef.current?.createNode()}
+                  aria-label="Add node"
+                  title="Add node"
+                >
+                  <Plus size={16} aria-hidden="true" />
+                </button>
+                <button
+                  className="icon-button delete-button"
+                  type="button"
+                  onClick={() => editorRef.current?.deleteSelectedNodes()}
+                  disabled={selectedNodeIds.length === 0}
+                  aria-label="Delete selected nodes"
+                  title="Delete selected nodes"
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
             <ol className="node-list">
               {item.diagram.nodes.map((node) => (
                 <li key={node.id}>

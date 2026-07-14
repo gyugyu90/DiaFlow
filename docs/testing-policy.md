@@ -97,6 +97,7 @@ Use editor tests when changing:
 - side panels
 - prompt input
 - node/edge editing UI
+- node creation and cascading deletion
 - edit transaction and Undo/Redo boundaries
 - single and multi-selection behavior
 - publish flow

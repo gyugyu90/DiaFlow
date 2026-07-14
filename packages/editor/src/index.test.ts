@@ -3,7 +3,9 @@ import { fireEvent } from "@testing-library/dom";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import {
+  addDiagramNode,
   createDiagramEditor,
+  deleteDiagramNodes,
   moveDiagramNodes,
   updateDiagramEdge,
   updateDiagramNode,
@@ -35,6 +37,74 @@ beforeEach(() => {
 });
 
 describe("diagram editor model", () => {
+  it("adds schema-ready nodes with stable unique ids", () => {
+    const first = addDiagramNode(diagram);
+    const second = addDiagramNode(first.diagram);
+
+    expect(first.node).toMatchObject({
+      id: "node_1",
+      label: "New Node",
+      type: "server",
+    });
+    expect(second.node).toMatchObject({
+      id: "node_2",
+      label: "New Node 2",
+      type: "server",
+    });
+    expect(diagram.nodes.every((node) =>
+      Math.abs(node.position.x - first.node.position.x) >= 190 ||
+      Math.abs(node.position.y - first.node.position.y) >= 120
+    )).toBe(true);
+    expect(diagram.nodes.some((node) => node.id === "node_1")).toBe(false);
+    expect(() => parseDiagramDocument(second.diagram)).not.toThrow();
+  });
+
+  it("deletes connected edges and cleans every dependent reference", () => {
+    const cascadingDiagram = parseDiagramDocument({
+      ...diagram,
+      edges: diagram.edges.map((edge) => edge.id === "edge_app_db"
+        ? { ...edge, animationId: "anim_removed" }
+        : { ...edge, animationId: undefined }),
+      groups: [
+        ...(diagram.groups ?? []),
+        { id: "clients", label: "Clients", nodeIds: ["user", "browser"] },
+      ],
+      animations: [{
+        id: "anim_removed",
+        type: "packet",
+        edgeIds: ["edge_user_browser"],
+        enabled: true,
+      }],
+      scenes: [{
+        id: "scene_delete",
+        title: "Delete references",
+        animationIds: ["anim_removed"],
+        nodeOverrides: [{ nodeId: "browser", tone: "active" }],
+        edgeOverrides: [
+          { edgeId: "edge_user_browser", animationId: "anim_removed" },
+          { edgeId: "edge_app_db", animationId: "anim_removed" },
+        ],
+      }],
+    });
+
+    const updated = deleteDiagramNodes(cascadingDiagram, ["browser"]);
+
+    expect(updated.nodes.some((node) => node.id === "browser")).toBe(false);
+    expect(updated.edges.some((edge) =>
+      edge.source.nodeId === "browser" || edge.target.nodeId === "browser"
+    )).toBe(false);
+    expect(updated.edges).toHaveLength(cascadingDiagram.edges.length - 2);
+    expect(updated.animations).toEqual([]);
+    expect(updated.edges.find((edge) => edge.id === "edge_app_db")?.animationId).toBeUndefined();
+    expect(updated.groups?.find((group) => group.id === "clients")?.nodeIds).toEqual(["user"]);
+    expect(updated.scenes?.[0]).toMatchObject({
+      animationIds: [],
+      nodeOverrides: [],
+      edgeOverrides: [{ edgeId: "edge_app_db", animationId: null }],
+    });
+    expect(() => parseDiagramDocument(updated)).not.toThrow();
+  });
+
   it("updates a node without mutating the source document", () => {
     const updated = updateDiagramNode(diagram, "user", {
       label: "Customer",
@@ -86,6 +156,50 @@ describe("diagram editor model", () => {
 });
 
 describe("createDiagramEditor", () => {
+  it("creates, selects, deletes, and restores a node through history", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+
+    const nodeId = editor.createNode();
+    expect(nodeId).toBe("node_1");
+    expect(editor.getState().selectedNodeIds).toEqual(["node_1"]);
+    expect(container.querySelector('[data-node-id="node_1"]')).toBeTruthy();
+
+    editor.deleteSelectedNodes();
+    expect(container.querySelector('[data-node-id="node_1"]')).toBeNull();
+    expect(editor.getState().selectedNodeIds).toEqual([]);
+
+    editor.undo();
+    expect(container.querySelector('[data-node-id="node_1"]')).toBeTruthy();
+    editor.undo();
+    expect(container.querySelector('[data-node-id="node_1"]')).toBeNull();
+    editor.destroy();
+  });
+
+  it("deletes selected nodes with the keyboard but ignores text inputs", () => {
+    const container = document.createElement("div");
+    const input = document.createElement("input");
+    document.body.append(container, input);
+    const editor = createDiagramEditor(container, diagram);
+    editor.selectNode("browser");
+
+    fireEvent.keyDown(input, { key: "Backspace" });
+    expect(editor.getState().diagram.nodes.some((node) => node.id === "browser")).toBe(true);
+
+    const modal = document.createElement("section");
+    modal.setAttribute("aria-modal", "true");
+    document.body.appendChild(modal);
+    fireEvent.keyDown(window, { key: "Delete" });
+    expect(editor.getState().diagram.nodes.some((node) => node.id === "browser")).toBe(true);
+    modal.remove();
+
+    fireEvent.keyDown(window, { key: "Delete" });
+    expect(editor.getState().diagram.nodes.some((node) => node.id === "browser")).toBe(false);
+    expect(editor.getState().diagram.edges).toHaveLength(diagram.edges.length - 2);
+    editor.destroy();
+  });
+
   it("shift-selects nodes, hides the inspector, and moves the group as one history entry", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

@@ -72,6 +72,8 @@ Diagram JSON을 생성하고 수정하는 공개 LLM 스킬은 Schema와 함께 
 
 ## Editor backlog
 
+- [x] node 생성 및 삭제, 연결된 edge 연쇄 삭제
+- [ ] edge 생성 및 삭제
 - [x] viewport 이동 및 node drag 중 node edit popup 숨기기
 - [x] edge 수정하기
 - [x] edge 타입 여러개 만들기

@@ -43,6 +43,45 @@ describe("App", () => {
     expect(document.querySelectorAll("[data-node-id]")).toHaveLength(0);
   });
 
+  it("adds a node to an empty diagram and restores it after deletion", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "New diagram" }));
+
+    const deleteButton = screen.getByRole("button", { name: "Delete selected nodes" });
+    expect((deleteButton as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Add node" }));
+
+    expect(await screen.findByRole("dialog", { name: "Edit node New Node" })).toBeTruthy();
+    expect(document.querySelectorAll("[data-node-id]")).toHaveLength(1);
+    expect((deleteButton as HTMLButtonElement).disabled).toBe(false);
+
+    fireEvent.click(deleteButton);
+    expect(document.querySelectorAll("[data-node-id]")).toHaveLength(0);
+    expect(screen.queryByRole("dialog", { name: "Edit node New Node" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect(document.querySelectorAll("[data-node-id]")).toHaveLength(1);
+  });
+
+  it("deletes every edge connected to a selected node and restores them with undo", async () => {
+    render(<App />);
+    fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    const browserNode = document.querySelector('[data-node-id="browser"]');
+    if (!browserNode) throw new Error("Missing browser node");
+    expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
+
+    fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.click(screen.getByRole("button", { name: "Delete selected nodes" }));
+
+    expect(document.querySelector('[data-node-id="browser"]')).toBeNull();
+    expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(3);
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect(document.querySelector('[data-node-id="browser"]')).toBeTruthy();
+    expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
+  });
+
   it("opens a valid diagram JSON file as a clean editable document", async () => {
     render(<App />);
     const openedDiagram = {

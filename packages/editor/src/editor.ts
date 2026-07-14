@@ -14,7 +14,13 @@ import {
   updateSelectedEdgeAnchor,
   updateSelectedNodeAnchor,
 } from "./dom.js";
-import { moveDiagramNodes, updateDiagramEdge, updateDiagramNode } from "./model.js";
+import {
+  addDiagramNode,
+  deleteDiagramNodes,
+  moveDiagramNodes,
+  updateDiagramEdge,
+  updateDiagramNode,
+} from "./model.js";
 import type {
   DiagramEditorController,
   DiagramEditorOptions,
@@ -75,6 +81,7 @@ class DomDiagramEditor implements DiagramEditorController {
     window.addEventListener("pointerup", this.handleRelease);
     window.addEventListener("mouseup", this.handleRelease);
     window.addEventListener("pointercancel", this.handleRelease);
+    window.addEventListener("keydown", this.handleKeyDown);
     this.emitState();
   }
 
@@ -168,6 +175,26 @@ class DomDiagramEditor implements DiagramEditorController {
     this.emitState();
   }
 
+  createNode(): string {
+    this.commitTransaction();
+    const result = addDiagramNode(this.diagram);
+    this.selectedNodeIds = new Set([result.node.id]);
+    this.selectedEdgeId = null;
+    this.commit(result.diagram, { nodeIds: [result.node.id] });
+    return result.node.id;
+  }
+
+  deleteSelectedNodes(): void {
+    this.commitTransaction();
+    if (this.selectedNodeIds.size === 0) return;
+
+    const nextDiagram = deleteDiagramNodes(this.diagram, this.selectedNodeIds);
+    if (nextDiagram === this.diagram) return;
+    this.selectedNodeIds.clear();
+    this.selectedEdgeId = null;
+    this.commit(nextDiagram);
+  }
+
   updateNode(nodeId: string, patch: NodePatch): void {
     this.commit(updateDiagramNode(this.diagram, nodeId, patch), { nodeIds: [nodeId] });
   }
@@ -219,6 +246,7 @@ class DomDiagramEditor implements DiagramEditorController {
     window.removeEventListener("pointerup", this.handleRelease);
     window.removeEventListener("mouseup", this.handleRelease);
     window.removeEventListener("pointercancel", this.handleRelease);
+    window.removeEventListener("keydown", this.handleKeyDown);
     this.renderer.destroy();
     this.container.classList.remove("interactive-diagram-editor");
   }
@@ -292,6 +320,18 @@ class DomDiagramEditor implements DiagramEditorController {
       this.future = [];
       this.emitState();
     }
+  };
+
+  private readonly handleKeyDown = (event: KeyboardEvent): void => {
+    if (
+      (event.key !== "Delete" && event.key !== "Backspace") ||
+      this.selectedNodeIds.size === 0 ||
+      isTextInput(event.target) ||
+      hasOpenModalOutside(this.container)
+    ) return;
+
+    event.preventDefault();
+    this.deleteSelectedNodes();
   };
 
   private readonly handleViewportChange = (event: ViewportChangeEvent): void => {
@@ -379,4 +419,16 @@ class DomDiagramEditor implements DiagramEditorController {
   private emitSelectionAnchor(position: InspectorPosition | null): void {
     this.getSelectionAnchorCallback()?.(position);
   }
+}
+
+function isTextInput(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (
+    target.isContentEditable ||
+    target.matches("input, textarea, select")
+  );
+}
+
+function hasOpenModalOutside(container: HTMLElement): boolean {
+  const modal = document.querySelector('[aria-modal="true"]');
+  return modal !== null && !container.contains(modal);
 }
