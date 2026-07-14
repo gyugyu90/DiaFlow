@@ -22,7 +22,8 @@ describe("App", () => {
   it("starts on a single-column diagram list with diagram cards", () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "Diagrams" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+    expect(screen.getByText("Interactive diagrams")).toBeTruthy();
     const list = screen.getByRole("region", { name: "Diagram list" });
     expect(within(list).getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     expect(within(list).getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
@@ -75,7 +76,7 @@ describe("App", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toContain("This file is not valid JSON");
-    expect(screen.getByRole("heading", { name: "Diagrams" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
   });
 
   it("opens the selected diagram in a large view modal", async () => {
@@ -301,7 +302,7 @@ describe("App", () => {
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("button", { name: "Back to diagram list" }));
 
-    expect(screen.getByRole("heading", { name: "Diagrams" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
   });
 
   it("opens the view modal from the edit page", async () => {

@@ -66,6 +66,21 @@ button:disabled {
   gap: 16px;
 }
 
+.brand-lockup {
+  display: grid;
+  gap: 2px;
+}
+
+.brand-lockup h1 {
+  font-size: 30px;
+}
+
+.brand-lockup p {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .file-input {
   display: none;
 }

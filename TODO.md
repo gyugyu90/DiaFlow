@@ -50,11 +50,11 @@
 ### 4. Provide an LLM skill
 
 Diagram JSON을 생성하고 수정하는 공개 LLM 스킬은 Schema와 함께 변경하고 검증할 수 있도록
-이 저장소의 `skills/interactive-diagram/`에서 관리한다. 스킬은 특정 AI 서비스나 인증 정보에
+이 저장소의 `skills/diaflow/`에서 관리한다. 스킬은 특정 AI 서비스나 인증 정보에
 의존하지 않고, 로컬 파일과 공개된 Schema만으로 사용할 수 있어야 한다.
 
 - [ ] 스킬의 책임을 Diagram JSON 생성, 수정, 설명, 검증으로 제한
-- [ ] `skills/interactive-diagram/SKILL.md`에 실행 절차와 출력 규칙 작성
+- [ ] `skills/diaflow/SKILL.md`에 실행 절차와 출력 규칙 작성
 - [ ] LLM이 SVG, HTML, Canvas 대신 Diagram JSON만 생성하도록 명시
 - [ ] 현재 `schemaVersion`과 지원하는 node, edge, marker, animation, scene 목록 문서화
 - [ ] 작은 시스템 구성도와 scene 기반 구성도를 위한 예제 요청 및 기대 결과 추가

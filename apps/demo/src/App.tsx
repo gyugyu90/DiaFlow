@@ -202,9 +202,9 @@ export function App() {
     <>
       <main className="app-shell">
         <header className="app-header">
-          <div>
-            <p className="eyebrow">Interactive Diagram</p>
-            <h1>Diagrams</h1>
+          <div className="brand-lockup">
+            <h1>DiaFlow</h1>
+            <p>Interactive diagrams</p>
           </div>
           <div className="toolbar">
             <input

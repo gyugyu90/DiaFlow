@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`Diagram JSON` is the source-of-truth document format for interactive diagrams in this project.
+`Diagram JSON` is the source-of-truth document format for interactive diagrams in DiaFlow.
 
 It is not an existing standard. It is a project-defined schema designed for:
 

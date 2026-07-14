@@ -1,14 +1,14 @@
 # AGENTS.md
 
-# AI Interactive Diagram Platform
+# DiaFlow
 
-> Generate with AI. Refine visually. Animate the flow. Embed anywhere.
+> An AI-native platform for interactive, animated, and embeddable diagrams.
 
 ---
 
 # 1. 프로젝트 개요
 
-이 프로젝트는 AI를 활용하여 다양한 다이어그램을 생성하고,
+DiaFlow는 AI를 활용하여 다양한 다이어그램을 생성하고,
 사용자가 이를 시각적으로 수정한 뒤,
 인터랙티브한 형태로 웹에 배포할 수 있는 플랫폼을 만드는 것을 목표로 한다.
 
@@ -473,7 +473,7 @@ AI Image Generator
 
 # 16. 장기 목표
 
-Interactive Diagram Platform
+DiaFlow Interactive Diagram Platform
 
 ↓
 
@@ -549,7 +549,7 @@ Embed를 우선한다.
 
 # 19. 제품 한 줄 정의
 
-AI가 생성하고
+DiaFlow는 AI가 생성하고
 
 사람이 다듬으며
 

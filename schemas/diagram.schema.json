@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://interactive-diagram.local/schemas/diagram.schema.json",
-  "title": "Interactive Diagram",
-  "description": "Source-of-truth document schema for interactive architecture diagrams.",
+  "title": "DiaFlow Diagram",
+  "description": "Source-of-truth document schema for DiaFlow interactive architecture diagrams.",
   "type": "object",
   "additionalProperties": false,
   "required": [
