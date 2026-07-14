@@ -159,7 +159,15 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
     const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    const documentHeading = document.querySelector<HTMLElement>(".editor-document-heading");
+    if (!documentHeading) throw new Error("Missing editor document heading");
     expect(within(sideView).queryByRole("heading", { name: "Overview" })).toBeNull();
+    expect(within(sideView).queryByLabelText("Diagram title")).toBeNull();
+    expect(within(documentHeading).getByRole("button", { name: "Edit diagram title" }))
+      .toBeTruthy();
+    expect(within(documentHeading).getByRole("button", { name: "Edit diagram description" }))
+      .toBeTruthy();
+    expect(within(documentHeading).queryByLabelText("Diagram title")).toBeNull();
     expect(canvas.classList.contains("has-scene-controls")).toBe(true);
     expect(within(canvas).getByRole("region", { name: "Scene controls" })).toBeTruthy();
     expect(within(canvas).getByRole("heading", { name: "Default Scene" })).toBeTruthy();
@@ -172,24 +180,30 @@ describe("App", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "New diagram" }));
 
-    const titleInput = screen.getByLabelText("Diagram title") as HTMLInputElement;
-    const descriptionInput = screen.getByLabelText("Diagram description") as HTMLTextAreaElement;
-    expect(titleInput.value).toBe("Untitled Diagram");
-    expect(descriptionInput.value).toBe("");
+    const titleDisplay = screen.getByRole("button", { name: "Edit diagram title" });
+    const descriptionDisplay = screen.getByRole("button", { name: "Edit diagram description" });
+    expect(titleDisplay.textContent).toBe("Untitled Diagram");
+    expect(descriptionDisplay.textContent).toBe("Tell us what this diagram is about");
 
-    fireEvent.focus(titleInput);
+    fireEvent.click(titleDisplay);
+    const titleInput = screen.getByLabelText("Diagram title") as HTMLInputElement;
     fireEvent.change(titleInput, { target: { value: "Checkout Flow" } });
     fireEvent.blur(titleInput);
+    expect(screen.queryByLabelText("Diagram title")).toBeNull();
     expect(screen.getByRole("heading", { name: "Checkout Flow" })).toBeTruthy();
 
-    fireEvent.focus(descriptionInput);
+    fireEvent.click(screen.getByRole("button", { name: "Edit diagram description" }));
+    const descriptionInput = screen.getByLabelText("Diagram description") as HTMLTextAreaElement;
+    expect(descriptionInput.placeholder).toBe("Tell us what this diagram is about");
     fireEvent.change(descriptionInput, { target: { value: "Customer checkout services" } });
     fireEvent.blur(descriptionInput);
-    expect((screen.getByLabelText("Diagram description") as HTMLTextAreaElement).value)
+    expect(screen.queryByLabelText("Diagram description")).toBeNull();
+    expect(screen.getByRole("button", { name: "Edit diagram description" }).textContent)
       .toBe("Customer checkout services");
 
     fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
-    expect((screen.getByLabelText("Diagram description") as HTMLTextAreaElement).value).toBe("");
+    expect(screen.getByRole("button", { name: "Edit diagram description" }).textContent)
+      .toBe("Tell us what this diagram is about");
     expect(screen.getByRole("heading", { name: "Checkout Flow" })).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));

@@ -16,6 +16,18 @@
   box-sizing: border-box;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 html,
 body,
 #root {
@@ -233,18 +245,102 @@ p {
 
 .editor-document-heading {
   display: grid;
-  gap: 2px;
+  width: min(720px, 100%);
   min-width: 0;
 }
 
-.editor-document-heading h1 {
+.editor-title-heading {
+  min-width: 0;
+}
+
+.inline-metadata-display {
+  display: block;
+  width: 100%;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  letter-spacing: 0;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.inline-metadata-display:hover {
+  border-color: rgba(105, 117, 134, 0.12);
+  background: rgba(105, 117, 134, 0.08);
+}
+
+.inline-metadata-display:focus-visible {
+  border-color: rgba(47, 111, 237, 0.34);
+  background: rgba(47, 111, 237, 0.07);
+  outline: 2px solid rgba(47, 111, 237, 0.12);
+}
+
+.editor-title-display,
+.editor-title-input {
+  min-height: 40px;
+  color: var(--text);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.editor-title-display {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.editor-description-display,
+.editor-description-input {
+  min-height: 42px;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.editor-description-display.is-placeholder {
+  color: #8a96a8;
+  font-weight: 500;
+}
+
+.editor-title-input,
+.editor-description-input {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.06);
+}
+
+.editor-title-input {
+  padding: 3px 6px;
+}
+
+.editor-description-input {
+  padding: 5px 6px;
+  resize: none;
+}
+
+.editor-title-input:focus,
+.editor-description-input:focus {
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+
+.editor-description-input::placeholder {
+  color: #8a96a8;
+  font-weight: 500;
+}
+
 .editor-document-heading .document-file-status {
-  margin-top: 3px;
+  margin-top: 4px;
+  padding-left: 4px;
 }
 
 .diagram-card-thumbnail {
@@ -271,6 +367,11 @@ p {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.editor-title-row {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .button,
@@ -420,47 +521,6 @@ p {
 .node-actions {
   display: flex;
   align-items: center;
-}
-
-.diagram-details label {
-  display: grid;
-  gap: 6px;
-}
-
-.diagram-details label span {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.diagram-details input,
-.diagram-details textarea {
-  width: 100%;
-  border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.diagram-details input {
-  min-height: 38px;
-  padding: 0 10px;
-}
-
-.diagram-details textarea {
-  min-height: 76px;
-  padding: 9px 10px;
-  resize: vertical;
-}
-
-.diagram-details input:focus,
-.diagram-details textarea:focus {
-  border-color: var(--line-strong);
-  outline: 2px solid rgba(47, 111, 237, 0.14);
-  outline-offset: 0;
 }
 
 .side-section-heading {
@@ -771,5 +831,10 @@ p {
   .app-header .toolbar {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .editor-title-row,
+  .editor-document-heading {
+    width: 100%;
   }
 }
