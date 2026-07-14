@@ -1,38 +1,37 @@
 # DiaFlow
 
-DiaFlow is a local-first toolkit for creating, editing, animating, and eventually embedding
-interactive technical diagrams.
+DiaFlow helps you turn technical systems into interactive diagrams that people can explore, edit,
+and play through.
 
 **Diagrams that explain themselves: interactive, easy to create and refine, scenario-aware,
 embeddable anywhere, and readable by both people and AI.**
 
-The source of every diagram is a structured `Diagram JSON` document. SVG is a rendered view,
-not the source of truth. This keeps diagrams editable, deterministic, and portable across tools
-and websites.
+Every diagram is saved as structured `Diagram JSON`, so it stays editable and portable. DiaFlow
+turns that data into an interactive SVG experience in the browser.
 
-> **Project status:** DiaFlow is an early public prototype. Diagram JSON currently uses
+> 🚧 **Project status:** DiaFlow is an early public prototype. Diagram JSON currently uses
 > `schemaVersion: "0.1"`, and its APIs and file format may change before the first stable release.
 
-## What DiaFlow Stands For
+## 🌟 Why DiaFlow?
 
-- **Self-explanatory.** A diagram should communicate its structure and behavior without requiring
+- 💡 **Self-explanatory.** A diagram should communicate its structure and behavior without requiring
   a separate wall of text. Labels, visual hierarchy, animation, and scenes should work together to
   explain the system.
-- **Interactive by default.** A diagram should be explored, inspected, zoomed, and played rather
+- 🖱️ **Interactive by default.** A diagram should be explored, inspected, zoomed, and played rather
   than consumed as a fixed image.
-- **Easy to create and refine.** Start from a structured draft, then adjust nodes, connections,
+- ✏️ **Easy to create and refine.** Start from a structured draft, then adjust nodes, connections,
   layout, labels, and behavior visually without losing the underlying model.
-- **Scenario-driven.** Use the same architecture to explain normal operation, failures, retries,
+- 🎬 **Scenario-driven.** Use the same architecture to explain normal operation, failures, retries,
   recovery, and other changes over time.
-- **Embed anywhere.** Diagrams should remain interactive inside technical blogs, documentation,
+- 🌍 **Embed anywhere.** Diagrams should remain interactive inside technical blogs, documentation,
   websites, and wikis instead of being exported only as static images.
-- **Readable by people and AI.** Diagram JSON gives humans, editors, validators, and language models
+- 🤖 **Readable by people and AI.** Diagram JSON gives humans, editors, validators, and language models
   one explicit format they can all inspect and modify.
 
 These principles describe the product direction. The local editor and scene runtime already cover
 part of this experience; standalone embedding and the public LLM skill remain roadmap work.
 
-## Current Features
+## ✨ What Works Today
 
 - Schema-validated Diagram JSON with semantic reference checks
 - Deterministic SVG rendering from Diagram JSON
@@ -44,7 +43,7 @@ part of this experience; standalone embedding and the public LLM skill remain ro
 - Dirty-state tracking and unsaved-page warnings
 - Runtime, editor, and schema packages with regression tests
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Requirements
 
@@ -69,7 +68,7 @@ Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/) in a browser.
 The first screen contains the bundled examples and actions for opening an existing
 `.diagram.json` file or creating a new empty document.
 
-## Local File Workflow
+## 💾 Work with Local Files
 
 1. Select **Open** to load an existing `.diagram.json` file, or select **New diagram** to create
    an empty schema-valid document.
@@ -84,7 +83,7 @@ application.
 Directly overwriting the original file through the File System Access API is not implemented yet.
 `Save as` currently uses the browser download flow.
 
-## Diagram JSON
+## 🧩 Diagram JSON
 
 Diagram JSON is a project-defined format, not an existing standard. Its main document model is:
 
@@ -110,7 +109,7 @@ See the following resources:
 - [Basic web architecture example](examples/basic-web-architecture.diagram.json)
 - [Circuit breaker scenes example](examples/circuit-breaker-scenes.diagram.json)
 
-## Repository Structure
+## 🏗️ Project Structure
 
 ```txt
 apps/
@@ -129,7 +128,7 @@ docs/         Format and testing documentation
 The package namespace remains `@interactive-diagram/*` for now. These packages are workspace
 packages and are not yet documented as a stable public npm API.
 
-## Development Commands
+## 🛠️ Build and Test
 
 ```sh
 npm run dev      # Start the local Vite development server
@@ -142,17 +141,7 @@ npm run preview  # Preview the production build locally
 Changes to the schema, renderer output, editor behavior, or local document workflow should include
 regression tests. See the [testing policy](docs/testing-policy.md) for the expected test layers.
 
-## Design Principles
-
-- **Diagram JSON is the source of truth.** Rendered SVG, Canvas, PNG, and HTML are derived output.
-- **Everything should remain editable.** Generated output should not become a fixed image.
-- **Animation should explain flow.** Motion represents requests, responses, retries, events, and
-  other system behavior rather than decoration.
-- **The runtime should be deterministic.** The same document and options should produce the same
-  rendered result.
-- **Embed is a primary output.** Portable, versioned website embedding is a core project direction.
-
-## Current Limitations
+## 🚧 Good to Know
 
 - The editor cannot yet create or delete nodes and edges from the UI.
 - A new diagram starts as an empty document intended for upcoming authoring controls.
@@ -162,9 +151,9 @@ regression tests. See the [testing policy](docs/testing-policy.md) for the expec
 - The standalone iframe/script embed runtime has not been released.
 - Schema migration between versions is not implemented.
 
-## Roadmap
+## 🗺️ Where DiaFlow Is Heading
 
-The next local-first milestones are:
+Here is what comes next for the local-first experience:
 
 1. Add node and edge creation and deletion.
 2. Support direct file saving where the browser permits it.
@@ -175,7 +164,7 @@ The next local-first milestones are:
 
 The detailed working list is maintained in [TODO.md](TODO.md).
 
-## Contributing
+## 🤝 Contributing
 
 DiaFlow is being developed in public. Focused issues and pull requests are welcome, especially for
 schema correctness, renderer compatibility, editor usability, accessibility, testing, and
@@ -188,7 +177,7 @@ Before submitting a change:
 3. Run `npm run check`.
 4. Update the relevant documentation when changing Diagram JSON or a public contract.
 
-## License
+## 📄 License
 
 An open-source license has not been selected yet. Until a `LICENSE` file is added, the repository is
 publicly visible but is not licensed for reuse or redistribution.
