@@ -12,6 +12,20 @@ function cloneSample() {
   return structuredClone(sampleDiagram);
 }
 
+function addUnknownField(value: unknown, path: Array<string | number>): void {
+  let target = value;
+  for (const segment of path) {
+    if (typeof target !== "object" || target === null) {
+      throw new Error(`Invalid test path: ${path.join(".")}`);
+    }
+    target = (target as Record<string | number, unknown>)[segment];
+  }
+  if (typeof target !== "object" || target === null || Array.isArray(target)) {
+    throw new Error(`Test path is not an object: ${path.join(".")}`);
+  }
+  (target as Record<string, unknown>).unexpectedField = true;
+}
+
 describe("diagramDocumentSchema", () => {
   it("accepts the basic web architecture sample", () => {
     const diagram = parseDiagramDocument(sampleDiagram);
@@ -106,6 +120,64 @@ describe("diagramDocumentSchema", () => {
     expect(() => parseDiagramDocument(nodeWithGroupId)).toThrow();
     expect(() => parseDiagramDocument(edgeWithAnimationId)).toThrow();
     expect(() => parseDiagramDocument(overrideWithAnimationId)).toThrow();
+  });
+
+  it("rejects unknown fields at every structural object boundary", () => {
+    const samplePaths: Array<Array<string | number>> = [
+      [],
+      ["metadata"],
+      ["viewport"],
+      ["theme"],
+      ["nodes", 0],
+      ["nodes", 0, "position"],
+      ["nodes", 0, "size"],
+      ["edges", 0],
+      ["edges", 0, "source"],
+      ["edges", 0, "target"],
+      ["edges", 0, "style"],
+      ["groups", 0],
+      ["groups", 0, "style"],
+      ["animations", 0],
+      ["scenes", 0],
+    ];
+
+    samplePaths.forEach((path) => {
+      const invalid = cloneSample();
+      addUnknownField(invalid, path);
+      expect(() => parseDiagramDocument(invalid), path.join(".") || "<root>").toThrow();
+    });
+
+    const portWithUnknownField = cloneSample() as unknown as Record<string, unknown>;
+    const firstNode = (portWithUnknownField.nodes as Array<Record<string, unknown>>)[0];
+    firstNode.ports = [{ id: "out", side: "right", unexpectedField: true }];
+    expect(() => parseDiagramDocument(portWithUnknownField), "nodes.0.ports.0").toThrow();
+
+    const scenePaths: Array<Array<string | number>> = [
+      ["scenes", 0, "edgeOverrides", 0],
+      ["scenes", 0, "nodeOverrides", 0],
+    ];
+    scenePaths.forEach((path) => {
+      const invalid = structuredClone(circuitBreakerDiagram);
+      addUnknownField(invalid, path);
+      expect(() => parseDiagramDocument(invalid), path.join(".")).toThrow();
+    });
+  });
+
+  it("keeps extension fields inside data and payload objects", () => {
+    const input = cloneSample() as unknown as {
+      nodes: Array<Record<string, unknown>>;
+      edges: Array<Record<string, unknown>>;
+      animations: Array<Record<string, unknown>>;
+    };
+    input.nodes[0].data = { owner: "platform", nested: { enabled: true } };
+    input.edges[0].data = { protocolVersion: 2 };
+    input.animations[0].payload = { traceId: "trace_1", retryCount: 3 };
+
+    const parsed = parseDiagramDocument(input);
+
+    expect(parsed.nodes[0].data).toEqual({ owner: "platform", nested: { enabled: true } });
+    expect(parsed.edges[0].data).toEqual({ protocolVersion: 2 });
+    expect(parsed.animations?.[0].payload).toEqual({ traceId: "trace_1", retryCount: 3 });
   });
 
   it("uses the same stable id format as the published JSON Schema", () => {

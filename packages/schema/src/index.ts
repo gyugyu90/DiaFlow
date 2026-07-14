@@ -27,12 +27,12 @@ export const nodeTypeSchema = z.enum([
 export const pointSchema = z.object({
   x: z.number().describe("Horizontal canvas coordinate in diagram units."),
   y: z.number().describe("Vertical canvas coordinate in diagram units."),
-}).describe("Absolute point in the diagram coordinate system.");
+}).strict().describe("Absolute point in the diagram coordinate system.");
 
 export const sizeSchema = z.object({
   width: z.number().positive().describe("Positive width in diagram units."),
   height: z.number().positive().describe("Positive height in diagram units."),
-}).describe("Explicit rendered size of a diagram element.");
+}).strict().describe("Explicit rendered size of a diagram element.");
 
 export const nodeSchema = z.object({
   id: idSchema.describe("Unique node identifier referenced by edges, groups, and scenes."),
@@ -48,7 +48,7 @@ export const nodeSchema = z.object({
         id: idSchema.describe("Port identifier unique within this node."),
         side: z.enum(["top", "right", "bottom", "left"])
           .describe("Node side where the port is rendered."),
-      }),
+      }).strict(),
     )
     .optional()
     .describe("Optional named connection points."),
@@ -69,14 +69,14 @@ export const edgeStyleSchema = z.object({
     .describe("Label position relative to the edge; defaults to above."),
   startMarker: edgeMarkerSchema.optional().describe("Optional marker at the source endpoint."),
   endMarker: edgeMarkerSchema.optional().describe("Optional marker at the target endpoint."),
-}).describe("Static visual styling for an edge.");
+}).strict().describe("Static visual styling for an edge.");
 
 export const sceneToneSchema = z.enum(["normal", "active", "warning", "danger", "muted"]);
 
 export const endpointSchema = z.object({
   nodeId: idSchema.describe("Referenced node identifier."),
   portId: idSchema.optional().describe("Optional port identifier on the referenced node."),
-}).describe("One endpoint of an edge.");
+}).strict().describe("One endpoint of an edge.");
 
 export const edgeSchema = z.object({
   id: idSchema.describe("Unique edge identifier referenced by animations and scenes."),
@@ -98,10 +98,10 @@ export const groupSchema = z.object({
     .object({
       variant: z.enum(["boundary", "lane", "none"]).default("boundary").optional()
         .describe("Group rendering variant; defaults to boundary."),
-    })
+    }).strict()
     .optional()
     .describe("Optional group styling."),
-}).describe("A visual grouping that owns its node membership through nodeIds.");
+}).strict().describe("A visual grouping that owns its node membership through nodeIds.");
 
 export const animationSchema = z.object({
   id: idSchema.describe("Unique animation identifier referenced by scenes."),
@@ -125,7 +125,7 @@ export const animationSchema = z.object({
   label: z.string().optional().describe("Optional human-readable animation label."),
   payload: z.record(z.string(), z.unknown()).optional()
     .describe("Optional semantic payload carried by the flow."),
-}).describe("A flow animation that owns its edge membership through edgeIds.");
+}).strict().describe("A flow animation that owns its edge membership through edgeIds.");
 
 export const sceneEdgeOverrideSchema = z.object({
   edgeId: idSchema.describe("Edge identifier affected in this scene."),
@@ -139,7 +139,7 @@ export const sceneNodeOverrideSchema = z.object({
   nodeId: idSchema.describe("Node identifier affected in this scene."),
   tone: sceneToneSchema.optional().describe("Scene-specific semantic node tone."),
   status: z.string().optional().describe("Optional scene-specific node status text."),
-}).describe("Scene-specific changes applied to one node.");
+}).strict().describe("Scene-specific changes applied to one node.");
 
 export const sceneSchema = z.object({
   id: idSchema.describe("Unique scene identifier."),
@@ -151,7 +151,7 @@ export const sceneSchema = z.object({
     .describe("Scene-specific edge changes."),
   nodeOverrides: z.array(sceneNodeOverrideSchema).optional()
     .describe("Scene-specific node changes."),
-}).describe("One scenario step over the shared diagram structure.");
+}).strict().describe("One scenario step over the shared diagram structure.");
 
 export const diagramDocumentSchema = z.object({
   schemaVersion: z.literal("0.2").describe("Diagram JSON contract version."),
@@ -163,23 +163,23 @@ export const diagramDocumentSchema = z.object({
     createdAt: z.string().datetime().optional().describe("Optional ISO 8601 creation timestamp."),
     updatedAt: z.string().datetime().optional().describe("Optional ISO 8601 last-update timestamp."),
     tags: z.array(z.string()).optional().describe("Optional search and classification tags."),
-  }).describe("Human-facing diagram metadata."),
+  }).strict().describe("Human-facing diagram metadata."),
   viewport: z.object({
     x: z.number().describe("Initial horizontal canvas translation."),
     y: z.number().describe("Initial vertical canvas translation."),
     zoom: z.number().positive().describe("Initial positive zoom scale."),
-  }).describe("Initial viewer camera state."),
+  }).strict().describe("Initial viewer camera state."),
   theme: z.object({
     mode: z.enum(["light", "dark"]).describe("Base light or dark appearance."),
     accent: z.string().describe("Accent color preset or CSS color."),
     background: z.string().describe("Diagram background color."),
-  }).describe("Document-level visual theme."),
+  }).strict().describe("Document-level visual theme."),
   nodes: z.array(nodeSchema).describe("All nodes in the diagram."),
   edges: z.array(edgeSchema).describe("All edges in the diagram."),
   groups: z.array(groupSchema).optional().describe("Optional visual node groups."),
   animations: z.array(animationSchema).optional().describe("Optional flow animations."),
   scenes: z.array(sceneSchema).optional().describe("Optional ordered scenario steps."),
-}).describe("Source-of-truth document for a DiaFlow interactive architecture diagram.");
+}).strict().describe("Source-of-truth document for a DiaFlow interactive architecture diagram.");
 
 export type DiagramDocument = z.infer<typeof diagramDocumentSchema>;
 export type DiagramNode = z.infer<typeof nodeSchema>;

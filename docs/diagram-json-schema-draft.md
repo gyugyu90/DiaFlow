@@ -24,6 +24,10 @@ Renderer output = derived view
 
 The renderer must only consume Diagram JSON. It must not call AI or infer hidden state.
 
+All structural objects reject unknown fields so misspelled AI-generated properties fail validation
+instead of being silently discarded. Arbitrary extension properties are allowed only inside
+`Node.data`, `Edge.data`, and `Animation.payload`.
+
 ## MVP Scope
 
 The first schema version targets system architecture diagrams.
