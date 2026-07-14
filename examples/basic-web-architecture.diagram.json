@@ -171,5 +171,11 @@
         "kind": "request"
       }
     }
+  ],
+  "scenes": [
+    {
+      "id": "scene_default",
+      "title": "Default Scene"
+    }
   ]
 }

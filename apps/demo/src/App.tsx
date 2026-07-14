@@ -589,7 +589,10 @@ function EditorPage({
           </form>
         </aside>
 
-        <section className="editor-workspace" aria-label="Diagram editor canvas">
+        <section
+          className={`editor-workspace ${scene ? "has-scene-controls" : ""}`}
+          aria-label="Diagram editor canvas"
+        >
           <SceneControls
             scene={scene}
             sceneIndex={sceneIndex}

@@ -67,7 +67,7 @@ describe("App", () => {
   it("deletes every edge connected to a selected node and restores them with undo", async () => {
     render(<App />);
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
     const browserNode = document.querySelector('[data-node-id="browser"]');
     if (!browserNode) throw new Error("Missing browser node");
     expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
@@ -155,6 +155,9 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
     const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    expect(canvas.classList.contains("has-scene-controls")).toBe(true);
+    expect(within(canvas).getByRole("region", { name: "Scene controls" })).toBeTruthy();
+    expect(within(canvas).getByRole("heading", { name: "Default Scene" })).toBeTruthy();
     expect(within(sideView).getByLabelText("Diagram prompt")).toBeTruthy();
     expect(within(canvas).queryByLabelText("Diagram prompt")).toBeNull();
     expect(document.querySelector(".editor-diagram-root .diagram-svg")).toBeTruthy();
@@ -197,7 +200,7 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
 
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) {
@@ -229,7 +232,7 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
 
     const userNode = document.querySelector('[data-node-id="user"]');
     const browserNode = document.querySelector('[data-node-id="browser"]');
@@ -256,7 +259,7 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
 
     const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
     if (!edgeHitArea) throw new Error("Missing edge hit area");
@@ -287,7 +290,7 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
 
     const root = document.querySelector(".editor-diagram-root");
     const browserNode = document.querySelector('[data-node-id="browser"]');
@@ -311,7 +314,7 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
 
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) {
@@ -348,7 +351,7 @@ describe("App", () => {
     render(<App />);
 
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture" });
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
     fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
@@ -417,6 +420,8 @@ describe("App", () => {
     fireEvent.click(getDiagramCard("Circuit Breaker Scenes").getByRole("button", { name: "Edit" }));
 
     expect(screen.getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
+    const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    expect(canvas.classList.contains("has-scene-controls")).toBe(true);
     expect(screen.getByRole("region", { name: "Scene controls" })).toBeTruthy();
     expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id")).toBe("scene_normal");
   });

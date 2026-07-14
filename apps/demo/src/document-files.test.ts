@@ -18,6 +18,7 @@ describe("diagram document files", () => {
     expect(diagram.metadata.title).toBe("Untitled Diagram");
     expect(diagram.nodes).toEqual([]);
     expect(diagram.edges).toEqual([]);
+    expect(diagram.scenes).toEqual([{ id: "scene_default", title: "Default Scene" }]);
   });
 
   it("round-trips a diagram without changing its document data", () => {

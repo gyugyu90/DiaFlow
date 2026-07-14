@@ -27,6 +27,7 @@ export function createEmptyDiagramDocument(now = new Date()): DiagramDocument {
     },
     nodes: [],
     edges: [],
+    scenes: [{ id: "scene_default", title: "Default Scene" }],
   };
 }
 

@@ -350,6 +350,8 @@ Scenes describe step-by-step changes over the same diagram.
 
 They do not replace nodes or edges. A scene selects active animations and can override edge labels, edge style, edge tone, node tone, or disabled state for that step.
 
+New documents start with one `scene_default` scene. The `scenes` field remains optional so existing documents without scenes continue to be valid.
+
 ```json
 {
   "id": "scene_open",

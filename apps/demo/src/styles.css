@@ -389,15 +389,18 @@ dd {
   grid-template-rows: auto minmax(0, 1fr);
   gap: 14px;
   width: min(1520px, 100%);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   margin: 0 auto;
   padding: 18px;
+  overflow: hidden;
 }
 
 .editor-layout {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   gap: 14px;
+  height: 100%;
   min-height: 0;
 }
 
@@ -513,9 +516,15 @@ dd {
 
 .editor-workspace {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 12px;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
+}
+
+.editor-workspace.has-scene-controls {
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .scene-controls {
@@ -544,10 +553,14 @@ dd {
 
 .diagram-edit-surface {
   position: relative;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
 }
 
 .editor-diagram-root {
+  width: 100%;
+  height: 100%;
   min-height: 0;
   border: 1px solid var(--line-soft);
   border-radius: 8px;
@@ -688,6 +701,13 @@ dd {
     padding: 12px;
   }
 
+  .editor-shell {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   .diagram-card {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -699,10 +719,27 @@ dd {
 
   .editor-layout {
     grid-template-columns: minmax(0, 1fr);
+    height: auto;
   }
 
   .side-panel {
     max-height: 260px;
+  }
+
+  .editor-workspace,
+  .diagram-edit-surface,
+  .editor-diagram-root {
+    height: auto;
+  }
+
+  .editor-workspace,
+  .diagram-edit-surface {
+    overflow: visible;
+  }
+
+  .diagram-edit-surface,
+  .editor-diagram-root {
+    min-height: 620px;
   }
 
   .editor-topbar,

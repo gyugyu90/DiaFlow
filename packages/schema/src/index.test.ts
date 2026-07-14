@@ -21,6 +21,7 @@ describe("diagramDocumentSchema", () => {
     expect(diagram.nodes).toHaveLength(6);
     expect(diagram.edges).toHaveLength(5);
     expect(diagram.animations ?? []).toHaveLength(1);
+    expect(diagram.scenes).toEqual([{ id: "scene_default", title: "Default Scene" }]);
   });
 
   it("accepts supported edge label placements", () => {
