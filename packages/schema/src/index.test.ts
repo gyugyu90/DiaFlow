@@ -324,4 +324,83 @@ describe("diagramDocumentSchema", () => {
       expect.objectContaining({ path: ["nodes", 0, "ports", 1, "id"] }),
     ]));
   });
+
+  it("rejects duplicate membership references and scene targets", () => {
+    const diagram = parseDiagramDocument(cloneSample());
+    const nodeId = diagram.nodes[0].id;
+    const edgeId = diagram.edges[0].id;
+    const animationId = diagram.animations?.[0].id;
+    if (!animationId) throw new Error("Expected the sample to contain an animation");
+
+    const invalid = {
+      ...diagram,
+      groups: diagram.groups?.map((group, index) => index === 0 ? {
+        ...group,
+        nodeIds: [nodeId, nodeId],
+      } : group),
+      animations: diagram.animations?.map((animation, index) => index === 0 ? {
+        ...animation,
+        edgeIds: [edgeId, edgeId],
+      } : animation),
+      scenes: [{
+        id: "scene_duplicate_references",
+        title: "Duplicate references",
+        animationIds: [animationId, animationId],
+        nodeOverrides: [
+          { nodeId, tone: "active" as const },
+          { nodeId, status: "Duplicate" },
+        ],
+        edgeOverrides: [
+          { edgeId, tone: "warning" as const },
+          { edgeId, disabled: true },
+        ],
+      }],
+    };
+
+    const issues = validateDiagramIntegrity(invalid);
+
+    expect(issues).toEqual(expect.arrayContaining([
+      {
+        path: ["groups", 0, "nodeIds", 1],
+        message: `Duplicate node reference '${nodeId}'`,
+      },
+      {
+        path: ["animations", 0, "edgeIds", 1],
+        message: `Duplicate edge reference '${edgeId}'`,
+      },
+      {
+        path: ["scenes", 0, "animationIds", 1],
+        message: `Duplicate animation reference '${animationId}'`,
+      },
+      {
+        path: ["scenes", 0, "nodeOverrides", 1, "nodeId"],
+        message: `Duplicate node override '${nodeId}'`,
+      },
+      {
+        path: ["scenes", 0, "edgeOverrides", 1, "edgeId"],
+        message: `Duplicate edge override '${edgeId}'`,
+      },
+    ]));
+    expect(() => parseDiagramDocument(invalid)).toThrow(DiagramIntegrityError);
+  });
+
+  it("rejects a node that belongs to multiple groups", () => {
+    const diagram = parseDiagramDocument(cloneSample());
+    const groups = diagram.groups;
+    if (!groups || groups.length < 2) throw new Error("Expected at least two sample groups");
+    const nodeId = groups[0].nodeIds[0];
+    const invalid = {
+      ...diagram,
+      groups: groups.map((group, index) => index === 1 ? {
+        ...group,
+        nodeIds: [...group.nodeIds, nodeId],
+      } : group),
+    };
+
+    expect(validateDiagramIntegrity(invalid)).toContainEqual({
+      path: ["groups", 1, "nodeIds", groups[1].nodeIds.length],
+      message: `Node '${nodeId}' belongs to multiple groups ('${groups[0].id}' and '${groups[1].id}')`,
+    });
+    expect(() => parseDiagramDocument(invalid)).toThrow(DiagramIntegrityError);
+  });
 });

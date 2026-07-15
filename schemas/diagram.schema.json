@@ -407,7 +407,7 @@
               "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
               "description": "Stable identifier beginning with a letter and containing only letters, digits, underscores, or hyphens."
             },
-            "description": "Node identifiers owned by this group membership."
+            "description": "Unique node identifiers owned by this group; a node can belong to only one group."
           },
           "style": {
             "type": "object",
@@ -471,7 +471,7 @@
               "description": "Stable identifier beginning with a letter and containing only letters, digits, underscores, or hyphens."
             },
             "minItems": 1,
-            "description": "Ordered edge identifiers included in this animation."
+            "description": "Ordered unique edge identifiers included in this animation."
           },
           "enabled": {
             "type": "boolean",
@@ -545,7 +545,7 @@
               "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
               "description": "Stable identifier beginning with a letter and containing only letters, digits, underscores, or hyphens."
             },
-            "description": "Animations active in this scene; all enabled animations are active when omitted."
+            "description": "Unique animations active in this scene; all enabled animations are active when omitted."
           },
           "edgeOverrides": {
             "type": "array",
@@ -645,7 +645,7 @@
               "additionalProperties": false,
               "description": "Scene-specific changes applied to one edge."
             },
-            "description": "Scene-specific edge changes."
+            "description": "Scene-specific edge changes with at most one override per edge."
           },
           "nodeOverrides": {
             "type": "array",
@@ -679,7 +679,7 @@
               "additionalProperties": false,
               "description": "Scene-specific changes applied to one node."
             },
-            "description": "Scene-specific node changes."
+            "description": "Scene-specific node changes with at most one override per node."
           }
         },
         "required": [

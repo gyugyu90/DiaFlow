@@ -109,6 +109,9 @@ Version `0.2` makes collection membership single-directional:
 - Animations own membership through `Animation.edgeIds`; remove `Edge.animationId`.
 - Scenes select animations through `Scene.animationIds`; remove `animationId` from edge overrides.
 
+Membership arrays contain unique IDs. A node can belong to at most one group, while an edge can
+participate in multiple animations as long as it appears only once within each animation.
+
 When migrating a `0.1` document, copy any inverse references into the owning ID arrays before
 removing the deprecated fields and changing `schemaVersion` to `0.2`.
 
@@ -381,6 +384,9 @@ Scenes describe step-by-step changes over the same diagram.
 
 They do not replace nodes or edges. A scene selects active animations and can override edge labels, edge style, edge tone, node tone, or disabled state for that step.
 
+`animationIds` cannot contain duplicates. Each scene can contain at most one `nodeOverride` per
+node and one `edgeOverride` per edge so that override precedence is never ambiguous.
+
 New documents start with one `scene_default` scene. The `scenes` field remains optional so existing documents without scenes continue to be valid.
 
 ```json
@@ -445,8 +451,10 @@ Groups organize nodes without becoming a freeform whiteboard feature.
 }
 ```
 
-Groups are optional. Group membership is defined only by `Group.nodeIds`. Canonical output stores
-`style.variant: "boundary"` when group style is omitted.
+Groups are optional. Group membership is defined only by `Group.nodeIds`. IDs cannot repeat within
+a group, and a node can belong to at most one group. This keeps group bounds, movement, and future
+group editing behavior deterministic. Canonical output stores `style.variant: "boundary"` when
+group style is omitted.
 
 ## Complete MVP Example
 

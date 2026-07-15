@@ -53,7 +53,8 @@ Use schema tests when changing:
 - edge style options
 - animation options
 - validation rules
-- duplicate IDs and cross-document reference integrity
+- duplicate IDs, duplicate membership references, and cross-document reference integrity
+- single-group node membership and unique scene override targets
 - sample diagram compatibility
 
 Schema tests should verify both accepted and rejected examples.

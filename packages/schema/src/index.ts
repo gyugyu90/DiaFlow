@@ -98,7 +98,8 @@ export const edgeSchema = z.object({
 export const groupSchema = z.object({
   id: idSchema.describe("Unique group identifier."),
   label: z.string().min(1).describe("Human-readable group label."),
-  nodeIds: z.array(idSchema).describe("Node identifiers owned by this group membership."),
+  nodeIds: z.array(idSchema)
+    .describe("Unique node identifiers owned by this group; a node can belong to only one group."),
   style: z
     .object({
       variant: z.enum(["boundary", "lane", "none"]).default("boundary")
@@ -121,7 +122,8 @@ export const animationSchema = z.object({
     "step_reveal",
     "none",
   ]).describe("Semantic meaning of the animated flow."),
-  edgeIds: z.array(idSchema).min(1).describe("Ordered edge identifiers included in this animation."),
+  edgeIds: z.array(idSchema).min(1)
+    .describe("Ordered unique edge identifiers included in this animation."),
   enabled: z.boolean().describe("Whether the animation can be rendered."),
   direction: z.enum(["forward", "backward", "bidirectional"])
     .default("forward").describe("Playback direction; defaults to forward."),
@@ -151,11 +153,11 @@ export const sceneSchema = z.object({
   title: z.string().min(1).describe("Human-readable scene title."),
   description: z.string().optional().describe("Optional explanation of the scenario step."),
   animationIds: z.array(idSchema).optional()
-    .describe("Animations active in this scene; all enabled animations are active when omitted."),
+    .describe("Unique animations active in this scene; all enabled animations are active when omitted."),
   edgeOverrides: z.array(sceneEdgeOverrideSchema).optional()
-    .describe("Scene-specific edge changes."),
+    .describe("Scene-specific edge changes with at most one override per edge."),
   nodeOverrides: z.array(sceneNodeOverrideSchema).optional()
-    .describe("Scene-specific node changes."),
+    .describe("Scene-specific node changes with at most one override per node."),
 }).strict().describe("One scenario step over the shared diagram structure.");
 
 export const diagramDocumentSchema = z.object({
@@ -298,19 +300,44 @@ export function validateDiagramIntegrity(diagram: DiagramDocument): DiagramInteg
     validateEndpoint(diagram, nodeIds, edge.target, ["edges", edgeIndex, "target"], issues);
   });
 
+  const nodeGroupOwners = new Map<string, { groupId: string; groupIndex: number }>();
   (diagram.groups ?? []).forEach((group, groupIndex) => {
+    validateUniqueValues(
+      group.nodeIds,
+      ["groups", groupIndex, "nodeIds"],
+      "node reference",
+      issues,
+    );
     group.nodeIds.forEach((nodeId, nodeIdIndex) => {
+      const path = ["groups", groupIndex, "nodeIds", nodeIdIndex];
       requireReference(
         nodeIds,
         nodeId,
-        ["groups", groupIndex, "nodeIds", nodeIdIndex],
+        path,
         "node",
         issues,
       );
+      if (!nodeIds.has(nodeId)) return;
+
+      const owner = nodeGroupOwners.get(nodeId);
+      if (owner && owner.groupIndex !== groupIndex) {
+        issues.push({
+          path,
+          message: `Node '${nodeId}' belongs to multiple groups ('${owner.groupId}' and '${group.id}')`,
+        });
+      } else if (!owner) {
+        nodeGroupOwners.set(nodeId, { groupId: group.id, groupIndex });
+      }
     });
   });
 
   (diagram.animations ?? []).forEach((animation, animationIndex) => {
+    validateUniqueValues(
+      animation.edgeIds,
+      ["animations", animationIndex, "edgeIds"],
+      "edge reference",
+      issues,
+    );
     animation.edgeIds.forEach((edgeId, edgeIdIndex) => {
       requireReference(
         edgeIds,
@@ -323,6 +350,12 @@ export function validateDiagramIntegrity(diagram: DiagramDocument): DiagramInteg
   });
 
   (diagram.scenes ?? []).forEach((scene, sceneIndex) => {
+    validateUniqueValues(
+      scene.animationIds ?? [],
+      ["scenes", sceneIndex, "animationIds"],
+      "animation reference",
+      issues,
+    );
     scene.animationIds?.forEach((animationId, animationIdIndex) => {
       requireReference(
         animationIds,
@@ -332,6 +365,13 @@ export function validateDiagramIntegrity(diagram: DiagramDocument): DiagramInteg
         issues,
       );
     });
+    validateUniqueValues(
+      scene.nodeOverrides?.map((override) => override.nodeId) ?? [],
+      ["scenes", sceneIndex, "nodeOverrides"],
+      "node override",
+      issues,
+      "nodeId",
+    );
     scene.nodeOverrides?.forEach((override, overrideIndex) => {
       requireReference(
         nodeIds,
@@ -341,6 +381,13 @@ export function validateDiagramIntegrity(diagram: DiagramDocument): DiagramInteg
         issues,
       );
     });
+    validateUniqueValues(
+      scene.edgeOverrides?.map((override) => override.edgeId) ?? [],
+      ["scenes", sceneIndex, "edgeOverrides"],
+      "edge override",
+      issues,
+      "edgeId",
+    );
     scene.edgeOverrides?.forEach((override, overrideIndex) => {
       requireReference(
         edgeIds,
@@ -487,6 +534,25 @@ function collectIds(
     ids.add(item.id);
   });
   return ids;
+}
+
+function validateUniqueValues(
+  values: readonly string[],
+  path: Array<string | number>,
+  duplicateLabel: string,
+  issues: DiagramIntegrityIssue[],
+  idField?: string,
+): void {
+  const seen = new Set<string>();
+  values.forEach((value, index) => {
+    if (seen.has(value)) {
+      issues.push({
+        path: idField ? [...path, index, idField] : [...path, index],
+        message: `Duplicate ${duplicateLabel} '${value}'`,
+      });
+    }
+    seen.add(value);
+  });
 }
 
 function requireReference(

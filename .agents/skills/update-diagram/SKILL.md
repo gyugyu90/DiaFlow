@@ -55,12 +55,14 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 
 - Preserve IDs for existing entities, even when labels or titles change. Add a new stable ID only for a new entity.
 - Preserve unrelated fields, ordering, extension data, viewport, theme, and scene behavior.
-- Keep group membership only in `Group.nodeIds` and animation membership only in `Animation.edgeIds`.
+- Keep group membership only in `Group.nodeIds`; do not repeat a node ID or place one node in multiple groups.
+- Keep animation membership only in `Animation.edgeIds` and do not repeat an edge ID within one animation.
 - When deleting a node, also delete or update edges that reference it, remove its ID from groups, and remove affected scene node overrides.
 - When deleting an edge, remove its ID from animations and scene edge overrides. Remove or adjust animations that would otherwise have an empty `edgeIds` array.
 - When deleting an animation, remove its ID from every scene's `animationIds`.
 - When changing ports, repair every edge endpoint that references the changed port.
 - Keep scenes as overrides over shared nodes and edges; do not duplicate the full graph per scene.
+- Keep `Scene.animationIds` unique and preserve at most one node or edge override for each target in a scene.
 - Put arbitrary extensions only in `Node.data`, `Edge.data`, or `Animation.payload`; structural objects are strict.
 - Do not make unrelated visual cleanup or schema migrations unless requested.
 

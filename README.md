@@ -227,12 +227,11 @@ untouched:
 
 Here is what comes next for the local-first experience:
 
-1. Strengthen collection and scene-override integrity validation.
-2. Define supported icon and color vocabularies.
-3. Support direct file saving where the browser permits it.
-4. Separate the local editor from the sample gallery entry point.
-5. Produce and document a standalone read-only iframe viewer.
-6. Add port-aware edge creation, followed by scene and group authoring.
+1. Define supported icon and color vocabularies.
+2. Support direct file saving where the browser permits it.
+3. Separate the local editor from the sample gallery entry point.
+4. Produce and document a standalone read-only iframe viewer.
+5. Add port-aware edge creation, followed by scene and group authoring.
 
 ## 🤝 Contributing
 
