@@ -165,6 +165,9 @@ describe("diagram editor model", () => {
       type: "request",
       edgeIds: ["edge_app_db"],
       enabled: true,
+      direction: "forward",
+      speed: 1,
+      loop: true,
     }]);
     expect(updated.scenes?.[0]).toMatchObject({
       animationIds: ["anim_preserved"],

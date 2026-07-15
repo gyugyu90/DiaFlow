@@ -2,21 +2,27 @@
 
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { parseDiagramDocument } from "../../packages/schema/src/index.ts";
+import {
+  parseDiagramDocument,
+  serializeDiagramDocument,
+} from "../../packages/schema/src/index.ts";
 
 const createExamplePaths = [
   "examples/basic-web-architecture.diagram.json",
   "examples/circuit-breaker-scenes.diagram.json",
+  "pkce-oauth2-flow.diagram.json",
 ];
 
 describe("LLM skill regression coverage", () => {
   it("keeps create-diagram example outputs schema-valid", async () => {
     for (const path of createExamplePaths) {
-      const diagram = await readDiagram(path);
+      const source = await readFile(new URL(`../../${path}`, import.meta.url), "utf8");
+      const diagram = parseDiagramDocument(JSON.parse(source));
 
       expect(diagram.schemaVersion).toBe("0.2");
       expect(diagram.kind).toBe("architecture");
       expect(diagram.scenes?.length).toBeGreaterThan(0);
+      expect(serializeDiagramDocument(diagram)).toBe(source);
     }
   });
 

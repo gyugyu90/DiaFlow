@@ -366,7 +366,8 @@
               }
             },
             "additionalProperties": false,
-            "description": "Optional static visual styling."
+            "description": "Static visual styling with canonical defaults.",
+            "default": {}
           },
           "data": {
             "type": "object",
@@ -423,7 +424,8 @@
               }
             },
             "additionalProperties": false,
-            "description": "Optional group styling."
+            "default": {},
+            "description": "Group styling with canonical defaults."
           }
         },
         "required": [

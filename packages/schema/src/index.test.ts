@@ -7,7 +7,9 @@ import {
   UnsupportedDiagramVersionError,
   diagramDocumentSchema,
   migrateDiagramDocument,
+  normalizeDiagramDocument,
   parseDiagramDocument,
+  serializeDiagramDocument,
   validateDiagramIntegrity,
 } from "./index";
 
@@ -68,6 +70,50 @@ describe("diagramDocumentSchema", () => {
     const input = cloneSample();
 
     expect(migrateDiagramDocument(input, CURRENT_DIAGRAM_SCHEMA_VERSION)).toBe(input);
+  });
+
+  it("normalizes behavioral and visual defaults into a canonical document", () => {
+    const input = cloneSample() as unknown as {
+      edges: Array<Record<string, unknown>>;
+      groups: Array<Record<string, unknown>>;
+      animations: Array<Record<string, unknown>>;
+    };
+    delete input.edges[0].direction;
+    delete input.edges[0].style;
+    const partialMarkers = input.edges[1].style as Record<string, unknown>;
+    delete partialMarkers.startMarker;
+    partialMarkers.endMarker = "triangle";
+    delete input.groups[0].style;
+    delete input.animations[0].direction;
+    delete input.animations[0].speed;
+    delete input.animations[0].loop;
+
+    const normalized = normalizeDiagramDocument(input);
+
+    expect(normalized.edges[0]).toMatchObject({
+      direction: "forward",
+      style: {
+        line: "solid",
+        routing: "smooth",
+        color: "default",
+        labelPlacement: "above",
+        startMarker: "none",
+        endMarker: "arrow",
+      },
+    });
+    expect(normalized.groups?.[0].style).toEqual({ variant: "boundary" });
+    expect(normalized.edges[1].style).toMatchObject({
+      startMarker: "none",
+      endMarker: "triangle",
+    });
+    expect(normalized.animations?.[0]).toMatchObject({
+      direction: "forward",
+      speed: 1,
+      loop: true,
+    });
+    expect(normalizeDiagramDocument(normalized)).toEqual(normalized);
+    const serialized = serializeDiagramDocument(normalized);
+    expect(serializeDiagramDocument(JSON.parse(serialized))).toBe(serialized);
   });
 
   it("rejects missing and invalid schemaVersion before structural validation", () => {

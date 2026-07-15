@@ -7,7 +7,10 @@
     "description": "A browser sends traffic through a load balancer to an app server, database, and object storage.",
     "createdAt": "2026-07-08T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z",
-    "tags": ["web", "architecture"]
+    "tags": [
+      "web",
+      "architecture"
+    ]
   },
   "viewport": {
     "x": 0,
@@ -24,113 +27,181 @@
       "id": "user",
       "type": "user",
       "label": "User",
-      "position": { "x": 80, "y": 220 },
-      "size": { "width": 120, "height": 72 },
+      "position": {
+        "x": 80,
+        "y": 220
+      },
+      "size": {
+        "width": 120,
+        "height": 72
+      },
       "icon": "user"
     },
     {
       "id": "browser",
       "type": "browser",
       "label": "Browser",
-      "position": { "x": 280, "y": 220 },
-      "size": { "width": 140, "height": 72 },
+      "position": {
+        "x": 280,
+        "y": 220
+      },
+      "size": {
+        "width": 140,
+        "height": 72
+      },
       "icon": "browser"
     },
     {
       "id": "load_balancer",
       "type": "load_balancer",
       "label": "Load Balancer",
-      "position": { "x": 500, "y": 220 },
-      "size": { "width": 160, "height": 72 },
+      "position": {
+        "x": 500,
+        "y": 220
+      },
+      "size": {
+        "width": 160,
+        "height": 72
+      },
       "icon": "network"
     },
     {
       "id": "app_server",
       "type": "app",
       "label": "App Server",
-      "position": { "x": 740, "y": 160 },
-      "size": { "width": 160, "height": 80 },
+      "position": {
+        "x": 740,
+        "y": 160
+      },
+      "size": {
+        "width": 160,
+        "height": 80
+      },
       "icon": "server"
     },
     {
       "id": "database",
       "type": "database",
       "label": "Database",
-      "position": { "x": 980, "y": 120 },
-      "size": { "width": 160, "height": 80 },
+      "position": {
+        "x": 980,
+        "y": 120
+      },
+      "size": {
+        "width": 160,
+        "height": 80
+      },
       "icon": "database"
     },
     {
       "id": "storage",
       "type": "storage",
       "label": "Object Storage",
-      "position": { "x": 980, "y": 280 },
-      "size": { "width": 160, "height": 80 },
+      "position": {
+        "x": 980,
+        "y": 280
+      },
+      "size": {
+        "width": 160,
+        "height": 80
+      },
       "icon": "storage"
     }
   ],
   "edges": [
     {
       "id": "edge_user_browser",
-      "source": { "nodeId": "user" },
-      "target": { "nodeId": "browser" },
+      "source": {
+        "nodeId": "user"
+      },
+      "target": {
+        "nodeId": "browser"
+      },
       "label": "Uses",
       "direction": "forward",
       "style": {
         "line": "solid",
         "routing": "smooth",
         "color": "muted",
-        "labelPlacement": "center"
+        "labelPlacement": "center",
+        "startMarker": "none",
+        "endMarker": "arrow"
       }
     },
     {
       "id": "edge_browser_lb",
-      "source": { "nodeId": "browser" },
-      "target": { "nodeId": "load_balancer" },
+      "source": {
+        "nodeId": "browser"
+      },
+      "target": {
+        "nodeId": "load_balancer"
+      },
       "label": "HTTPS",
       "direction": "forward",
       "style": {
         "line": "solid",
         "routing": "smooth",
         "color": "accent",
-        "labelPlacement": "above"
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
       }
     },
     {
       "id": "edge_lb_app",
-      "source": { "nodeId": "load_balancer" },
-      "target": { "nodeId": "app_server" },
+      "source": {
+        "nodeId": "load_balancer"
+      },
+      "target": {
+        "nodeId": "app_server"
+      },
       "label": "HTTP",
       "direction": "forward",
       "style": {
         "line": "solid",
         "routing": "smooth",
-        "color": "accent"
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
       }
     },
     {
       "id": "edge_app_db",
-      "source": { "nodeId": "app_server" },
-      "target": { "nodeId": "database" },
+      "source": {
+        "nodeId": "app_server"
+      },
+      "target": {
+        "nodeId": "database"
+      },
       "label": "SQL",
       "direction": "bidirectional",
       "style": {
         "line": "solid",
         "routing": "smooth",
-        "color": "default"
+        "color": "default",
+        "labelPlacement": "above",
+        "startMarker": "arrow",
+        "endMarker": "arrow"
       }
     },
     {
       "id": "edge_app_storage",
-      "source": { "nodeId": "app_server" },
-      "target": { "nodeId": "storage" },
+      "source": {
+        "nodeId": "app_server"
+      },
+      "target": {
+        "nodeId": "storage"
+      },
       "label": "Files",
       "direction": "bidirectional",
       "style": {
         "line": "dashed",
         "routing": "smooth",
         "color": "default",
-        "labelPlacement": "below"
+        "labelPlacement": "below",
+        "startMarker": "arrow",
+        "endMarker": "arrow"
       }
     }
   ],
@@ -138,7 +209,9 @@
     {
       "id": "backend",
       "label": "Backend",
-      "nodeIds": ["app_server"],
+      "nodeIds": [
+        "app_server"
+      ],
       "style": {
         "variant": "boundary"
       }
@@ -146,7 +219,10 @@
     {
       "id": "data",
       "label": "Data Layer",
-      "nodeIds": ["database", "storage"],
+      "nodeIds": [
+        "database",
+        "storage"
+      ],
       "style": {
         "variant": "boundary"
       }
@@ -156,7 +232,10 @@
     {
       "id": "anim_request",
       "type": "packet",
-      "edgeIds": ["edge_browser_lb", "edge_lb_app"],
+      "edgeIds": [
+        "edge_browser_lb",
+        "edge_lb_app"
+      ],
       "enabled": true,
       "direction": "forward",
       "speed": 1,

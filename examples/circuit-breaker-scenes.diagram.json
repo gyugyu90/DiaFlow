@@ -7,7 +7,11 @@
     "description": "MSA circuit breaker behavior across normal traffic, downstream failure, open circuit, and recovery.",
     "createdAt": "2026-07-09T00:00:00.000Z",
     "updatedAt": "2026-07-09T00:00:00.000Z",
-    "tags": ["msa", "resilience", "circuit-breaker"]
+    "tags": [
+      "msa",
+      "resilience",
+      "circuit-breaker"
+    ]
   },
   "viewport": {
     "x": 0,
@@ -24,143 +28,290 @@
       "id": "browser",
       "type": "browser",
       "label": "Client",
-      "position": { "x": 60, "y": 250 },
-      "size": { "width": 140, "height": 72 },
+      "position": {
+        "x": 60,
+        "y": 250
+      },
+      "size": {
+        "width": 140,
+        "height": 72
+      },
       "icon": "browser"
     },
     {
       "id": "api_gateway",
       "type": "api",
       "label": "API Gateway",
-      "position": { "x": 280, "y": 250 },
-      "size": { "width": 160, "height": 72 },
+      "position": {
+        "x": 280,
+        "y": 250
+      },
+      "size": {
+        "width": 160,
+        "height": 72
+      },
       "icon": "server"
     },
     {
       "id": "order_service",
       "type": "app",
       "label": "Order Service",
-      "position": { "x": 520, "y": 250 },
-      "size": { "width": 170, "height": 78 },
+      "position": {
+        "x": 520,
+        "y": 250
+      },
+      "size": {
+        "width": 170,
+        "height": 78
+      },
       "icon": "server"
     },
     {
       "id": "payment_service",
       "type": "app",
       "label": "Payment Service",
-      "position": { "x": 800, "y": 130 },
-      "size": { "width": 180, "height": 78 },
+      "position": {
+        "x": 800,
+        "y": 130
+      },
+      "size": {
+        "width": 180,
+        "height": 78
+      },
       "icon": "server"
     },
     {
       "id": "inventory_service",
       "type": "app",
       "label": "Inventory Service",
-      "position": { "x": 800, "y": 370 },
-      "size": { "width": 180, "height": 78 },
+      "position": {
+        "x": 800,
+        "y": 370
+      },
+      "size": {
+        "width": 180,
+        "height": 78
+      },
       "icon": "server"
     },
     {
       "id": "payment_db",
       "type": "database",
       "label": "Payment DB",
-      "position": { "x": 1080, "y": 130 },
-      "size": { "width": 160, "height": 78 },
+      "position": {
+        "x": 1080,
+        "y": 130
+      },
+      "size": {
+        "width": 160,
+        "height": 78
+      },
       "icon": "database"
     },
     {
       "id": "fallback_cache",
       "type": "cache",
       "label": "Fallback Cache",
-      "position": { "x": 1080, "y": 370 },
-      "size": { "width": 170, "height": 78 }
+      "position": {
+        "x": 1080,
+        "y": 370
+      },
+      "size": {
+        "width": 170,
+        "height": 78
+      }
     }
   ],
   "edges": [
     {
       "id": "edge_browser_gateway",
-      "source": { "nodeId": "browser" },
-      "target": { "nodeId": "api_gateway" },
+      "source": {
+        "nodeId": "browser"
+      },
+      "target": {
+        "nodeId": "api_gateway"
+      },
       "label": "HTTPS",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above" }
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_gateway_order",
-      "source": { "nodeId": "api_gateway" },
-      "target": { "nodeId": "order_service" },
+      "source": {
+        "nodeId": "api_gateway"
+      },
+      "target": {
+        "nodeId": "order_service"
+      },
       "label": "Create order",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above" }
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_order_payment",
-      "source": { "nodeId": "order_service" },
-      "target": { "nodeId": "payment_service" },
+      "source": {
+        "nodeId": "order_service"
+      },
+      "target": {
+        "nodeId": "payment_service"
+      },
       "label": "Charge card",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above" }
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_payment_db",
-      "source": { "nodeId": "payment_service" },
-      "target": { "nodeId": "payment_db" },
+      "source": {
+        "nodeId": "payment_service"
+      },
+      "target": {
+        "nodeId": "payment_db"
+      },
       "label": "Write payment",
       "direction": "bidirectional",
-      "style": { "line": "solid", "routing": "smooth", "color": "default", "labelPlacement": "above" }
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "default",
+        "labelPlacement": "above",
+        "startMarker": "arrow",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_order_inventory",
-      "source": { "nodeId": "order_service" },
-      "target": { "nodeId": "inventory_service" },
+      "source": {
+        "nodeId": "order_service"
+      },
+      "target": {
+        "nodeId": "inventory_service"
+      },
       "label": "Reserve stock",
       "direction": "forward",
-      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "below" }
+      "style": {
+        "line": "solid",
+        "routing": "smooth",
+        "color": "accent",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_order_cache",
-      "source": { "nodeId": "order_service" },
-      "target": { "nodeId": "fallback_cache" },
+      "source": {
+        "nodeId": "order_service"
+      },
+      "target": {
+        "nodeId": "fallback_cache"
+      },
       "label": "Fallback data",
       "direction": "forward",
-      "style": { "line": "dashed", "routing": "smooth", "color": "muted", "labelPlacement": "below" }
+      "style": {
+        "line": "dashed",
+        "routing": "smooth",
+        "color": "muted",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_order_gateway_response",
-      "source": { "nodeId": "order_service" },
-      "target": { "nodeId": "api_gateway" },
+      "source": {
+        "nodeId": "order_service"
+      },
+      "target": {
+        "nodeId": "api_gateway"
+      },
       "label": "Response",
       "direction": "forward",
-      "style": { "line": "dotted", "routing": "smooth", "color": "muted", "labelPlacement": "below" }
+      "style": {
+        "line": "dotted",
+        "routing": "smooth",
+        "color": "muted",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     },
     {
       "id": "edge_gateway_browser_response",
-      "source": { "nodeId": "api_gateway" },
-      "target": { "nodeId": "browser" },
+      "source": {
+        "nodeId": "api_gateway"
+      },
+      "target": {
+        "nodeId": "browser"
+      },
       "label": "200 OK",
       "direction": "forward",
-      "style": { "line": "dotted", "routing": "smooth", "color": "muted", "labelPlacement": "below" }
+      "style": {
+        "line": "dotted",
+        "routing": "smooth",
+        "color": "muted",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
     }
   ],
   "groups": [
     {
       "id": "services",
       "label": "Microservices",
-      "nodeIds": ["order_service", "payment_service", "inventory_service"],
-      "style": { "variant": "boundary" }
+      "nodeIds": [
+        "order_service",
+        "payment_service",
+        "inventory_service"
+      ],
+      "style": {
+        "variant": "boundary"
+      }
     },
     {
       "id": "data",
       "label": "State and Fallback",
-      "nodeIds": ["payment_db", "fallback_cache"],
-      "style": { "variant": "boundary" }
+      "nodeIds": [
+        "payment_db",
+        "fallback_cache"
+      ],
+      "style": {
+        "variant": "boundary"
+      }
     }
   ],
   "animations": [
     {
       "id": "anim_normal_request",
       "type": "request",
-      "edgeIds": ["edge_browser_gateway", "edge_gateway_order", "edge_order_payment", "edge_order_inventory", "edge_payment_db"],
+      "edgeIds": [
+        "edge_browser_gateway",
+        "edge_gateway_order",
+        "edge_order_payment",
+        "edge_order_inventory",
+        "edge_payment_db"
+      ],
       "enabled": true,
       "direction": "forward",
       "speed": 1.05,
@@ -170,7 +321,10 @@
     {
       "id": "anim_normal_response",
       "type": "response",
-      "edgeIds": ["edge_order_gateway_response", "edge_gateway_browser_response"],
+      "edgeIds": [
+        "edge_order_gateway_response",
+        "edge_gateway_browser_response"
+      ],
       "enabled": true,
       "direction": "forward",
       "speed": 0.9,
@@ -180,7 +334,10 @@
     {
       "id": "anim_failure_retry",
       "type": "retry",
-      "edgeIds": ["edge_gateway_order", "edge_order_payment"],
+      "edgeIds": [
+        "edge_gateway_order",
+        "edge_order_payment"
+      ],
       "enabled": true,
       "direction": "forward",
       "speed": 1.7,
@@ -190,7 +347,10 @@
     {
       "id": "anim_error_response",
       "type": "response",
-      "edgeIds": ["edge_order_gateway_response", "edge_gateway_browser_response"],
+      "edgeIds": [
+        "edge_order_gateway_response",
+        "edge_gateway_browser_response"
+      ],
       "enabled": true,
       "direction": "forward",
       "speed": 1.3,
@@ -200,7 +360,11 @@
     {
       "id": "anim_fallback_response",
       "type": "cache_hit",
-      "edgeIds": ["edge_order_cache", "edge_order_gateway_response", "edge_gateway_browser_response"],
+      "edgeIds": [
+        "edge_order_cache",
+        "edge_order_gateway_response",
+        "edge_gateway_browser_response"
+      ],
       "enabled": true,
       "direction": "forward",
       "speed": 1.15,
@@ -213,75 +377,215 @@
       "id": "scene_normal",
       "title": "Normal Traffic",
       "description": "Requests pass through the gateway and order service, then call payment and inventory normally.",
-      "animationIds": ["anim_normal_request", "anim_normal_response"],
+      "animationIds": [
+        "anim_normal_request",
+        "anim_normal_response"
+      ],
       "edgeOverrides": [
-        { "edgeId": "edge_browser_gateway", "tone": "active" },
-        { "edgeId": "edge_gateway_order", "tone": "active" },
-        { "edgeId": "edge_order_payment", "tone": "active" },
-        { "edgeId": "edge_order_inventory", "tone": "active" },
-        { "edgeId": "edge_order_cache", "tone": "muted", "disabled": true },
-        { "edgeId": "edge_gateway_browser_response", "label": "200 OK", "tone": "active" }
+        {
+          "edgeId": "edge_browser_gateway",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_gateway_order",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_payment",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_inventory",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_cache",
+          "disabled": true,
+          "tone": "muted"
+        },
+        {
+          "edgeId": "edge_gateway_browser_response",
+          "label": "200 OK",
+          "tone": "active"
+        }
       ],
       "nodeOverrides": [
-        { "nodeId": "order_service", "tone": "active" },
-        { "nodeId": "payment_service", "tone": "active" },
-        { "nodeId": "inventory_service", "tone": "active" }
+        {
+          "nodeId": "order_service",
+          "tone": "active"
+        },
+        {
+          "nodeId": "payment_service",
+          "tone": "active"
+        },
+        {
+          "nodeId": "inventory_service",
+          "tone": "active"
+        }
       ]
     },
     {
       "id": "scene_failure",
       "title": "Failure Propagates",
       "description": "Payment starts timing out. Retries increase pressure and error responses travel back to the client.",
-      "animationIds": ["anim_failure_retry", "anim_error_response"],
+      "animationIds": [
+        "anim_failure_retry",
+        "anim_error_response"
+      ],
       "edgeOverrides": [
-        { "edgeId": "edge_gateway_order", "label": "Retrying order", "tone": "warning" },
-        { "edgeId": "edge_order_payment", "label": "Timeout / retry", "tone": "warning", "style": { "line": "solid" } },
-        { "edgeId": "edge_payment_db", "label": "Slow writes", "tone": "danger" },
-        { "edgeId": "edge_order_gateway_response", "label": "5xx propagates", "tone": "danger" },
-        { "edgeId": "edge_gateway_browser_response", "label": "Error response", "tone": "danger" },
-        { "edgeId": "edge_order_cache", "tone": "muted", "disabled": true }
+        {
+          "edgeId": "edge_gateway_order",
+          "label": "Retrying order",
+          "tone": "warning"
+        },
+        {
+          "edgeId": "edge_order_payment",
+          "label": "Timeout / retry",
+          "tone": "warning",
+          "style": {
+            "line": "solid"
+          }
+        },
+        {
+          "edgeId": "edge_payment_db",
+          "label": "Slow writes",
+          "tone": "danger"
+        },
+        {
+          "edgeId": "edge_order_gateway_response",
+          "label": "5xx propagates",
+          "tone": "danger"
+        },
+        {
+          "edgeId": "edge_gateway_browser_response",
+          "label": "Error response",
+          "tone": "danger"
+        },
+        {
+          "edgeId": "edge_order_cache",
+          "disabled": true,
+          "tone": "muted"
+        }
       ],
       "nodeOverrides": [
-        { "nodeId": "api_gateway", "tone": "warning" },
-        { "nodeId": "order_service", "tone": "warning" },
-        { "nodeId": "payment_service", "tone": "danger" },
-        { "nodeId": "payment_db", "tone": "danger" }
+        {
+          "nodeId": "api_gateway",
+          "tone": "warning"
+        },
+        {
+          "nodeId": "order_service",
+          "tone": "warning"
+        },
+        {
+          "nodeId": "payment_service",
+          "tone": "danger"
+        },
+        {
+          "nodeId": "payment_db",
+          "tone": "danger"
+        }
       ]
     },
     {
       "id": "scene_open",
       "title": "Circuit Open",
       "description": "The order service stops calling payment, uses fallback data, and returns a degraded but controlled response.",
-      "animationIds": ["anim_fallback_response"],
+      "animationIds": [
+        "anim_fallback_response"
+      ],
       "edgeOverrides": [
-        { "edgeId": "edge_order_payment", "label": "Circuit open", "tone": "muted", "disabled": true },
-        { "edgeId": "edge_payment_db", "tone": "muted", "disabled": true },
-        { "edgeId": "edge_order_cache", "label": "Fallback cache", "tone": "active", "style": { "line": "solid" } },
-        { "edgeId": "edge_order_gateway_response", "label": "Degraded response", "tone": "warning" },
-        { "edgeId": "edge_gateway_browser_response", "label": "Fallback 200", "tone": "warning" }
+        {
+          "edgeId": "edge_order_payment",
+          "label": "Circuit open",
+          "disabled": true,
+          "tone": "muted"
+        },
+        {
+          "edgeId": "edge_payment_db",
+          "disabled": true,
+          "tone": "muted"
+        },
+        {
+          "edgeId": "edge_order_cache",
+          "label": "Fallback cache",
+          "tone": "active",
+          "style": {
+            "line": "solid"
+          }
+        },
+        {
+          "edgeId": "edge_order_gateway_response",
+          "label": "Degraded response",
+          "tone": "warning"
+        },
+        {
+          "edgeId": "edge_gateway_browser_response",
+          "label": "Fallback 200",
+          "tone": "warning"
+        }
       ],
       "nodeOverrides": [
-        { "nodeId": "order_service", "tone": "active" },
-        { "nodeId": "payment_service", "tone": "muted" },
-        { "nodeId": "payment_db", "tone": "muted" },
-        { "nodeId": "fallback_cache", "tone": "active" }
+        {
+          "nodeId": "order_service",
+          "tone": "active"
+        },
+        {
+          "nodeId": "payment_service",
+          "tone": "muted"
+        },
+        {
+          "nodeId": "payment_db",
+          "tone": "muted"
+        },
+        {
+          "nodeId": "fallback_cache",
+          "tone": "active"
+        }
       ]
     },
     {
       "id": "scene_recovered",
       "title": "Recovered",
       "description": "Payment responds again. The circuit closes and normal request and response paths resume.",
-      "animationIds": ["anim_normal_request", "anim_normal_response"],
+      "animationIds": [
+        "anim_normal_request",
+        "anim_normal_response"
+      ],
       "edgeOverrides": [
-        { "edgeId": "edge_order_payment", "label": "Charge card", "tone": "active" },
-        { "edgeId": "edge_payment_db", "label": "Write payment", "tone": "active" },
-        { "edgeId": "edge_order_cache", "tone": "muted", "disabled": true },
-        { "edgeId": "edge_gateway_browser_response", "label": "200 OK", "tone": "active" }
+        {
+          "edgeId": "edge_order_payment",
+          "label": "Charge card",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_payment_db",
+          "label": "Write payment",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_cache",
+          "disabled": true,
+          "tone": "muted"
+        },
+        {
+          "edgeId": "edge_gateway_browser_response",
+          "label": "200 OK",
+          "tone": "active"
+        }
       ],
       "nodeOverrides": [
-        { "nodeId": "order_service", "tone": "active" },
-        { "nodeId": "payment_service", "tone": "active" },
-        { "nodeId": "payment_db", "tone": "active" }
+        {
+          "nodeId": "order_service",
+          "tone": "active"
+        },
+        {
+          "nodeId": "payment_service",
+          "tone": "active"
+        },
+        {
+          "nodeId": "payment_db",
+          "tone": "active"
+        }
       ]
     }
   ]

@@ -28,6 +28,28 @@ All structural objects reject unknown fields so misspelled AI-generated properti
 instead of being silently discarded. Arbitrary extension properties are allowed only inside
 `Node.data`, `Edge.data`, and `Animation.payload`.
 
+## Canonical Serialization
+
+DiaFlow accepts documents that omit supported defaults, then normalizes them before editing or
+saving. Canonical `.diagram.json` files explicitly store behavior and appearance defaults so the
+same file remains understandable to people, LLMs, and future runtime versions.
+
+Canonical output includes:
+
+- edge `direction`
+- edge `line`, `routing`, `color`, `labelPlacement`, `startMarker`, and `endMarker`
+- animation `direction`, `speed`, and `loop`
+- group `style.variant`
+
+The normalizer preserves entity and collection order. It does not add optional descriptions,
+timestamps, extension data, groups, animations, or scenes that were not present. Normalization is
+idempotent: normalizing canonical output again produces the same document.
+
+```sh
+npm run diagrams:normalize -- path/to/file.diagram.json
+npm run diagrams:normalize:check
+```
+
 ## MVP Scope
 
 The first schema version targets system architecture diagrams.
@@ -293,8 +315,8 @@ Initial values:
 - `above`: label is offset above a horizontal edge. For vertical edges, it is offset to the right.
 - `below`: label is offset below a horizontal edge. For vertical edges, it is offset to the left.
 
-`startMarker` and `endMarker` control endpoint shapes independently. When they are omitted,
-the renderer derives arrow markers from `direction` for backward compatibility.
+`startMarker` and `endMarker` control endpoint shapes independently. Input documents may omit them;
+the canonical normalizer derives and stores both markers from `direction`.
 
 Default value: `above`.
 
@@ -423,7 +445,8 @@ Groups organize nodes without becoming a freeform whiteboard feature.
 }
 ```
 
-Groups are optional. Group membership is defined only by `Group.nodeIds`.
+Groups are optional. Group membership is defined only by `Group.nodeIds`. Canonical output stores
+`style.variant: "boundary"` when group style is omitted.
 
 ## Complete MVP Example
 

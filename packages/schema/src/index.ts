@@ -67,10 +67,10 @@ export const edgeRoutingSchema = z.enum(["straight", "smooth", "orthogonal"]);
 export const edgeLabelPlacementSchema = z.enum(["center", "above", "below"]);
 
 export const edgeStyleSchema = z.object({
-  line: edgeLineSchema.default("solid").optional().describe("Line pattern; defaults to solid."),
-  routing: edgeRoutingSchema.default("smooth").optional().describe("Path routing mode; defaults to smooth."),
-  color: z.string().default("default").optional().describe("Runtime color preset or CSS color; defaults to default."),
-  labelPlacement: edgeLabelPlacementSchema.default("above").optional()
+  line: edgeLineSchema.default("solid").describe("Line pattern; defaults to solid."),
+  routing: edgeRoutingSchema.default("smooth").describe("Path routing mode; defaults to smooth."),
+  color: z.string().default("default").describe("Runtime color preset or CSS color; defaults to default."),
+  labelPlacement: edgeLabelPlacementSchema.default("above")
     .describe("Label position relative to the edge; defaults to above."),
   startMarker: edgeMarkerSchema.optional().describe("Optional marker at the source endpoint."),
   endMarker: edgeMarkerSchema.optional().describe("Optional marker at the target endpoint."),
@@ -89,8 +89,8 @@ export const edgeSchema = z.object({
   target: endpointSchema.describe("Target endpoint."),
   label: z.string().optional().describe("Optional relationship or protocol label."),
   direction: z.enum(["none", "forward", "backward", "bidirectional"])
-    .default("forward").optional().describe("Semantic edge direction; defaults to forward."),
-  style: edgeStyleSchema.optional().describe("Optional static visual styling."),
+    .default("forward").describe("Semantic edge direction; defaults to forward."),
+  style: edgeStyleSchema.default({}).describe("Static visual styling with canonical defaults."),
   data: z.record(z.string(), z.unknown()).optional()
     .describe("Extension data ignored by the core schema."),
 }).strict().describe("A connection or communication path between two nodes.");
@@ -101,11 +101,11 @@ export const groupSchema = z.object({
   nodeIds: z.array(idSchema).describe("Node identifiers owned by this group membership."),
   style: z
     .object({
-      variant: z.enum(["boundary", "lane", "none"]).default("boundary").optional()
+      variant: z.enum(["boundary", "lane", "none"]).default("boundary")
         .describe("Group rendering variant; defaults to boundary."),
     }).strict()
-    .optional()
-    .describe("Optional group styling."),
+    .default({})
+    .describe("Group styling with canonical defaults."),
 }).strict().describe("A visual grouping that owns its node membership through nodeIds.");
 
 export const animationSchema = z.object({
@@ -124,9 +124,9 @@ export const animationSchema = z.object({
   edgeIds: z.array(idSchema).min(1).describe("Ordered edge identifiers included in this animation."),
   enabled: z.boolean().describe("Whether the animation can be rendered."),
   direction: z.enum(["forward", "backward", "bidirectional"])
-    .default("forward").optional().describe("Playback direction; defaults to forward."),
-  speed: z.number().positive().default(1).optional().describe("Positive playback speed multiplier; defaults to 1."),
-  loop: z.boolean().default(true).optional().describe("Whether playback repeats; defaults to true."),
+    .default("forward").describe("Playback direction; defaults to forward."),
+  speed: z.number().positive().default(1).describe("Positive playback speed multiplier; defaults to 1."),
+  loop: z.boolean().default(true).describe("Whether playback repeats; defaults to true."),
   label: z.string().optional().describe("Optional human-readable animation label."),
   payload: z.record(z.string(), z.unknown()).optional()
     .describe("Optional semantic payload carried by the flow."),
@@ -360,11 +360,33 @@ export function assertValidDiagramDocument(diagram: DiagramDocument): void {
   if (issues.length > 0) throw new DiagramIntegrityError(issues);
 }
 
-export function parseDiagramDocument(value: unknown): DiagramDocument {
+export function normalizeDiagramDocument(value: unknown): DiagramDocument {
   const migrated = migrateDiagramDocument(value, CURRENT_DIAGRAM_SCHEMA_VERSION);
-  const diagram = diagramDocumentSchema.parse(migrated);
+  const parsed = diagramDocumentSchema.parse(migrated);
+  const diagram: DiagramDocument = {
+    ...parsed,
+    edges: parsed.edges.map((edge) => ({
+      ...edge,
+      style: {
+        line: edge.style.line,
+        routing: edge.style.routing,
+        color: edge.style.color,
+        labelPlacement: edge.style.labelPlacement,
+        startMarker: edge.style.startMarker ?? resolveEdgeStartMarker(edge),
+        endMarker: edge.style.endMarker ?? resolveEdgeEndMarker(edge),
+      },
+    })),
+  };
   assertValidDiagramDocument(diagram);
   return diagram;
+}
+
+export function parseDiagramDocument(value: unknown): DiagramDocument {
+  return normalizeDiagramDocument(value);
+}
+
+export function serializeDiagramDocument(value: unknown): string {
+  return `${JSON.stringify(normalizeDiagramDocument(value), null, 2)}\n`;
 }
 
 function readDiagramSchemaVersion(input: unknown): string {

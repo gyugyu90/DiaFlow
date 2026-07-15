@@ -2,6 +2,7 @@ import {
   DiagramIntegrityError,
   UnsupportedDiagramVersionError,
   parseDiagramDocument,
+  serializeDiagramDocument as serializeCanonicalDiagramDocument,
   type DiagramDocument,
 } from "@interactive-diagram/schema";
 
@@ -49,7 +50,7 @@ export async function readDiagramFile(file: File): Promise<DiagramDocument> {
 }
 
 export function serializeDiagramDocument(diagram: DiagramDocument): string {
-  return `${JSON.stringify(diagram, null, 2)}\n`;
+  return serializeCanonicalDiagramDocument(diagram);
 }
 
 export function normalizeDiagramFileName(fileName: string): string {

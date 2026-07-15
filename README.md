@@ -9,6 +9,9 @@ embeddable anywhere, and readable by both people and AI.**
 Every diagram is saved as structured `Diagram JSON`, so it stays editable and portable. DiaFlow
 turns that data into an interactive SVG experience in the browser.
 
+DiaFlow normalizes saved documents into a canonical form with explicit edge, animation, and group
+defaults. The same JSON therefore carries its behavior without relying on hidden runtime defaults.
+
 > 🚧 **Project status:** DiaFlow is an early public prototype. Diagram JSON currently uses
 > `schemaVersion: "0.2"`, and its APIs and file format may change before the first stable release.
 
@@ -117,6 +120,8 @@ The Zod definition in `packages/schema/src/index.ts` is the schema source of tru
 ```sh
 npm run schema:generate     # Regenerate the public JSON Schema
 npm run schema:check        # Fail when the generated file is out of sync
+npm run diagrams:normalize # Canonicalize Diagram JSON files
+npm run diagrams:normalize:check # Check that bundled examples are canonical
 npm run diagrams:validate   # Run structural and reference-integrity checks on examples
 ```
 
@@ -215,20 +220,19 @@ untouched:
 - Group and scene authoring are not available in the editor.
 - The prompt field does not call an AI service.
 - The standalone iframe/script embed runtime has not been released.
-- Schema migration between versions is not implemented.
+- Unsupported schema versions produce compatibility errors. The migration entry point exists, but
+  no cross-version migration path is registered yet.
 
 ## 🗺️ Where DiaFlow Is Heading
 
 Here is what comes next for the local-first experience:
 
-1. Add validated creation and update examples for the LLM skills.
-2. Define schema-version compatibility errors and a migration entry point.
+1. Strengthen collection and scene-override integrity validation.
+2. Define supported icon and color vocabularies.
 3. Support direct file saving where the browser permits it.
 4. Separate the local editor from the sample gallery entry point.
 5. Produce and document a standalone read-only iframe viewer.
 6. Add port-aware edge creation, followed by scene and group authoring.
-
-The detailed working list is maintained in [TODO.md](TODO.md).
 
 ## 🤝 Contributing
 

@@ -13,8 +13,8 @@ Every feature that changes those contracts should include regression tests.
 - Command: `npm test`
 - Full local check: `npm run check`
 
-`npm run check` verifies the generated JSON Schema, validates example diagrams, runs tests, and
-then creates the production build.
+`npm run check` verifies the generated JSON Schema, checks canonical example serialization,
+validates example diagrams, runs tests, and then creates the production build.
 
 ```sh
 npm run check
@@ -25,6 +25,8 @@ Schema-specific commands:
 ```sh
 npm run schema:generate     # Regenerate schemas/diagram.schema.json from Zod
 npm run schema:check        # Detect generated-schema drift
+npm run diagrams:normalize # Rewrite Diagram JSON with canonical defaults and formatting
+npm run diagrams:normalize:check # Detect non-canonical bundled examples
 npm run diagrams:validate   # Validate structure, then cross-document references
 ```
 

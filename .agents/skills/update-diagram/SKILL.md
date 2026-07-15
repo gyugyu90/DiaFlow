@@ -42,7 +42,13 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 
 3. Translate the request into the smallest JSON change. Preserve formatting style where practical.
 4. Update `metadata.updatedAt` to the current ISO 8601 UTC timestamp when that field exists. Do not invent `createdAt` or rewrite it.
-5. Validate the edited file with the same command. Fix every structural and reference-integrity error before finishing.
+5. Normalize and validate the edited file. Fix every structural and reference-integrity error before finishing.
+
+   ```sh
+   npm run diagrams:normalize -- path/to/file.diagram.json
+   npm run diagrams:validate -- path/to/file.diagram.json
+   ```
+
 6. Report the resolved path, concise changes, and validation result.
 
 ## Preservation Rules

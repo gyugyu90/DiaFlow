@@ -17,9 +17,10 @@ Target DiaFlow `schemaVersion: "0.2"`. Treat the repository's `packages/schema/s
 2. Read `schemas/diagram.schema.json`. Consult `docs/diagram-json-schema-draft.md` and the closest file in `examples/` when layout, animation, or scene behavior is needed.
 3. Extract the requested components, relationships, flows, and scenario steps. Ask a question only when a missing detail prevents a coherent diagram; otherwise choose conservative architecture defaults.
 4. Use the requested output path. When none is given, derive a lowercase hyphenated filename ending in `.diagram.json` in the current directory. Never overwrite an existing file unless the user explicitly requests it.
-5. Write one complete JSON document and validate it from the DiaFlow repository root:
+5. Write one complete JSON document, normalize it, and validate it from the DiaFlow repository root:
 
    ```sh
+   npm run diagrams:normalize -- path/to/file.diagram.json
    npm run diagrams:validate -- path/to/file.diagram.json
    ```
 
