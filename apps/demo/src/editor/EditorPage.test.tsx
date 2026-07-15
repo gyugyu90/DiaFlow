@@ -179,7 +179,7 @@ describe("EditorPage", () => {
     fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
     const inspector = screen.getByRole("dialog", { name: "Edit node User" });
     fireEvent.click(within(inspector).getByRole("button", { name: "Create edge" }));
-    expect(within(inspector).getByRole("button", { name: "Cancel edge" })).toBeTruthy();
+    expect(screen.queryByRole("dialog", { name: "Edit node User" })).toBeNull();
     expect(document.querySelector(".edge-creation-preview")).toBeTruthy();
     fireEvent.pointerDown(databaseNode, { button: 0, clientX: 500, clientY: 320 });
 

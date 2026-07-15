@@ -140,7 +140,7 @@ export function EditorPage({
               onSelectionAnchorChange={setInspectorPosition}
               onStateChange={handleEditorStateChange}
             />
-            {selectedNode ? (
+            {selectedNode && !creatingEdgeSourceNodeId ? (
               <NodeInspector
                 node={selectedNode}
                 creatingEdgeSourceNodeId={creatingEdgeSourceNodeId}

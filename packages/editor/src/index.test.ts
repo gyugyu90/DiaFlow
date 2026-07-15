@@ -407,13 +407,16 @@ describe("createDiagramEditor", () => {
     expect(editor.getState().selectedNodeIds).toEqual(["user"]);
     expect(container.querySelector(".edge-creation-preview")).toBeTruthy();
 
-    fireEvent.pointerMove(window, { clientX: 460, clientY: 320 });
+    fireEvent.pointerMove(targetNode, { clientX: 460, clientY: 320 });
+    expect(targetNode.classList.contains("edge-creation-target-hover")).toBe(true);
+    expect(container.querySelector('[data-node-id="user"]')?.classList.contains("edge-creation-target-hover")).toBe(false);
     fireEvent.pointerDown(targetNode, { button: 0, clientX: 460, clientY: 320 });
 
     expect(editor.getState().creatingEdgeSourceNodeId).toBeNull();
     expect(editor.getState().selectedEdgeId).toBe("edge_user_database");
     expect(container.querySelector('[data-edge-id="edge_user_database"]')).toBeTruthy();
     expect(container.querySelector(".edge-creation-preview")).toBeNull();
+    expect(targetNode.classList.contains("edge-creation-target-hover")).toBe(false);
     editor.destroy();
   });
 

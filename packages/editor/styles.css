@@ -31,6 +31,11 @@
   stroke-width: 3.4;
 }
 
+.interactive-diagram-editor .edge-creation-target-hover .node-box {
+  stroke: #2f6fed;
+  stroke-width: 3.2;
+}
+
 .interactive-diagram-editor .edge-creation-preview {
   position: absolute;
   inset: 0;

@@ -63,6 +63,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private future: DiagramDocument[] = [];
   private drag: DragState | null = null;
   private creatingEdgeSourceNodeId: string | null = null;
+  private edgeCreationHoverNodeId: string | null = null;
   private edgeCreationPointer: { clientX: number; clientY: number } | null = null;
   private edgeCreationPreview: SVGSVGElement | null = null;
   private transaction: EditTransaction | null = null;
@@ -194,6 +195,7 @@ class DomDiagramEditor implements DiagramEditorController {
     if (!this.hasNode(sourceNodeId)) return;
 
     this.creatingEdgeSourceNodeId = sourceNodeId;
+    this.setEdgeCreationHoverNode(null);
     this.edgeCreationPointer = null;
     this.selectedNodeIds = new Set([sourceNodeId]);
     this.selectedEdgeId = null;
@@ -206,6 +208,7 @@ class DomDiagramEditor implements DiagramEditorController {
     if (!this.creatingEdgeSourceNodeId) return;
 
     this.creatingEdgeSourceNodeId = null;
+    this.setEdgeCreationHoverNode(null);
     this.edgeCreationPointer = null;
     this.removeEdgeCreationPreview();
     this.refreshSelection();
@@ -228,6 +231,7 @@ class DomDiagramEditor implements DiagramEditorController {
 
     const result = addDiagramEdge(this.diagram, { sourceNodeId, targetNodeId });
     this.creatingEdgeSourceNodeId = null;
+    this.setEdgeCreationHoverNode(null);
     this.edgeCreationPointer = null;
     this.removeEdgeCreationPreview();
     this.selectedNodeIds.clear();
@@ -315,6 +319,7 @@ class DomDiagramEditor implements DiagramEditorController {
   destroy(): void {
     this.drag = null;
     this.creatingEdgeSourceNodeId = null;
+    this.setEdgeCreationHoverNode(null);
     this.edgeCreationPointer = null;
     this.removeEdgeCreationPreview();
     this.transaction = null;
@@ -384,6 +389,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private readonly handleMove = (event: MouseEvent | PointerEvent): void => {
     if (this.creatingEdgeSourceNodeId) {
       this.edgeCreationPointer = { clientX: event.clientX, clientY: event.clientY };
+      this.updateEdgeCreationHover(event);
       this.updateEdgeCreationPreview();
     }
     if (!this.drag) return;
@@ -538,6 +544,33 @@ class DomDiagramEditor implements DiagramEditorController {
     line?.setAttribute("y1", `${start.y}`);
     line?.setAttribute("x2", `${end.x}`);
     line?.setAttribute("y2", `${end.y}`);
+  }
+
+  private updateEdgeCreationHover(event: Event): void {
+    const sourceNodeId = this.creatingEdgeSourceNodeId;
+    if (!sourceNodeId) {
+      this.setEdgeCreationHoverNode(null);
+      return;
+    }
+
+    const nodeId = getEventNodeId(event);
+    this.setEdgeCreationHoverNode(nodeId && nodeId !== sourceNodeId ? nodeId : null);
+  }
+
+  private setEdgeCreationHoverNode(nodeId: string | null): void {
+    if (nodeId === this.edgeCreationHoverNodeId) return;
+
+    if (this.edgeCreationHoverNodeId) {
+      this.container
+        .querySelector(selectNodeById(this.edgeCreationHoverNodeId))
+        ?.classList.remove("edge-creation-target-hover");
+    }
+    this.edgeCreationHoverNodeId = nodeId;
+    if (nodeId) {
+      this.container
+        .querySelector(selectNodeById(nodeId))
+        ?.classList.add("edge-creation-target-hover");
+    }
   }
 
   private getEdgeCreationPreview(): SVGSVGElement {
