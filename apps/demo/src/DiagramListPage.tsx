@@ -8,12 +8,14 @@ export function DiagramListPage({
   onCreate,
   onEdit,
   onOpen,
+  onOpenNative,
   onView,
 }: {
   items: DiagramListItem[];
   onCreate: () => void;
   onEdit: (diagramId: string) => void;
   onOpen: (file: File) => void;
+  onOpenNative?: () => void;
   onView: (diagramId: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -41,7 +43,10 @@ export function DiagramListPage({
           <button
             className="button button-secondary"
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (onOpenNative) onOpenNative();
+              else fileInputRef.current?.click();
+            }}
           >
             <FolderOpen size={17} aria-hidden="true" />
             <span>Open</span>

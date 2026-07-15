@@ -10,10 +10,12 @@ import { useDiagramDocuments } from "./useDiagramDocuments";
 export function App() {
   const {
     items,
+    canOpenNativeFiles,
     fileError,
     clearFileError,
     createDocument,
     openDocument,
+    openDocumentFromPicker,
     saveDocument,
     updateDocument,
   } = useDiagramDocuments();
@@ -46,13 +48,18 @@ export function App() {
     if (item) navigate(editRoute(item.id));
   }
 
+  async function openDiagramWithNativePicker() {
+    const item = await openDocumentFromPicker();
+    if (item) navigate(editRoute(item.id));
+  }
+
   return (
     <>
       {selectedDiagram ? (
         <EditorPage
           item={selectedDiagram}
           onBack={() => navigate(listRoute)}
-          onSave={() => saveDocument(selectedDiagram)}
+          onSave={() => void saveDocument(selectedDiagram)}
           onView={() => setViewingDiagramId(selectedDiagram.id)}
           onDiagramChange={(diagram) => updateDocument(selectedDiagram.id, diagram)}
         />
@@ -60,6 +67,7 @@ export function App() {
         <DiagramListPage
           items={items}
           onCreate={createNewDiagram}
+          onOpenNative={canOpenNativeFiles ? () => void openDiagramWithNativePicker() : undefined}
           onOpen={(file) => void openDiagramFile(file)}
           onEdit={(diagramId) => navigate(editRoute(diagramId))}
           onView={setViewingDiagramId}

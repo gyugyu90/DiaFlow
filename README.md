@@ -45,7 +45,7 @@ skills are available for local use.
 - Edge creation, deletion, selection, and editing, including markers, routing, line styles, colors,
   and labels
 - Scene playback and animated data-flow examples
-- Local `New diagram`, `Open`, and `Save as` workflows
+- Local `New diagram`, `Open`, `Save`, and `Save as` workflows
 - Dirty-state tracking and unsaved-page warnings
 - Runtime, editor, and schema packages with regression tests
 
@@ -79,15 +79,15 @@ The first screen contains the bundled examples and actions for opening an existi
 1. Select **Open** to load an existing `.diagram.json` file, or select **New diagram** to create
    an empty schema-valid document.
 2. Add, select, move, edit, or delete nodes and edit supported edge properties on the canvas.
-3. Select **Save as** to download the current document as a `.diagram.json` file.
+3. Select **Save** to overwrite the original file when your browser supports the File System
+   Access API, or select **Save as** to download the current document as a `.diagram.json` file.
 4. Reopen that file later to continue editing.
 
 Opened files are validated against both the structural schema and cross-document reference rules.
 Invalid JSON, missing or malformed fields, duplicate IDs, and broken references are reported in the
 application.
 
-Directly overwriting the original file through the File System Access API is not implemented yet.
-`Save as` currently uses the browser download flow.
+Browsers without the File System Access API continue to use the standard upload and download flow.
 
 ## 🧩 Diagram JSON
 
@@ -217,7 +217,7 @@ untouched:
 - Edge creation currently connects nodes; selecting explicit source and target ports is not yet
   available.
 - Deleting a node also deletes every edge connected to it.
-- Direct `Save` through the File System Access API is not available.
+- Direct `Save` is available only when the browser exposes the File System Access API.
 - Group and scene authoring are not available in the editor.
 - The prompt field does not call an AI service.
 - The standalone iframe/script embed runtime has not been released.

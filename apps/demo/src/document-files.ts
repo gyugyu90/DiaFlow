@@ -8,6 +8,39 @@ import {
 
 const DIAGRAM_FILE_SUFFIX = ".diagram.json";
 
+type DiagramWritableFileStream = {
+  write: (data: string) => Promise<void> | void;
+  close: () => Promise<void> | void;
+};
+
+export type DiagramFileHandle = {
+  readonly name: string;
+  getFile: () => Promise<File>;
+  createWritable: () => Promise<DiagramWritableFileStream>;
+};
+
+type DiagramOpenFilePicker = (options?: {
+  excludeAcceptAllOption?: boolean;
+  multiple?: boolean;
+  types?: Array<{
+    description?: string;
+    accept: Record<string, string[]>;
+  }>;
+}) => Promise<DiagramFileHandle[]>;
+
+const diagramFilePickerOptions = {
+  excludeAcceptAllOption: false,
+  multiple: false,
+  types: [
+    {
+      description: "Diagram JSON",
+      accept: {
+        "application/json": [".diagram.json", ".json"],
+      },
+    },
+  ],
+};
+
 export function createEmptyDiagramDocument(now = new Date()): DiagramDocument {
   const timestamp = now.toISOString();
   const idTimestamp = timestamp.replaceAll(/[^0-9]/g, "");
@@ -49,6 +82,23 @@ export async function readDiagramFile(file: File): Promise<DiagramDocument> {
   return parseDiagramText(await readFileText(file));
 }
 
+export async function pickDiagramFile(): Promise<{
+  file: File;
+  handle: DiagramFileHandle;
+} | null> {
+  const openFilePicker = getNativeOpenFilePicker();
+  if (!openFilePicker) return null;
+
+  try {
+    const [handle] = await openFilePicker(diagramFilePickerOptions);
+    if (!handle) return null;
+    return { file: await handle.getFile(), handle };
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") return null;
+    throw error;
+  }
+}
+
 export function serializeDiagramDocument(diagram: DiagramDocument): string {
   return serializeCanonicalDiagramDocument(diagram);
 }
@@ -77,6 +127,15 @@ export function downloadDiagramFile(diagram: DiagramDocument, fileName: string):
   }
 }
 
+export async function writeDiagramFile(
+  handle: DiagramFileHandle,
+  diagram: DiagramDocument,
+): Promise<void> {
+  const writable = await handle.createWritable();
+  await writable.write(serializeDiagramDocument(diagram));
+  await writable.close();
+}
+
 export function formatDiagramFileError(error: unknown): string {
   if (error instanceof UnsupportedDiagramVersionError) {
     return error.message;
@@ -91,6 +150,10 @@ export function formatDiagramFileError(error: unknown): string {
   }
 
   return error instanceof Error ? error.message : "The diagram file could not be opened.";
+}
+
+export function canPickDiagramFile(): boolean {
+  return Boolean(getNativeOpenFilePicker());
 }
 
 async function readFileText(file: File): Promise<string> {
@@ -121,4 +184,9 @@ function formatIssues(issues: Issue[]): string {
     const path = issue.path?.length ? `${issue.path.join(".")}: ` : "";
     return `${path}${issue.message ?? "Invalid value"}`;
   }).join(" ");
+}
+
+function getNativeOpenFilePicker(): DiagramOpenFilePicker | null {
+  const candidate = (globalThis as { showOpenFilePicker?: unknown }).showOpenFilePicker;
+  return typeof candidate === "function" ? candidate as DiagramOpenFilePicker : null;
 }

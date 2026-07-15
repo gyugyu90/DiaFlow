@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
 import {
@@ -7,6 +7,8 @@ import {
   normalizeDiagramFileName,
   parseDiagramText,
   serializeDiagramDocument,
+  writeDiagramFile,
+  type DiagramFileHandle,
 } from "./document-files";
 
 describe("diagram document files", () => {
@@ -50,6 +52,23 @@ describe("diagram document files", () => {
     expect(normalizeDiagramFileName("architecture.json")).toBe("architecture.diagram.json");
     expect(normalizeDiagramFileName("architecture")).toBe("architecture.diagram.json");
     expect(normalizeDiagramFileName("  ")).toBe("untitled.diagram.json");
+  });
+
+  it("writes canonical diagram JSON to a File System Access handle", async () => {
+    const diagram = parseDiagramDocument(sampleDiagram);
+    const write = vi.fn();
+    const close = vi.fn();
+    const handle: DiagramFileHandle = {
+      name: "architecture.diagram.json",
+      getFile: vi.fn(),
+      createWritable: vi.fn(async () => ({ write, close })),
+    };
+
+    await writeDiagramFile(handle, diagram);
+
+    expect(handle.createWritable).toHaveBeenCalledOnce();
+    expect(write).toHaveBeenCalledWith(serializeDiagramDocument(diagram));
+    expect(close).toHaveBeenCalledOnce();
   });
 
   it("returns readable syntax and schema validation errors", () => {

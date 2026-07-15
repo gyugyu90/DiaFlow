@@ -173,6 +173,48 @@ describe("App", () => {
     expect(savedUnload.defaultPrevented).toBe(false);
   });
 
+  it("opens with the native file picker and saves directly to the original handle", async () => {
+    const openedDiagram = {
+      ...sampleDiagram,
+      id: "diagram_native_architecture",
+      metadata: { ...sampleDiagram.metadata, title: "Native Architecture" },
+    };
+    const file = new File(
+      [JSON.stringify(openedDiagram)],
+      "native-architecture.diagram.json",
+      { type: "application/json" },
+    );
+    const write = vi.fn();
+    const close = vi.fn();
+    const handle = {
+      name: file.name,
+      getFile: vi.fn(async () => file),
+      createWritable: vi.fn(async () => ({ write, close })),
+    };
+    vi.stubGlobal("showOpenFilePicker", vi.fn(async () => [handle]));
+    render(<App />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open" }));
+
+    expect(await screen.findByRole("heading", { name: "Native Architecture" })).toBeTruthy();
+    expect(screen.getByText("native-architecture.diagram.json")).toBeTruthy();
+    expect(screen.getByText("Saved")).toBeTruthy();
+    await screen.findByRole("img", { name: "Native Architecture: Default Scene" });
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) throw new Error("Missing user node");
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.change(screen.getByLabelText("Node name"), { target: { value: "Customer" } });
+
+    expect(screen.getByText("Unsaved changes")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(screen.getByText("Saved")).toBeTruthy());
+    expect(handle.createWritable).toHaveBeenCalledOnce();
+    expect(write).toHaveBeenCalledOnce();
+    expect(String(write.mock.calls[0][0])).toContain("\"label\": \"Customer\"");
+    expect(close).toHaveBeenCalledOnce();
+  });
+
   it("returns from edit page to list view", () => {
     render(<App />);
 

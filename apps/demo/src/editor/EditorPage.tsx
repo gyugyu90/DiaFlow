@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Download, Eye, Redo2, Undo2 } from "lucide-react";
+import { ArrowLeft, Download, Eye, Redo2, Save, Undo2 } from "lucide-react";
 import type {
   DiagramEditorController,
   DiagramEditorState,
@@ -99,8 +99,12 @@ export function EditorPage({
             <span>View</span>
           </button>
           <button className="button button-primary" type="button" onClick={onSave}>
-            <Download size={17} aria-hidden="true" />
-            <span>Save as</span>
+            {item.fileHandle ? (
+              <Save size={17} aria-hidden="true" />
+            ) : (
+              <Download size={17} aria-hidden="true" />
+            )}
+            <span>{item.fileHandle ? "Save" : "Save as"}</span>
           </button>
         </div>
       </header>
