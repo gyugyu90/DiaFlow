@@ -1,5 +1,6 @@
 import {
   DiagramIntegrityError,
+  UnsupportedDiagramVersionError,
   parseDiagramDocument,
   type DiagramDocument,
 } from "@interactive-diagram/schema";
@@ -76,6 +77,10 @@ export function downloadDiagramFile(diagram: DiagramDocument, fileName: string):
 }
 
 export function formatDiagramFileError(error: unknown): string {
+  if (error instanceof UnsupportedDiagramVersionError) {
+    return error.message;
+  }
+
   if (error instanceof DiagramIntegrityError) {
     return `Diagram references are invalid. ${formatIssues(error.issues)}`;
   }

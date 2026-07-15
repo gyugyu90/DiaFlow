@@ -57,13 +57,34 @@ describe("diagram document files", () => {
       .toThrow("This file is not valid JSON");
 
     try {
-      parseDiagramText(JSON.stringify({ schemaVersion: "9" }));
+      parseDiagramText(JSON.stringify({ schemaVersion: "0.2" }));
       throw new Error("Expected schema validation to fail");
     } catch (error) {
       expect(formatDiagramFileError(error)).toContain(
         "Diagram JSON does not match schema 0.2",
       );
-      expect(formatDiagramFileError(error)).toContain("schemaVersion");
+      expect(formatDiagramFileError(error)).toContain("id");
+    }
+  });
+
+  it("returns readable schemaVersion compatibility errors", () => {
+    try {
+      parseDiagramText(JSON.stringify({ schemaVersion: "0.1" }));
+      throw new Error("Expected schemaVersion compatibility to fail");
+    } catch (error) {
+      expect(formatDiagramFileError(error)).toContain(
+        "schemaVersion 0.1 is older than the current schemaVersion 0.2",
+      );
+      expect(formatDiagramFileError(error)).toContain("No migration path to 0.2 is available yet");
+    }
+
+    try {
+      parseDiagramText(JSON.stringify({ schemaVersion: "0.3" }));
+      throw new Error("Expected schemaVersion compatibility to fail");
+    } catch (error) {
+      expect(formatDiagramFileError(error)).toContain(
+        "schemaVersion 0.3 is newer than the current schemaVersion 0.2",
+      );
     }
   });
 });

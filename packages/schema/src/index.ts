@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export const CURRENT_DIAGRAM_SCHEMA_VERSION = "0.2" as const;
+export const SUPPORTED_DIAGRAM_SCHEMA_VERSIONS = [CURRENT_DIAGRAM_SCHEMA_VERSION] as const;
+
+export type DiagramSchemaVersion = typeof SUPPORTED_DIAGRAM_SCHEMA_VERSIONS[number];
+
 export const idSchema = z.string()
   .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
   .describe("Stable identifier beginning with a letter and containing only letters, digits, underscores, or hyphens.");
@@ -154,7 +159,7 @@ export const sceneSchema = z.object({
 }).strict().describe("One scenario step over the shared diagram structure.");
 
 export const diagramDocumentSchema = z.object({
-  schemaVersion: z.literal("0.2").describe("Diagram JSON contract version."),
+  schemaVersion: z.literal(CURRENT_DIAGRAM_SCHEMA_VERSION).describe("Diagram JSON contract version."),
   id: idSchema.describe("Unique diagram document identifier."),
   kind: z.literal("architecture").describe("Diagram vertical supported by this schema version."),
   metadata: z.object({
@@ -215,6 +220,56 @@ export class DiagramIntegrityError extends Error {
     this.name = "DiagramIntegrityError";
     this.issues = issues;
   }
+}
+
+export type UnsupportedDiagramVersionReason = "missing" | "invalid" | "older" | "newer" | "unsupported";
+
+export class UnsupportedDiagramVersionError extends Error {
+  readonly schemaVersion: unknown;
+  readonly targetVersion: DiagramSchemaVersion;
+  readonly currentVersion: DiagramSchemaVersion;
+  readonly reason: UnsupportedDiagramVersionReason;
+
+  constructor({
+    schemaVersion,
+    targetVersion,
+    currentVersion = CURRENT_DIAGRAM_SCHEMA_VERSION,
+    reason,
+  }: {
+    schemaVersion: unknown;
+    targetVersion: DiagramSchemaVersion;
+    currentVersion?: DiagramSchemaVersion;
+    reason: UnsupportedDiagramVersionReason;
+  }) {
+    super(formatUnsupportedDiagramVersionMessage(schemaVersion, targetVersion, currentVersion, reason));
+    this.name = "UnsupportedDiagramVersionError";
+    this.schemaVersion = schemaVersion;
+    this.targetVersion = targetVersion;
+    this.currentVersion = currentVersion;
+    this.reason = reason;
+  }
+}
+
+type DiagramMigration = (input: unknown) => unknown;
+type DiagramMigrationKey = `${string}->${string}`;
+
+const diagramMigrationRegistry = new Map<DiagramMigrationKey, DiagramMigration>();
+
+export function migrateDiagramDocument(
+  input: unknown,
+  targetVersion: DiagramSchemaVersion = CURRENT_DIAGRAM_SCHEMA_VERSION,
+): unknown {
+  const sourceVersion = readDiagramSchemaVersion(input);
+  if (sourceVersion === targetVersion) return input;
+
+  const migration = diagramMigrationRegistry.get(getMigrationKey(sourceVersion, targetVersion));
+  if (migration) return migration(input);
+
+  throw new UnsupportedDiagramVersionError({
+    schemaVersion: sourceVersion,
+    targetVersion,
+    reason: getUnsupportedVersionReason(sourceVersion, targetVersion),
+  });
 }
 
 export function validateDiagramIntegrity(diagram: DiagramDocument): DiagramIntegrityIssue[] {
@@ -306,9 +361,95 @@ export function assertValidDiagramDocument(diagram: DiagramDocument): void {
 }
 
 export function parseDiagramDocument(value: unknown): DiagramDocument {
-  const diagram = diagramDocumentSchema.parse(value);
+  const migrated = migrateDiagramDocument(value, CURRENT_DIAGRAM_SCHEMA_VERSION);
+  const diagram = diagramDocumentSchema.parse(migrated);
   assertValidDiagramDocument(diagram);
   return diagram;
+}
+
+function readDiagramSchemaVersion(input: unknown): string {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    throw new UnsupportedDiagramVersionError({
+      schemaVersion: undefined,
+      targetVersion: CURRENT_DIAGRAM_SCHEMA_VERSION,
+      reason: "missing",
+    });
+  }
+
+  const schemaVersion = (input as { schemaVersion?: unknown }).schemaVersion;
+  if (schemaVersion === undefined) {
+    throw new UnsupportedDiagramVersionError({
+      schemaVersion,
+      targetVersion: CURRENT_DIAGRAM_SCHEMA_VERSION,
+      reason: "missing",
+    });
+  }
+
+  if (typeof schemaVersion !== "string" || schemaVersion.trim() === "") {
+    throw new UnsupportedDiagramVersionError({
+      schemaVersion,
+      targetVersion: CURRENT_DIAGRAM_SCHEMA_VERSION,
+      reason: "invalid",
+    });
+  }
+
+  return schemaVersion;
+}
+
+function getMigrationKey(sourceVersion: string, targetVersion: string): DiagramMigrationKey {
+  return `${sourceVersion}->${targetVersion}`;
+}
+
+function getUnsupportedVersionReason(
+  sourceVersion: string,
+  targetVersion: DiagramSchemaVersion,
+): UnsupportedDiagramVersionReason {
+  if (!parseVersionParts(sourceVersion) || !parseVersionParts(targetVersion)) return "unsupported";
+  const ordering = compareDiagramSchemaVersions(sourceVersion, targetVersion);
+  if (ordering < 0) return "older";
+  if (ordering > 0) return "newer";
+  return "unsupported";
+}
+
+function compareDiagramSchemaVersions(left: string, right: string): number {
+  const leftParts = parseVersionParts(left);
+  const rightParts = parseVersionParts(right);
+  if (!leftParts || !rightParts) return left.localeCompare(right);
+
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const leftPart = leftParts[index] ?? 0;
+    const rightPart = rightParts[index] ?? 0;
+    if (leftPart !== rightPart) return leftPart - rightPart;
+  }
+  return 0;
+}
+
+function parseVersionParts(version: string): number[] | null {
+  if (!/^\d+(?:\.\d+)*$/.test(version)) return null;
+  return version.split(".").map((part) => Number(part));
+}
+
+function formatUnsupportedDiagramVersionMessage(
+  schemaVersion: unknown,
+  targetVersion: DiagramSchemaVersion,
+  currentVersion: DiagramSchemaVersion,
+  reason: UnsupportedDiagramVersionReason,
+): string {
+  const supportedVersions = SUPPORTED_DIAGRAM_SCHEMA_VERSIONS.join(", ");
+  if (reason === "missing") {
+    return `Diagram JSON is missing schemaVersion. Supported schemaVersion: ${supportedVersions}.`;
+  }
+  if (reason === "invalid") {
+    return `Diagram JSON has an invalid schemaVersion. Expected a non-empty string supported by this app.`;
+  }
+  if (reason === "older") {
+    return `Diagram JSON schemaVersion ${String(schemaVersion)} is older than the current schemaVersion ${currentVersion}. No migration path to ${targetVersion} is available yet.`;
+  }
+  if (reason === "newer") {
+    return `Diagram JSON schemaVersion ${String(schemaVersion)} is newer than the current schemaVersion ${currentVersion}. Please open it with a newer DiaFlow version.`;
+  }
+  return `Diagram JSON schemaVersion ${String(schemaVersion)} is not supported. Supported schemaVersion: ${supportedVersions}.`;
 }
 
 function collectIds(

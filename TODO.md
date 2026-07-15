@@ -47,7 +47,7 @@ Product expansion
 - [x] File System Access API를 지원하지 않는 브라우저를 위한 업로드/다운로드 fallback 추가
 - [x] 새 문서, 열린 파일명, 수정 여부(dirty state)를 에디터 상단에 표시
 - [x] 앱 내 이동 중 dirty 문서를 유지하고 페이지 종료 경고 추가
-- [ ] `schemaVersion`이 다른 파일을 위한 호환성 오류와 향후 migration 진입점 정의
+- [x] `schemaVersion`이 다른 파일을 위한 호환성 오류와 향후 migration 진입점 정의
 - [x] 생성 -> 저장 -> 다시 열기 -> 수정 -> 재저장 round-trip 테스트 추가
 
 완료 조건: 사용자가 로컬 파일을 유일한 원본으로 사용하면서 브라우저를 닫은 뒤에도 같은
@@ -60,8 +60,8 @@ Product expansion
 - [x] animation membership을 `Animation.edgeIds`에서만 관리
 - [x] 구조 객체에 strict 검증을 적용하고 `data`, `payload`만 확장 지점으로 허용
 - [x] entity ID 중복과 node, port, edge, animation, group, scene 참조 무결성 검증
-- [ ] 지원하지 않는 `schemaVersion`을 일반 Schema 오류와 구분해 표시
-- [ ] 향후 버전 변경을 위한 migration 함수의 입력·출력 계약과 진입점 정의
+- [x] 지원하지 않는 `schemaVersion`을 일반 Schema 오류와 구분해 표시
+- [x] 향후 버전 변경을 위한 migration 함수의 입력·출력 계약과 진입점 정의
 - [ ] `direction`, `routing`, `line`, `loop` 등 생략 가능한 기본값의 저장 정책 결정
 - [ ] AI와 에디터가 동일한 형태로 저장할 수 있는 canonical normalizer 제공
 - [ ] `Group.nodeIds`, `Animation.edgeIds`, scene override 내부 중복 검증

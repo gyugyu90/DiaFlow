@@ -83,6 +83,26 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
   });
 
+  it("shows a schemaVersion compatibility error when an opened file is too old", async () => {
+    render(<App />);
+    const file = new File(
+      [JSON.stringify({ ...sampleDiagram, schemaVersion: "0.1" })],
+      "old.diagram.json",
+      { type: "application/json" },
+    );
+
+    fireEvent.change(screen.getByLabelText("Open diagram file"), {
+      target: { files: [file] },
+    });
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain(
+      "schemaVersion 0.1 is older than the current schemaVersion 0.2",
+    );
+    expect(alert.textContent).toContain("No migration path to 0.2 is available yet");
+    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+  });
+
   it("opens an edit route directly and returns to the list route", () => {
     window.history.replaceState(null, "", "/diagrams/circuit-breaker-scenes/edit");
     render(<App />);

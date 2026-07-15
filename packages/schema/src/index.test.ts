@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import {
+  CURRENT_DIAGRAM_SCHEMA_VERSION,
   DiagramIntegrityError,
+  UnsupportedDiagramVersionError,
   diagramDocumentSchema,
+  migrateDiagramDocument,
   parseDiagramDocument,
   validateDiagramIntegrity,
 } from "./index";
@@ -45,6 +48,33 @@ describe("diagramDocumentSchema", () => {
     expect(placements).toContain("center");
     expect(placements).toContain("above");
     expect(placements).toContain("below");
+  });
+
+  it("checks schemaVersion before Zod document validation", () => {
+    const older = { schemaVersion: "0.1" };
+    const newer = { schemaVersion: "0.3" };
+
+    expect(() => parseDiagramDocument(older)).toThrow(UnsupportedDiagramVersionError);
+    expect(() => parseDiagramDocument(older)).toThrow(
+      "schemaVersion 0.1 is older than the current schemaVersion 0.2",
+    );
+    expect(() => parseDiagramDocument(newer)).toThrow(UnsupportedDiagramVersionError);
+    expect(() => parseDiagramDocument(newer)).toThrow(
+      "schemaVersion 0.3 is newer than the current schemaVersion 0.2",
+    );
+  });
+
+  it("provides a migration entrypoint without changing current-version documents", () => {
+    const input = cloneSample();
+
+    expect(migrateDiagramDocument(input, CURRENT_DIAGRAM_SCHEMA_VERSION)).toBe(input);
+  });
+
+  it("rejects missing and invalid schemaVersion before structural validation", () => {
+    expect(() => parseDiagramDocument({})).toThrow(UnsupportedDiagramVersionError);
+    expect(() => parseDiagramDocument({ schemaVersion: 2 })).toThrow(
+      "invalid schemaVersion",
+    );
   });
 
   it("accepts independent edge endpoint markers", () => {
