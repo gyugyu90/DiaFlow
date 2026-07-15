@@ -26,12 +26,13 @@ describe("App", () => {
     const list = screen.getByRole("region", { name: "Diagram list" });
     expect(within(list).getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     expect(within(list).getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
+    expect(within(list).getByRole("heading", { name: "PKCE OAuth2 Authentication Flow" })).toBeTruthy();
     expect(within(list).queryByText("Architecture")).toBeNull();
-    expect(within(list).getAllByRole("button", { name: "View" })).toHaveLength(2);
-    expect(within(list).getAllByRole("button", { name: "Edit" })).toHaveLength(2);
+    expect(within(list).getAllByRole("button", { name: "View" })).toHaveLength(3);
+    expect(within(list).getAllByRole("button", { name: "Edit" })).toHaveLength(3);
     expect(within(list).queryByText("Nodes")).toBeNull();
-    expect(list.querySelectorAll(".diagram-card-thumbnail.is-static")).toHaveLength(2);
-    expect(list.querySelectorAll(".diagram-card-thumbnail .diagram-svg")).toHaveLength(2);
+    expect(list.querySelectorAll(".diagram-card-thumbnail.is-static")).toHaveLength(3);
+    expect(list.querySelectorAll(".diagram-card-thumbnail .diagram-svg")).toHaveLength(3);
     expect(screen.getByLabelText("Build version").textContent).toBe("Build test-build");
   });
 

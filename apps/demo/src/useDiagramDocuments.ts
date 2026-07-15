@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { parseDiagramDocument, type DiagramDocument } from "@interactive-diagram/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
+import pkceOauth2Diagram from "../../../pkce-oauth2-flow.diagram.json";
 import {
   createEmptyDiagramDocument,
   downloadDiagramFile,
@@ -35,6 +36,14 @@ const initialDiagrams: DiagramListItem[] = [
     fileName: "circuit-breaker-scenes.diagram.json",
     isDirty: false,
     diagram: parseDiagramDocument(circuitBreakerDiagram),
+  },
+  {
+    id: "pkce-oauth2-flow",
+    title: "PKCE OAuth2 Authentication Flow",
+    description: "Step-by-step OAuth2 Authorization Code flow with PKCE for a public browser client.",
+    fileName: "pkce-oauth2-flow.diagram.json",
+    isDirty: false,
+    diagram: parseDiagramDocument(pkceOauth2Diagram),
   },
 ];
 
