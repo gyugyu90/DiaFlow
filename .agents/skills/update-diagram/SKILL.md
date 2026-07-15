@@ -23,10 +23,10 @@ Accept selectors written naturally or as explicit prompt fields such as `path:`,
 Use the bundled resolver from the DiaFlow repository root:
 
 ```sh
-node skills/update-diagram/scripts/find-diagram.mjs --root . --path diagrams/api.diagram.json
-node skills/update-diagram/scripts/find-diagram.mjs --root . --filename api.diagram.json
-node skills/update-diagram/scripts/find-diagram.mjs --root . --title "API Overview"
-node skills/update-diagram/scripts/find-diagram.mjs --root . --query "Update the API Overview diagram"
+node .agents/skills/update-diagram/scripts/find-diagram.mjs --root . --path diagrams/api.diagram.json
+node .agents/skills/update-diagram/scripts/find-diagram.mjs --root . --filename api.diagram.json
+node .agents/skills/update-diagram/scripts/find-diagram.mjs --root . --title "API Overview"
+node .agents/skills/update-diagram/scripts/find-diagram.mjs --root . --query "Update the API Overview diagram"
 ```
 
 Do not guess when resolution returns no file or multiple files. Show the candidates and ask for a path or filename. Never update multiple diagrams unless the user explicitly requests a batch change.

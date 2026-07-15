@@ -38,7 +38,8 @@ skills are available for local use.
 - Deterministic SVG rendering from Diagram JSON
 - Pan, zoom, and an adaptive canvas grid
 - Node creation, cascading deletion, selection, editing, dragging, and Shift-based multi-selection
-- Edge selection and editing, including markers, routing, line styles, colors, and labels
+- Edge creation, deletion, selection, and editing, including markers, routing, line styles, colors,
+  and labels
 - Scene playback and animated data-flow examples
 - Local `New diagram`, `Open`, and `Save as` workflows
 - Dirty-state tracking and unsaved-page warnings
@@ -123,24 +124,29 @@ npm run diagrams:validate   # Run structural and reference-integrity checks on e
 
 DiaFlow includes two service-neutral skills that work with local files and the repository schema:
 
-- [`create-diagram`](skills/create-diagram/SKILL.md) creates a new schema-valid Diagram JSON file
+- [`create-diagram`](.agents/skills/create-diagram/SKILL.md) creates a new schema-valid Diagram JSON file
   from an architecture or scenario description.
-- [`update-diagram`](skills/update-diagram/SKILL.md) locates an existing diagram by exact path,
+- [`update-diagram`](.agents/skills/update-diagram/SKILL.md) locates an existing diagram by exact path,
   filename, metadata title, or a title mentioned in the prompt, then updates it without breaking
   IDs and references.
 
-Codex users can symlink the skills into their personal skill directory while keeping them connected
-to the cloned repository:
+Codex automatically discovers these repository-scoped skills from `.agents/skills` when it runs
+inside this repository. Invoke them with prompts such as
+`$create-diagram Draw a web checkout architecture` or
+`$update-diagram title: "Web Checkout" Add a retry queue after the worker`.
+
+To use the skills from other repositories, symlink them into the user-scoped skill directory while
+keeping them connected to this clone:
 
 ```sh
-mkdir -p "${CODEX_HOME:-$HOME/.codex}/skills"
-ln -s "$PWD/skills/create-diagram" "${CODEX_HOME:-$HOME/.codex}/skills/create-diagram"
-ln -s "$PWD/skills/update-diagram" "${CODEX_HOME:-$HOME/.codex}/skills/update-diagram"
+mkdir -p "$HOME/.agents/skills"
+ln -s "$PWD/.agents/skills/create-diagram" "$HOME/.agents/skills/create-diagram"
+ln -s "$PWD/.agents/skills/update-diagram" "$HOME/.agents/skills/update-diagram"
 ```
 
-Invoke them explicitly with prompts such as `$create-diagram Draw a web checkout architecture` or
-`$update-diagram title: "Web Checkout" Add a retry queue after the worker`. Other LLM tools can use
-the instructions in each `SKILL.md` without authentication or a hosted DiaFlow service.
+Other LLM tools can use the instructions in each `SKILL.md` without authentication or a hosted
+DiaFlow service. If a newly added skill does not appear in Codex, restart Codex and reopen the
+repository.
 
 Both skills target `schemaVersion: "0.2"` and run the repository validator before completing a
 change. Keep the skills, examples, and schema documentation synchronized when the contract changes.
@@ -159,7 +165,8 @@ packages/
 examples/     Example .diagram.json documents
 schemas/      Generated public JSON Schema
 scripts/      Schema generation and Diagram JSON validation tools
-skills/       LLM skills for creating and updating Diagram JSON
+.agents/
+  skills/     Repository-scoped LLM skills for creating and updating Diagram JSON
 docs/         Format and testing documentation
 ```
 
@@ -201,7 +208,8 @@ untouched:
 
 ## 🚧 Good to Know
 
-- The editor cannot yet create or delete edges from the UI.
+- Edge creation currently connects nodes; selecting explicit source and target ports is not yet
+  available.
 - Deleting a node also deletes every edge connected to it.
 - Direct `Save` through the File System Access API is not available.
 - Group and scene authoring are not available in the editor.
@@ -213,12 +221,12 @@ untouched:
 
 Here is what comes next for the local-first experience:
 
-1. Add edge creation and deletion.
-2. Support direct file saving where the browser permits it.
-3. Separate the local editor from the sample gallery entry point.
-4. Produce a standalone read-only iframe viewer.
-5. Document self-hosted embedding for blogs and documentation sites.
-6. Expand the LLM skills with validated scenario examples and broader agent installation guidance.
+1. Add validated creation and update examples for the LLM skills.
+2. Define schema-version compatibility errors and a migration entry point.
+3. Support direct file saving where the browser permits it.
+4. Separate the local editor from the sample gallery entry point.
+5. Produce and document a standalone read-only iframe viewer.
+6. Add port-aware edge creation, followed by scene and group authoring.
 
 The detailed working list is maintained in [TODO.md](TODO.md).
 

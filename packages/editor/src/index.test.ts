@@ -140,11 +140,16 @@ describe("diagram editor model", () => {
         type: "packet",
         edgeIds: ["edge_user_browser"],
         enabled: true,
+      }, {
+        id: "anim_preserved",
+        type: "request",
+        edgeIds: ["edge_user_browser", "edge_app_db"],
+        enabled: true,
       }],
       scenes: [{
         id: "scene_delete_edge",
         title: "Delete edge references",
-        animationIds: ["anim_removed"],
+        animationIds: ["anim_removed", "anim_preserved"],
         edgeOverrides: [
           { edgeId: "edge_user_browser" },
           { edgeId: "edge_app_db" },
@@ -155,12 +160,28 @@ describe("diagram editor model", () => {
     const updated = deleteDiagramEdges(cascadingDiagram, ["edge_user_browser"]);
 
     expect(updated.edges.some((edge) => edge.id === "edge_user_browser")).toBe(false);
-    expect(updated.animations).toEqual([]);
+    expect(updated.animations).toEqual([{
+      id: "anim_preserved",
+      type: "request",
+      edgeIds: ["edge_app_db"],
+      enabled: true,
+    }]);
     expect(updated.scenes?.[0]).toMatchObject({
-      animationIds: [],
+      animationIds: ["anim_preserved"],
       edgeOverrides: [{ edgeId: "edge_app_db" }],
     });
     expect(() => parseDiagramDocument(updated)).not.toThrow();
+  });
+
+  it("rejects edge creation when either endpoint node does not exist", () => {
+    expect(() => addDiagramEdge(diagram, {
+      sourceNodeId: "missing",
+      targetNodeId: "browser",
+    })).toThrow("Edge endpoints must reference existing nodes.");
+    expect(() => addDiagramEdge(diagram, {
+      sourceNodeId: "user",
+      targetNodeId: "missing",
+    })).toThrow("Edge endpoints must reference existing nodes.");
   });
 
   it("updates a node without mutating the source document", () => {

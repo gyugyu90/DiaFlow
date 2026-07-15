@@ -11,22 +11,21 @@ High priority
 
 1. LLM 스킬의 생성·수정 예제와 Schema validation 회귀 테스트를 추가한다.
 2. 지원하지 않는 `schemaVersion` 오류와 향후 migration 진입점을 정의한다.
-3. 에디터에서 edge를 생성하고 삭제할 수 있게 한다.
+3. 생략 가능한 기본값과 저장 형태를 통일하는 canonical Diagram JSON 규칙을 정의한다.
 
 Medium priority
 
-4. 생략 가능한 기본값과 저장 형태를 통일하는 canonical Diagram JSON 규칙을 정의한다.
-5. collection 내부 중복과 scene override 중복을 포함해 무결성 검증을 강화한다.
-6. AI와 사용자가 선택할 수 있는 icon과 color vocabulary를 명확히 한다.
-7. File System Access API를 지원하는 브라우저에 직접 `Save` 기능을 제공한다.
+4. collection 내부 중복과 scene override 중복을 포함해 무결성 검증을 강화한다.
+5. AI와 사용자가 선택할 수 있는 icon과 color vocabulary를 명확히 한다.
+6. File System Access API를 지원하는 브라우저에 직접 `Save` 기능을 제공한다.
 
 Product expansion
 
-8. 로컬 에디터와 샘플 gallery의 진입점을 분리한다.
-9. scene 생성·수정 UI를 추가한다.
-10. group 생성·수정 UI를 추가한다.
-11. 독립적인 iframe viewer와 embed 입력 계약을 구현한다.
-12. embed integration test와 runtime 배포 버저닝을 마련한다.
+7. 로컬 에디터와 샘플 gallery의 진입점을 분리한다.
+8. scene 생성·수정 UI를 추가한다.
+9. group 생성·수정 UI를 추가한다.
+10. 독립적인 iframe viewer와 embed 입력 계약을 구현한다.
+11. embed integration test와 runtime 배포 버저닝을 마련한다.
 
 ### 1. Run the editor locally
 
@@ -93,7 +92,8 @@ Product expansion
 ### 5. Provide an LLM skill
 
 Diagram JSON을 생성하고 수정하는 공개 LLM 스킬은 Schema와 함께 변경하고 검증할 수 있도록
-이 저장소의 `skills/create-diagram/`과 `skills/update-diagram/`에서 관리한다. 스킬은 특정 AI 서비스나 인증 정보에
+이 저장소의 `.agents/skills/create-diagram/`과 `.agents/skills/update-diagram/`에서 관리한다.
+스킬은 특정 AI 서비스나 인증 정보에
 의존하지 않고, 로컬 파일과 공개된 Schema만으로 사용할 수 있어야 한다.
 
 - [x] 스킬의 책임을 Diagram JSON 생성, 수정, 설명, 검증으로 제한
@@ -107,8 +107,8 @@ Diagram JSON을 생성하고 수정하는 공개 LLM 스킬은 Schema와 함께 
 - [x] 생성 및 수정 결과를 `@interactive-diagram/schema`로 검증하는 로컬 명령 연결
 - [x] path, filename, title, 자연어 요청으로 수정 대상 파일을 찾는 resolver 추가
 - [ ] Schema 변경 시 스킬 문서와 예제를 함께 갱신하도록 체크리스트 추가
-- [ ] create skill 예제 출력에 대한 Schema validation test 추가
-- [ ] update skill 예제의 ID 보존과 참조 무결성 회귀 테스트 추가
+- [x] create skill 예제 출력에 대한 Schema validation test 추가
+- [x] update skill 예제의 ID 보존과 참조 무결성 회귀 테스트 추가
 - [x] 저장소에서 스킬을 설치하거나 참조하는 방법을 `README.md`에 문서화
 - [x] 스킬 버전과 호환되는 Diagram `schemaVersion`을 명시하는 정책 정의
 - [ ] Codex 외 LLM에서도 재사용할 수 있도록 핵심 지침과 도구별 설치 지침 분리
@@ -119,9 +119,11 @@ Diagram JSON을 생성하고 수정하는 공개 LLM 스킬은 Schema와 함께 
 ## Editor backlog
 
 - [x] node 생성 및 삭제, 연결된 edge 연쇄 삭제
-- [ ] edge 생성 및 삭제
-- [ ] node에서 연결을 시작하고 target node 또는 port를 선택하는 edge 생성 UI 정의
-- [ ] edge 삭제 시 animation과 scene edge override의 참조를 함께 정리
+- [x] source/target node를 검증하고 고유 ID를 부여하는 edge 생성 모델 로직
+- [x] node에서 연결을 시작하고 target node를 선택하는 edge 생성 UI
+- [x] edge Inspector와 Delete/Backspace를 통한 edge 삭제
+- [x] edge 삭제 시 animation과 scene edge override의 참조를 함께 정리
+- [ ] source/target `portId`를 선택할 수 있도록 edge 생성 모델과 UI 확장
 - [x] viewport 이동 및 node drag 중 node edit popup 숨기기
 - [x] edge 수정하기
 - [x] edge 타입 여러개 만들기

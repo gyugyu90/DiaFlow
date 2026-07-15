@@ -18,7 +18,7 @@ export default defineConfig({
       "packages/**/*.test.ts",
       "apps/**/*.test.ts",
       "apps/**/*.test.tsx",
-      "skills/**/*.test.mjs",
+      ".agents/skills/**/*.test.mjs",
     ],
   },
 });

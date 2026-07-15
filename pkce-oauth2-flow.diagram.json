@@ -1,0 +1,438 @@
+{
+  "schemaVersion": "0.2",
+  "id": "diagram_pkce_oauth2_flow",
+  "kind": "architecture",
+  "metadata": {
+    "title": "PKCE OAuth2 Authentication Flow",
+    "description": "Step-by-step OAuth2 Authorization Code flow with PKCE for a public browser client.",
+    "createdAt": "2026-07-15T00:00:00.000Z",
+    "updatedAt": "2026-07-15T00:00:00.000Z",
+    "tags": ["oauth2", "pkce", "authentication", "security"]
+  },
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "theme": {
+    "mode": "light",
+    "accent": "blue",
+    "background": "#f8fafc"
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "type": "user",
+      "label": "사용자",
+      "description": "브라우저에서 공개 OAuth 클라이언트를 사용하는 최종 사용자입니다.",
+      "position": { "x": 60, "y": 250 },
+      "size": { "width": 120, "height": 72 },
+      "icon": "user"
+    },
+    {
+      "id": "browser_client",
+      "type": "browser",
+      "label": "브라우저 앱",
+      "description": "Client secret을 안전하게 보관할 수 없는 public OAuth client입니다.",
+      "position": { "x": 260, "y": 250 },
+      "size": { "width": 150, "height": 78 },
+      "icon": "browser"
+    },
+    {
+      "id": "pkce_state",
+      "type": "storage",
+      "label": "PKCE 상태",
+      "description": "code_verifier, state, nonce를 브라우저 세션에 임시 저장합니다.",
+      "position": { "x": 260, "y": 420 },
+      "size": { "width": 150, "height": 74 },
+      "icon": "storage"
+    },
+    {
+      "id": "authorization_server",
+      "type": "external_service",
+      "label": "인증 서버",
+      "description": "로그인, 동의, authorization code 발급, PKCE 검증을 담당합니다.",
+      "position": { "x": 540, "y": 250 },
+      "size": { "width": 170, "height": 78 },
+      "icon": "shield"
+    },
+    {
+      "id": "login_consent",
+      "type": "app",
+      "label": "로그인/동의 화면",
+      "description": "사용자 인증과 권한 동의를 처리하는 인증 서버의 사용자 인터페이스입니다.",
+      "position": { "x": 540, "y": 80 },
+      "size": { "width": 170, "height": 78 },
+      "icon": "lock"
+    },
+    {
+      "id": "token_endpoint",
+      "type": "api",
+      "label": "Token Endpoint",
+      "description": "authorization code와 code_verifier를 받아 access token을 발급합니다.",
+      "position": { "x": 820, "y": 250 },
+      "size": { "width": 170, "height": 78 },
+      "icon": "key"
+    },
+    {
+      "id": "resource_api",
+      "type": "api",
+      "label": "Protected API",
+      "description": "access token으로 보호되는 리소스 서버 API입니다.",
+      "position": { "x": 1100, "y": 250 },
+      "size": { "width": 170, "height": 78 },
+      "icon": "server"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_user_client",
+      "source": { "nodeId": "user" },
+      "target": { "nodeId": "browser_client" },
+      "label": "앱 사용",
+      "direction": "forward",
+      "style": { "line": "solid", "routing": "smooth", "color": "default", "labelPlacement": "above", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_client_store_verifier",
+      "source": { "nodeId": "browser_client" },
+      "target": { "nodeId": "pkce_state" },
+      "label": "code_verifier 저장",
+      "direction": "forward",
+      "style": { "line": "dashed", "routing": "smooth", "color": "accent", "labelPlacement": "below", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_client_auth_request",
+      "source": { "nodeId": "browser_client" },
+      "target": { "nodeId": "authorization_server" },
+      "label": "Auth request + code_challenge",
+      "direction": "forward",
+      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above", "endMarker": "arrow" },
+      "data": {
+        "parameters": ["response_type=code", "client_id", "redirect_uri", "scope", "state", "code_challenge", "code_challenge_method=S256"]
+      }
+    },
+    {
+      "id": "edge_auth_login",
+      "source": { "nodeId": "authorization_server" },
+      "target": { "nodeId": "login_consent" },
+      "label": "로그인/동의 표시",
+      "direction": "forward",
+      "style": { "line": "solid", "routing": "smooth", "color": "default", "labelPlacement": "above", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_user_login",
+      "source": { "nodeId": "user" },
+      "target": { "nodeId": "login_consent" },
+      "label": "인증 및 동의",
+      "direction": "forward",
+      "style": { "line": "solid", "routing": "smooth", "color": "default", "labelPlacement": "above", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_auth_code_redirect",
+      "source": { "nodeId": "authorization_server" },
+      "target": { "nodeId": "browser_client" },
+      "label": "Redirect: code + state",
+      "direction": "forward",
+      "style": { "line": "dotted", "routing": "smooth", "color": "accent", "labelPlacement": "below", "endMarker": "arrow" },
+      "data": {
+        "parameters": ["code", "state"]
+      }
+    },
+    {
+      "id": "edge_client_read_verifier",
+      "source": { "nodeId": "pkce_state" },
+      "target": { "nodeId": "browser_client" },
+      "label": "code_verifier 로드",
+      "direction": "forward",
+      "style": { "line": "dashed", "routing": "smooth", "color": "accent", "labelPlacement": "above", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_client_token_request",
+      "source": { "nodeId": "browser_client" },
+      "target": { "nodeId": "token_endpoint" },
+      "label": "Token request: code + verifier",
+      "direction": "forward",
+      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above", "endMarker": "arrow" },
+      "data": {
+        "parameters": ["grant_type=authorization_code", "code", "redirect_uri", "client_id", "code_verifier"]
+      }
+    },
+    {
+      "id": "edge_token_verify",
+      "source": { "nodeId": "token_endpoint" },
+      "target": { "nodeId": "authorization_server" },
+      "label": "S256 검증",
+      "direction": "bidirectional",
+      "style": { "line": "solid", "routing": "smooth", "color": "default", "labelPlacement": "below", "startMarker": "arrow", "endMarker": "arrow" },
+      "data": {
+        "check": "BASE64URL-ENCODE(SHA256(code_verifier)) equals stored code_challenge"
+      }
+    },
+    {
+      "id": "edge_token_response",
+      "source": { "nodeId": "token_endpoint" },
+      "target": { "nodeId": "browser_client" },
+      "label": "Access token",
+      "direction": "forward",
+      "style": { "line": "dotted", "routing": "smooth", "color": "accent", "labelPlacement": "below", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_api_request",
+      "source": { "nodeId": "browser_client" },
+      "target": { "nodeId": "resource_api" },
+      "label": "API request: Bearer token",
+      "direction": "forward",
+      "style": { "line": "solid", "routing": "smooth", "color": "accent", "labelPlacement": "above", "endMarker": "arrow" }
+    },
+    {
+      "id": "edge_api_response",
+      "source": { "nodeId": "resource_api" },
+      "target": { "nodeId": "browser_client" },
+      "label": "Protected resource",
+      "direction": "forward",
+      "style": { "line": "dotted", "routing": "smooth", "color": "default", "labelPlacement": "below", "endMarker": "arrow" }
+    }
+  ],
+  "groups": [
+    {
+      "id": "client_boundary",
+      "label": "Public Client",
+      "nodeIds": ["browser_client", "pkce_state"],
+      "style": { "variant": "boundary" }
+    },
+    {
+      "id": "authorization_boundary",
+      "label": "Authorization Server",
+      "nodeIds": ["authorization_server", "login_consent", "token_endpoint"],
+      "style": { "variant": "boundary" }
+    },
+    {
+      "id": "resource_boundary",
+      "label": "Resource Server",
+      "nodeIds": ["resource_api"],
+      "style": { "variant": "boundary" }
+    }
+  ],
+  "animations": [
+    {
+      "id": "anim_generate_pkce",
+      "type": "step_reveal",
+      "edgeIds": ["edge_client_store_verifier"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 0.8,
+      "loop": true,
+      "label": "PKCE 값 생성",
+      "payload": {
+        "produces": ["code_verifier", "code_challenge"]
+      }
+    },
+    {
+      "id": "anim_authorization_request",
+      "type": "request",
+      "edgeIds": ["edge_user_client", "edge_client_auth_request"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Authorization request"
+    },
+    {
+      "id": "anim_user_authentication",
+      "type": "request",
+      "edgeIds": ["edge_auth_login", "edge_user_login"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 0.9,
+      "loop": true,
+      "label": "사용자 로그인과 동의"
+    },
+    {
+      "id": "anim_authorization_code",
+      "type": "response",
+      "edgeIds": ["edge_auth_code_redirect"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Authorization code 반환"
+    },
+    {
+      "id": "anim_token_exchange",
+      "type": "request",
+      "edgeIds": ["edge_client_read_verifier", "edge_client_token_request", "edge_token_verify"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1.1,
+      "loop": true,
+      "label": "Code를 token으로 교환",
+      "payload": {
+        "security": "The code is useless without the original code_verifier."
+      }
+    },
+    {
+      "id": "anim_token_response",
+      "type": "response",
+      "edgeIds": ["edge_token_response"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Token response"
+    },
+    {
+      "id": "anim_api_call",
+      "type": "request",
+      "edgeIds": ["edge_api_request", "edge_api_response"],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Access token으로 API 호출"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_generate_pkce",
+      "title": "1. PKCE 값 생성",
+      "description": "브라우저 앱은 랜덤 code_verifier를 만들고 S256 방식으로 code_challenge를 계산한 뒤 verifier를 로컬 세션에 보관합니다.",
+      "animationIds": ["anim_generate_pkce"],
+      "edgeOverrides": [
+        { "edgeId": "edge_client_store_verifier", "label": "code_verifier 저장", "tone": "active" },
+        { "edgeId": "edge_client_auth_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_auth_login", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_user_login", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_auth_code_redirect", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_read_verifier", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_token_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_verify", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_response", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_response", "tone": "muted", "disabled": true }
+      ],
+      "nodeOverrides": [
+        { "nodeId": "browser_client", "tone": "active", "status": "code_challenge 생성" },
+        { "nodeId": "pkce_state", "tone": "active", "status": "code_verifier 보관" },
+        { "nodeId": "authorization_server", "tone": "muted" },
+        { "nodeId": "token_endpoint", "tone": "muted" },
+        { "nodeId": "resource_api", "tone": "muted" }
+      ]
+    },
+    {
+      "id": "scene_authorization_request",
+      "title": "2. 인증 요청",
+      "description": "브라우저 앱은 authorization endpoint로 사용자를 리다이렉트하며 code_challenge와 state를 함께 전달합니다.",
+      "animationIds": ["anim_authorization_request"],
+      "edgeOverrides": [
+        { "edgeId": "edge_user_client", "tone": "active" },
+        { "edgeId": "edge_client_store_verifier", "tone": "muted" },
+        { "edgeId": "edge_client_auth_request", "label": "code_challenge 포함", "tone": "active" },
+        { "edgeId": "edge_auth_login", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_user_login", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_auth_code_redirect", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_read_verifier", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_token_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_verify", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_response", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_response", "tone": "muted", "disabled": true }
+      ],
+      "nodeOverrides": [
+        { "nodeId": "user", "tone": "active", "status": "로그인 시작" },
+        { "nodeId": "browser_client", "tone": "active", "status": "authorization request 전송" },
+        { "nodeId": "pkce_state", "tone": "normal", "status": "verifier 유지" },
+        { "nodeId": "authorization_server", "tone": "active", "status": "challenge와 state 수신" },
+        { "nodeId": "token_endpoint", "tone": "muted" },
+        { "nodeId": "resource_api", "tone": "muted" }
+      ]
+    },
+    {
+      "id": "scene_login_consent",
+      "title": "3. 로그인과 동의",
+      "description": "인증 서버는 사용자에게 로그인과 권한 동의를 요구하고 승인되면 authorization code를 준비합니다.",
+      "animationIds": ["anim_user_authentication"],
+      "edgeOverrides": [
+        { "edgeId": "edge_client_auth_request", "tone": "normal" },
+        { "edgeId": "edge_auth_login", "label": "로그인 화면", "tone": "active" },
+        { "edgeId": "edge_user_login", "label": "자격 증명 + 동의", "tone": "active" },
+        { "edgeId": "edge_auth_code_redirect", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_read_verifier", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_token_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_verify", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_response", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_response", "tone": "muted", "disabled": true }
+      ],
+      "nodeOverrides": [
+        { "nodeId": "user", "tone": "active", "status": "인증 및 권한 승인" },
+        { "nodeId": "authorization_server", "tone": "active", "status": "authorization code 준비" },
+        { "nodeId": "login_consent", "tone": "active", "status": "로그인/동의 처리" },
+        { "nodeId": "pkce_state", "tone": "normal", "status": "verifier 유지" },
+        { "nodeId": "token_endpoint", "tone": "muted" },
+        { "nodeId": "resource_api", "tone": "muted" }
+      ]
+    },
+    {
+      "id": "scene_code_redirect",
+      "title": "4. Authorization Code 반환",
+      "description": "인증 서버는 redirect_uri로 authorization code와 state를 반환합니다. 브라우저 앱은 state를 비교해 요청 무결성을 확인합니다.",
+      "animationIds": ["anim_authorization_code"],
+      "edgeOverrides": [
+        { "edgeId": "edge_auth_code_redirect", "label": "code + state", "tone": "active" },
+        { "edgeId": "edge_client_read_verifier", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_client_token_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_verify", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_token_response", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_response", "tone": "muted", "disabled": true }
+      ],
+      "nodeOverrides": [
+        { "nodeId": "browser_client", "tone": "active", "status": "state 검증" },
+        { "nodeId": "authorization_server", "tone": "active", "status": "authorization code 발급" },
+        { "nodeId": "pkce_state", "tone": "normal", "status": "verifier 유지" },
+        { "nodeId": "token_endpoint", "tone": "muted" },
+        { "nodeId": "resource_api", "tone": "muted" }
+      ]
+    },
+    {
+      "id": "scene_token_exchange",
+      "title": "5. 토큰 교환과 PKCE 검증",
+      "description": "브라우저 앱은 authorization code와 원본 code_verifier를 token endpoint로 전송합니다. 서버는 저장된 code_challenge와 verifier의 S256 결과를 비교합니다.",
+      "animationIds": ["anim_token_exchange", "anim_token_response"],
+      "edgeOverrides": [
+        { "edgeId": "edge_client_read_verifier", "label": "원본 verifier 로드", "tone": "active" },
+        { "edgeId": "edge_client_token_request", "label": "code + code_verifier", "tone": "active" },
+        { "edgeId": "edge_token_verify", "label": "challenge == S256(verifier)", "tone": "active" },
+        { "edgeId": "edge_token_response", "label": "access token 발급", "tone": "active" },
+        { "edgeId": "edge_api_request", "tone": "muted", "disabled": true },
+        { "edgeId": "edge_api_response", "tone": "muted", "disabled": true }
+      ],
+      "nodeOverrides": [
+        { "nodeId": "browser_client", "tone": "active", "status": "token request 전송" },
+        { "nodeId": "pkce_state", "tone": "active", "status": "verifier 제공" },
+        { "nodeId": "authorization_server", "tone": "active", "status": "PKCE 검증" },
+        { "nodeId": "token_endpoint", "tone": "active", "status": "토큰 발급" },
+        { "nodeId": "resource_api", "tone": "muted" }
+      ]
+    },
+    {
+      "id": "scene_api_access",
+      "title": "6. 보호된 API 호출",
+      "description": "브라우저 앱은 발급받은 access token을 Authorization 헤더에 담아 보호된 API를 호출합니다.",
+      "animationIds": ["anim_api_call"],
+      "edgeOverrides": [
+        { "edgeId": "edge_token_response", "tone": "normal" },
+        { "edgeId": "edge_api_request", "label": "Authorization: Bearer access_token", "tone": "active" },
+        { "edgeId": "edge_api_response", "label": "보호 리소스 응답", "tone": "active" }
+      ],
+      "nodeOverrides": [
+        { "nodeId": "browser_client", "tone": "active", "status": "access token 보유" },
+        { "nodeId": "resource_api", "tone": "active", "status": "token 검증 후 응답" },
+        { "nodeId": "authorization_server", "tone": "normal" },
+        { "nodeId": "token_endpoint", "tone": "normal" },
+        { "nodeId": "pkce_state", "tone": "muted", "status": "사용 완료" }
+      ]
+    }
+  ]
+}
