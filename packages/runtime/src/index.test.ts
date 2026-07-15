@@ -226,6 +226,25 @@ describe("renderDiagram", () => {
     );
   });
 
+  it("resolves semantic and palette edge color presets", () => {
+    const presetColorDiagram = {
+      ...diagram,
+      edges: diagram.edges.map((edge, index) => {
+        if (index === 0) return { ...edge, style: { ...edge.style, color: "success" } };
+        if (index === 1) return { ...edge, style: { ...edge.style, color: "violet" } };
+        return edge;
+      }),
+    };
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    renderDiagram(container, presetColorDiagram);
+
+    expect(container.querySelector('[data-edge-id="edge_user_browser"] .edge-path')?.getAttribute("stroke"))
+      .toBe("#27945f");
+    expect(container.querySelector('[data-edge-id="edge_browser_lb"] .edge-path')?.getAttribute("stroke"))
+      .toBe("#7c5cff");
+  });
+
   it("renders a wide edge hit area without intercepting runtime input", () => {
     const { container } = renderSample();
     const hitAreas = container.querySelectorAll(".edge-hit-area");

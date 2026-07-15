@@ -177,6 +177,45 @@ Visual theme configuration.
 }
 ```
 
+Theme values:
+
+- `mode`: `light` or `dark`
+- `accent`: color preset token or six-digit `#rrggbb` hex color
+- `background`: six-digit `#rrggbb` hex color
+
+### Color Values
+
+DiaFlow accepts a limited color vocabulary so AI-generated documents, editor controls, and runtime
+rendering use the same contract.
+
+Semantic presets:
+
+```txt
+accent
+primary
+muted
+neutral
+success
+warning
+danger
+info
+```
+
+Palette presets:
+
+```txt
+blue
+green
+amber
+red
+violet
+slate
+```
+
+Edge colors also support `default`. Custom colors must use six-digit hex syntax such as `#2f6fed`
+or `#19A974`. CSS named colors, `rgb()`, `rgba()`, `hsl()`, short hex such as `#fff`, and other CSS
+color functions are intentionally rejected by schema version `0.2`.
+
 ## Node
 
 Nodes represent architecture components.
@@ -336,7 +375,7 @@ Initial values:
 
 - `line`: `solid`, `dashed`, `dotted`
 - `routing`: `straight`, `smooth`, `orthogonal`
-- `color`: `default`, `muted`, `accent`, or hex color
+- `color`: `default`, any semantic or palette color preset, or six-digit `#rrggbb` hex color
 - `labelPlacement`: `center`, `above`, `below`
 - `startMarker`: `none`, `arrow`, `triangle`, `circle`
 - `endMarker`: `none`, `arrow`, `triangle`, `circle`

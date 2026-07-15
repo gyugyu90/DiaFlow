@@ -3,7 +3,10 @@ import type { EdgePatch, InspectorPosition } from "@interactive-diagram/editor";
 import {
   EDGE_COLOR_OPTIONS,
   EDGE_COLOR_PALETTE,
+  isHexColor,
   isEdgeColorPreset,
+  resolveEdgeColor,
+  type EdgeColorPreset,
 } from "@interactive-diagram/runtime";
 import {
   edgeLabelPlacementSchema,
@@ -19,6 +22,7 @@ const edgeMarkerOptions = edgeMarkerSchema.options;
 const edgeLineOptions = edgeLineSchema.options;
 const edgeRoutingOptions = edgeRoutingSchema.options;
 const edgeLabelPlacementOptions = edgeLabelPlacementSchema.options;
+const customColorOption = "custom" as const;
 
 export function EdgeInspector({
   edge,
@@ -41,7 +45,8 @@ export function EdgeInspector({
 
   const startMarker = resolveEdgeStartMarker(edge);
   const endMarker = resolveEdgeEndMarker(edge);
-  const color = getEdgeColorOption(edge.style?.color);
+  const colorOption = getEdgeColorOption(edge.style?.color);
+  const resolvedColor = resolveEdgeColor(edge.style?.color);
 
   return (
     <section
@@ -113,14 +118,26 @@ export function EdgeInspector({
       <label>
         <span>Color</span>
         <div className="edge-color-control">
-          <i style={{ backgroundColor: EDGE_COLOR_PALETTE[color] }} aria-hidden="true" />
+          <i style={{ backgroundColor: resolvedColor }} aria-hidden="true" />
           <select
             aria-label="Edge color"
-            value={color}
-            onChange={(event) => onChange({ style: { color: event.target.value } })}
+            value={colorOption}
+            onChange={(event) => {
+              const value = event.target.value;
+              onChange({ style: { color: value === customColorOption ? resolvedColor : value } });
+            }}
           >
             {EDGE_COLOR_OPTIONS.map((option) => <option key={option}>{option}</option>)}
+            <option value={customColorOption}>custom hex</option>
           </select>
+          {colorOption === customColorOption ? (
+            <input
+              aria-label="Edge hex color"
+              type="color"
+              value={resolvedColor}
+              onChange={(event) => onChange({ style: { color: event.target.value } })}
+            />
+          ) : null}
         </div>
       </label>
       <EdgeSelect
@@ -158,6 +175,8 @@ function EdgeSelect({
   );
 }
 
-function getEdgeColorOption(color: string | undefined): (typeof EDGE_COLOR_OPTIONS)[number] {
-  return isEdgeColorPreset(color) ? color : "default";
+function getEdgeColorOption(color: string | undefined): EdgeColorPreset | typeof customColorOption {
+  if (isEdgeColorPreset(color)) return color;
+  if (isHexColor(color)) return customColorOption;
+  return "default";
 }

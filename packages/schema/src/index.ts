@@ -9,6 +9,57 @@ export const idSchema = z.string()
   .regex(/^[a-zA-Z][a-zA-Z0-9_-]*$/)
   .describe("Stable identifier beginning with a letter and containing only letters, digits, underscores, or hyphens.");
 
+export const SEMANTIC_COLOR_PRESETS = [
+  "accent",
+  "primary",
+  "muted",
+  "neutral",
+  "success",
+  "warning",
+  "danger",
+  "info",
+] as const;
+
+export const PALETTE_COLOR_PRESETS = [
+  "blue",
+  "green",
+  "amber",
+  "red",
+  "violet",
+  "slate",
+] as const;
+
+export const EDGE_COLOR_PRESETS = [
+  "default",
+  ...SEMANTIC_COLOR_PRESETS,
+  ...PALETTE_COLOR_PRESETS,
+] as const;
+
+export const semanticColorPresetSchema = z.enum(SEMANTIC_COLOR_PRESETS);
+
+export const paletteColorPresetSchema = z.enum(PALETTE_COLOR_PRESETS);
+
+export const colorPresetSchema = z.union([
+  semanticColorPresetSchema,
+  paletteColorPresetSchema,
+]);
+
+export const edgeColorPresetSchema = z.enum(EDGE_COLOR_PRESETS);
+
+export const hexColorSchema = z.string()
+  .regex(/^#[0-9a-fA-F]{6}$/)
+  .describe("Six-digit hex color in #rrggbb form.");
+
+export const diagramColorSchema = z.union([
+  colorPresetSchema,
+  hexColorSchema,
+]).describe("Color preset token or six-digit #rrggbb hex color.");
+
+export const edgeColorSchema = z.union([
+  edgeColorPresetSchema,
+  hexColorSchema,
+]).describe("Edge color preset token or six-digit #rrggbb hex color.");
+
 export const nodeTypeSchema = z.enum([
   "user",
   "browser",
@@ -71,7 +122,9 @@ export const edgeLabelPlacementSchema = z.enum(["center", "above", "below"]);
 export const edgeStyleSchema = z.object({
   line: edgeLineSchema.default("solid").describe("Line pattern; defaults to solid."),
   routing: edgeRoutingSchema.default("smooth").describe("Path routing mode; defaults to smooth."),
-  color: z.string().default("default").describe("Runtime color preset or CSS color; defaults to default."),
+  color: edgeColorSchema.default("default").describe(
+    "Runtime edge color preset or six-digit #rrggbb hex color; defaults to default.",
+  ),
   labelPlacement: edgeLabelPlacementSchema.default("above")
     .describe("Label position relative to the edge; defaults to above."),
   startMarker: edgeMarkerSchema.optional().describe("Optional marker at the source endpoint."),
@@ -180,8 +233,8 @@ export const diagramDocumentSchema = z.object({
   }).strict().describe("Initial viewer camera state."),
   theme: z.object({
     mode: z.enum(["light", "dark"]).describe("Base light or dark appearance."),
-    accent: z.string().describe("Accent color preset or CSS color."),
-    background: z.string().describe("Diagram background color."),
+    accent: diagramColorSchema.describe("Accent color preset or six-digit #rrggbb hex color."),
+    background: hexColorSchema.describe("Diagram background color as a six-digit #rrggbb hex color."),
   }).strict().describe("Document-level visual theme."),
   nodes: z.array(nodeSchema).describe("All nodes in the diagram."),
   edges: z.array(edgeSchema).describe("All edges in the diagram."),

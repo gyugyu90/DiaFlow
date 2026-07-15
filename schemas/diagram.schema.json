@@ -93,12 +93,38 @@
           "description": "Base light or dark appearance."
         },
         "accent": {
-          "type": "string",
-          "description": "Accent color preset or CSS color."
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "accent",
+                "primary",
+                "muted",
+                "neutral",
+                "success",
+                "warning",
+                "danger",
+                "info",
+                "blue",
+                "green",
+                "amber",
+                "red",
+                "violet",
+                "slate"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "description": "Six-digit hex color in #rrggbb form."
+            }
+          ],
+          "description": "Accent color preset or six-digit #rrggbb hex color."
         },
         "background": {
           "type": "string",
-          "description": "Diagram background color."
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "description": "Diagram background color as a six-digit #rrggbb hex color."
         }
       },
       "required": [
@@ -330,9 +356,35 @@
                 "description": "Path routing mode; defaults to smooth."
               },
               "color": {
-                "type": "string",
-                "default": "default",
-                "description": "Runtime color preset or CSS color; defaults to default."
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "default",
+                      "accent",
+                      "primary",
+                      "muted",
+                      "neutral",
+                      "success",
+                      "warning",
+                      "danger",
+                      "info",
+                      "blue",
+                      "green",
+                      "amber",
+                      "red",
+                      "violet",
+                      "slate"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$",
+                    "description": "Six-digit hex color in #rrggbb form."
+                  }
+                ],
+                "description": "Runtime edge color preset or six-digit #rrggbb hex color; defaults to default.",
+                "default": "default"
               },
               "labelPlacement": {
                 "type": "string",
@@ -600,9 +652,35 @@
                       "description": "Path routing mode; defaults to smooth."
                     },
                     "color": {
-                      "type": "string",
-                      "default": "default",
-                      "description": "Runtime color preset or CSS color; defaults to default."
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "default",
+                            "accent",
+                            "primary",
+                            "muted",
+                            "neutral",
+                            "success",
+                            "warning",
+                            "danger",
+                            "info",
+                            "blue",
+                            "green",
+                            "amber",
+                            "red",
+                            "violet",
+                            "slate"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "pattern": "^#[0-9a-fA-F]{6}$",
+                          "description": "Six-digit hex color in #rrggbb form."
+                        }
+                      ],
+                      "description": "Runtime edge color preset or six-digit #rrggbb hex color; defaults to default.",
+                      "default": "default"
                     },
                     "labelPlacement": {
                       "type": "string",

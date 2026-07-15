@@ -175,6 +175,35 @@ describe("diagramDocumentSchema", () => {
     expect(() => parseDiagramDocument(invalid)).toThrow();
   });
 
+  it("accepts color presets and six-digit hex colors", () => {
+    const input = cloneSample();
+    input.theme.accent = "primary";
+    input.theme.background = "#ffffff";
+    input.edges[0].style.color = "success";
+    input.edges[1].style.color = "violet";
+    input.edges[2].style.color = "#19A974";
+
+    const parsed = parseDiagramDocument(input);
+
+    expect(parsed.theme.accent).toBe("primary");
+    expect(parsed.edges[0].style.color).toBe("success");
+    expect(parsed.edges[1].style.color).toBe("violet");
+    expect(parsed.edges[2].style.color).toBe("#19A974");
+  });
+
+  it("rejects unsupported CSS color strings", () => {
+    const namedColor = cloneSample();
+    namedColor.edges[0].style.color = "rebeccapurple";
+    const rgbColor = cloneSample();
+    rgbColor.edges[0].style.color = "rgb(25, 169, 116)";
+    const shortHex = cloneSample();
+    shortHex.theme.accent = "#fff";
+
+    expect(() => parseDiagramDocument(namedColor)).toThrow();
+    expect(() => parseDiagramDocument(rgbColor)).toThrow();
+    expect(() => parseDiagramDocument(shortHex)).toThrow();
+  });
+
   it("rejects unsupported edge marker values", () => {
     const invalid = cloneSample();
     Object.assign(invalid.edges[0].style, { endMarker: "diamond" });

@@ -270,12 +270,35 @@ describe("EditorPage", () => {
     fireEvent.change(within(inspector).getByLabelText("Line"), {
       target: { value: "dashed" },
     });
+    fireEvent.change(within(inspector).getByLabelText("Edge color"), {
+      target: { value: "success" },
+    });
 
     const path = document.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
     expect(screen.getByRole("dialog", { name: "Edit edge Opens" })).toBeTruthy();
     expect(path?.getAttribute("marker-start")).toBe("url(#marker-circle)");
     expect(path?.getAttribute("marker-end")).toBe("url(#marker-triangle)");
     expect(path?.getAttribute("stroke-dasharray")).toBe("8 7");
+    expect(path?.getAttribute("stroke")).toBe("#27945f");
+  });
+
+  it("edits an edge custom hex color", async () => {
+    renderBasicDiagram();
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
+    if (!edgeHitArea) throw new Error("Missing edge hit area");
+    fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 100, clientY: 100 });
+
+    const inspector = screen.getByRole("dialog", { name: "Edit edge Uses" });
+    fireEvent.change(within(inspector).getByLabelText("Edge color"), {
+      target: { value: "custom" },
+    });
+    fireEvent.change(within(inspector).getByLabelText("Edge hex color"), {
+      target: { value: "#19a974" },
+    });
+
+    const path = document.querySelector('[data-edge-id="edge_user_browser"] .edge-path');
+    expect(path?.getAttribute("stroke")).toBe("#19a974");
   });
 
   it("deletes an edge from the edge inspector and restores it with undo", async () => {

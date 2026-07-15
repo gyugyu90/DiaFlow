@@ -5,6 +5,7 @@ import type { DiagramRenderer, DiagramRenderOptions } from "./types.js";
 export {
   EDGE_COLOR_OPTIONS,
   EDGE_COLOR_PALETTE,
+  isHexColor,
   isEdgeColorPreset,
   resolveEdgeColor,
 } from "./edge-style.js";
