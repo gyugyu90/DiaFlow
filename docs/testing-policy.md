@@ -14,7 +14,8 @@ Every feature that changes those contracts should include regression tests.
 - Full local check: `npm run check`
 
 `npm run check` verifies the generated JSON Schema, checks canonical example serialization,
-validates example diagrams, runs tests, and then creates the production build.
+validates example diagrams, runs tests, creates the production build, and verifies the self-hosted
+viewer artifact.
 
 ```sh
 npm run check
@@ -28,6 +29,7 @@ npm run schema:check        # Detect generated-schema drift
 npm run diagrams:normalize # Rewrite Diagram JSON with canonical defaults and formatting
 npm run diagrams:normalize:check # Detect non-canonical bundled examples
 npm run diagrams:validate   # Validate structure, then cross-document references
+npm run embed:check         # Verify dist/viewer and the iframe example after build
 ```
 
 The generated public JSON Schema performs structural validation through Ajv. After that succeeds,

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DiaFlow Self-Hosted Embed Example</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        color: #172033;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      iframe {
+        width: 100%;
+        height: 520px;
+        border: 1px solid #d7dee8;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DiaFlow self-hosted embed</h1>
+    <iframe
+      src="/viewer/?src=/diagrams/basic-web-architecture.diagram.json"
+      loading="lazy"
+      title="Basic Web Architecture"
+    ></iframe>
+  </body>
+</html>

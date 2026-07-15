@@ -37,6 +37,12 @@ export default defineConfig({
   build: {
     outDir: "../../dist",
     emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        app: resolve(__dirname, "index.html"),
+        viewer: resolve(__dirname, "viewer/index.html"),
+      },
+    },
   },
 });
 

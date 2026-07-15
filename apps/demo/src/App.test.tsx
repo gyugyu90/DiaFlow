@@ -261,4 +261,20 @@ describe("App", () => {
     });
     expect(modal.querySelectorAll("[data-node-id]")).toHaveLength(6);
   });
+
+  it("serves the self-hosted iframe viewer route", async () => {
+    window.history.replaceState(null, "", "/viewer/?src=/diagrams/basic.diagram.json");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify(sampleDiagram), { status: 200 })),
+    );
+
+    render(<App />);
+
+    expect(await screen.findByRole("img", { name: "Basic Web Architecture" })).toBeTruthy();
+    expect(window.location.pathname).toBe("/viewer/");
+    expect(window.location.search).toBe("?src=/diagrams/basic.diagram.json");
+    expect(screen.queryByRole("button", { name: "New diagram" })).toBeNull();
+    expect(screen.queryByLabelText("Build version")).toBeNull();
+  });
 });

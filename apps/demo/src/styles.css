@@ -192,6 +192,32 @@ p {
   text-align: center;
 }
 
+.self-hosted-viewer {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--surface-soft);
+}
+
+.self-hosted-viewer-root {
+  width: 100%;
+  height: 100%;
+}
+
+.self-hosted-viewer-status {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.self-hosted-viewer-status svg {
+  color: #b42318;
+}
+
 .diagram-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px auto;

@@ -15,7 +15,8 @@ export function useAppRoute() {
   useEffect(() => {
     const canonicalPath = formatAppRoute(route);
     if (window.location.pathname !== canonicalPath) {
-      window.history.replaceState(null, "", canonicalPath);
+      const search = route.view === "viewer" ? window.location.search : "";
+      window.history.replaceState(null, "", `${canonicalPath}${search}`);
     }
   }, [route]);
 

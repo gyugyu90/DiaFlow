@@ -3,6 +3,7 @@ import { BuildVersionBadge, FileErrorBanner } from "./AppStatus";
 import { DiagramListPage } from "./DiagramListPage";
 import { DiagramViewModal } from "./DiagramViewModal";
 import { LocalEditorStartPage } from "./LocalEditorStartPage";
+import { SelfHostedViewerPage } from "./SelfHostedViewerPage";
 import { EditorPage } from "./editor/EditorPage";
 import { editRoute, galleryRoute, listRoute } from "./routes";
 import { useAppRoute } from "./useAppRoute";
@@ -54,6 +55,10 @@ export function App() {
   async function openDiagramWithNativePicker() {
     const item = await openDocumentFromPicker();
     if (item) navigate(editRoute(item.id));
+  }
+
+  if (route.view === "viewer") {
+    return <SelfHostedViewerPage />;
   }
 
   return (

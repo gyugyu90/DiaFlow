@@ -47,6 +47,7 @@ skills are available for local use.
 - Scene playback and animated data-flow examples
 - Local `New diagram`, `Open`, `Save`, and `Save as` workflows
 - Dirty-state tracking and unsaved-page warnings
+- A self-hosted read-only iframe viewer at `/viewer/?src=...`
 - Runtime, editor, and schema packages with regression tests
 
 ## 🚀 Quick Start
@@ -112,6 +113,7 @@ are checked when a document is parsed.
 See the following resources:
 
 - [Diagram JSON design draft](docs/diagram-json-schema-draft.md)
+- [Self-hosted embedding guide](docs/embedding.md)
 - [JSON Schema](schemas/diagram.schema.json)
 - [Basic web architecture example](examples/basic-web-architecture.diagram.json)
 - [Circuit breaker scenes example](examples/circuit-breaker-scenes.diagram.json)
@@ -195,8 +197,8 @@ regression tests. See the [testing policy](docs/testing-policy.md) for the expec
 
 ## 🚀 Deployment
 
-The local editor entry point is served at `/`, the sample gallery is served at `/examples`, and each
-diagram editor uses
+The local editor entry point is served at `/`, the sample gallery is served at `/examples`, the
+self-hosted iframe viewer is served at `/viewer/?src=...`, and each diagram editor uses
 `/diagrams/:diagramId/edit`. Static hosts must rewrite client-side routes to `index.html`.
 
 For AWS Amplify Hosting, add the following 200 rewrite under **Rewrites and redirects** so direct
@@ -222,7 +224,8 @@ untouched:
 - Direct `Save` is available only when the browser exposes the File System Access API.
 - Group and scene authoring are not available in the editor.
 - The prompt field does not call an AI service.
-- The standalone iframe/script embed runtime has not been released.
+- The iframe viewer is self-hosted and read-only. Script embed and React SDK options are not
+  available yet.
 - Unsupported schema versions produce compatibility errors. The migration entry point exists, but
   no cross-version migration path is registered yet.
 
@@ -230,7 +233,7 @@ untouched:
 
 Here is what comes next for the local-first experience:
 
-1. Produce and document a standalone read-only iframe viewer.
+1. Package a standalone viewer build artifact with runtime versioning guidance.
 2. Add port-aware edge creation.
 3. Add scene and group authoring.
 

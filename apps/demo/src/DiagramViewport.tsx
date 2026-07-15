@@ -3,12 +3,16 @@ import { renderDiagram, type DiagramRenderer } from "@interactive-diagram/runtim
 import type { DiagramDocument } from "@interactive-diagram/schema";
 
 export function DiagramViewport({
+  animations,
   className,
   diagram,
+  interactive,
   sceneId,
 }: {
+  animations?: boolean;
   className?: string;
   diagram: DiagramDocument;
+  interactive?: boolean;
   sceneId?: string | null;
 }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -17,7 +21,11 @@ export function DiagramViewport({
   useEffect(() => {
     if (!rootRef.current) return;
 
-    rendererRef.current = renderDiagram(rootRef.current, diagram, { sceneId });
+    rendererRef.current = renderDiagram(rootRef.current, diagram, {
+      animations,
+      interactive,
+      sceneId,
+    });
     return () => {
       rendererRef.current?.destroy();
       rendererRef.current = null;
@@ -31,6 +39,10 @@ export function DiagramViewport({
   useEffect(() => {
     rendererRef.current?.setOptions({ sceneId });
   }, [sceneId]);
+
+  useEffect(() => {
+    rendererRef.current?.setOptions({ animations, interactive });
+  }, [animations, interactive]);
 
   return <div ref={rootRef} className={`diagram-root ${className ?? ""}`} />;
 }

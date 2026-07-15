@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { editRoute, formatAppRoute, galleryRoute, listRoute, parseAppRoute } from "./routes";
+import { editRoute, formatAppRoute, galleryRoute, listRoute, parseAppRoute, viewerRoute } from "./routes";
 
 describe("app routes", () => {
   it("maps the root path to the local editor start", () => {
@@ -11,6 +11,12 @@ describe("app routes", () => {
     expect(parseAppRoute("/examples")).toEqual(galleryRoute);
     expect(parseAppRoute("/examples/")).toEqual(galleryRoute);
     expect(formatAppRoute(galleryRoute)).toBe("/examples");
+  });
+
+  it("maps the viewer path to the self-hosted viewer", () => {
+    expect(parseAppRoute("/viewer")).toEqual(viewerRoute);
+    expect(parseAppRoute("/viewer/")).toEqual(viewerRoute);
+    expect(formatAppRoute(viewerRoute)).toBe("/viewer/");
   });
 
   it("round-trips an edit route with an encoded diagram id", () => {
