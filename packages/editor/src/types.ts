@@ -14,6 +14,7 @@ export type InspectorPosition = {
 };
 
 export type DiagramEditorState = {
+  creatingEdgeSourceNodeId: string | null;
   diagram: DiagramDocument;
   selectedNodeId: string | null;
   selectedNodeIds: string[];
@@ -32,7 +33,9 @@ export type DiagramEditorOptions = {
 
 export type DiagramEditorController = {
   beginTransaction(): void;
+  beginEdgeCreation(sourceNodeId: string): void;
   cancelTransaction(): void;
+  cancelEdgeCreation(): void;
   clearSelection(): void;
   commitTransaction(): void;
   createEdge(sourceNodeId: string, targetNodeId: string): string | null;

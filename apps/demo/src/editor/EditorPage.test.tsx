@@ -111,15 +111,12 @@ describe("EditorPage", () => {
   it("adds a node to an empty diagram and restores it after deletion", async () => {
     render(<EditorHarness diagram={createEmptyDiagramDocument()} isDirty />);
 
-    const deleteButton = screen.getByRole("button", { name: "Delete selected nodes" });
-    expect((deleteButton as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Add node" }));
 
     expect(await screen.findByRole("dialog", { name: "Edit node New Node" })).toBeTruthy();
     expect(document.querySelectorAll("[data-node-id]")).toHaveLength(1);
-    expect((deleteButton as HTMLButtonElement).disabled).toBe(false);
 
-    fireEvent.click(deleteButton);
+    fireEvent.click(screen.getByRole("button", { name: "Delete node New Node" }));
     expect(document.querySelectorAll("[data-node-id]")).toHaveLength(0);
     expect(screen.queryByRole("dialog", { name: "Edit node New Node" })).toBeNull();
 
@@ -135,7 +132,7 @@ describe("EditorPage", () => {
     expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
 
     fireEvent.pointerDown(browserNode, { button: 0, clientX: 100, clientY: 100 });
-    fireEvent.click(screen.getByRole("button", { name: "Delete selected nodes" }));
+    fireEvent.click(screen.getByRole("button", { name: "Delete node Browser" }));
 
     expect(document.querySelector('[data-node-id="browser"]')).toBeNull();
     expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(3);
@@ -174,15 +171,17 @@ describe("EditorPage", () => {
     renderBasicDiagram();
     await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
     const userNode = document.querySelector('[data-node-id="user"]');
+    const databaseNode = document.querySelector('[data-node-id="database"]');
     if (!userNode) throw new Error("Missing user node");
+    if (!databaseNode) throw new Error("Missing database node");
     expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
 
     fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
     const inspector = screen.getByRole("dialog", { name: "Edit node User" });
-    fireEvent.change(within(inspector).getByLabelText("Edge target node"), {
-      target: { value: "database" },
-    });
     fireEvent.click(within(inspector).getByRole("button", { name: "Create edge" }));
+    expect(within(inspector).getByRole("button", { name: "Cancel edge" })).toBeTruthy();
+    expect(document.querySelector(".edge-creation-preview")).toBeTruthy();
+    fireEvent.pointerDown(databaseNode, { button: 0, clientX: 500, clientY: 320 });
 
     expect(document.querySelector('[data-edge-id="edge_user_database"]')).toBeTruthy();
     expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(6);

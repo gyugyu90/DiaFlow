@@ -62,6 +62,9 @@ class DomDiagramEditor implements DiagramEditorController {
   private past: DiagramDocument[] = [];
   private future: DiagramDocument[] = [];
   private drag: DragState | null = null;
+  private creatingEdgeSourceNodeId: string | null = null;
+  private edgeCreationPointer: { clientX: number; clientY: number } | null = null;
+  private edgeCreationPreview: SVGSVGElement | null = null;
   private transaction: EditTransaction | null = null;
   private viewportInteractionActive = false;
 
@@ -92,6 +95,7 @@ class DomDiagramEditor implements DiagramEditorController {
   getState(): DiagramEditorState {
     const selectedNodeIds = [...this.selectedNodeIds];
     return {
+      creatingEdgeSourceNodeId: this.creatingEdgeSourceNodeId,
       diagram: this.diagram,
       selectedNodeId: selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
       selectedNodeIds,
@@ -108,6 +112,9 @@ class DomDiagramEditor implements DiagramEditorController {
     this.past = [];
     this.future = [];
     this.transaction = null;
+    if (!this.hasNode(this.creatingEdgeSourceNodeId)) {
+      this.cancelEdgeCreation();
+    }
     this.selectedNodeIds = new Set(
       [...this.selectedNodeIds].filter((nodeId) => this.hasNode(nodeId)),
     );
@@ -146,6 +153,9 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   clearSelection(): void {
+    if (this.creatingEdgeSourceNodeId) {
+      this.cancelEdgeCreation();
+    }
     if (this.selectedNodeIds.size === 0 && !this.selectedEdgeId) return;
     this.selectedNodeIds.clear();
     this.selectedEdgeId = null;
@@ -179,7 +189,31 @@ class DomDiagramEditor implements DiagramEditorController {
     this.emitState();
   }
 
+  beginEdgeCreation(sourceNodeId: string): void {
+    this.commitTransaction();
+    if (!this.hasNode(sourceNodeId)) return;
+
+    this.creatingEdgeSourceNodeId = sourceNodeId;
+    this.edgeCreationPointer = null;
+    this.selectedNodeIds = new Set([sourceNodeId]);
+    this.selectedEdgeId = null;
+    this.refreshSelection();
+    this.updateEdgeCreationPreview();
+    this.emitState();
+  }
+
+  cancelEdgeCreation(): void {
+    if (!this.creatingEdgeSourceNodeId) return;
+
+    this.creatingEdgeSourceNodeId = null;
+    this.edgeCreationPointer = null;
+    this.removeEdgeCreationPreview();
+    this.refreshSelection();
+    this.emitState();
+  }
+
   createNode(): string {
+    this.cancelEdgeCreation();
     this.commitTransaction();
     const result = addDiagramNode(this.diagram);
     this.selectedNodeIds = new Set([result.node.id]);
@@ -193,6 +227,9 @@ class DomDiagramEditor implements DiagramEditorController {
     if (!this.hasNode(sourceNodeId) || !this.hasNode(targetNodeId)) return null;
 
     const result = addDiagramEdge(this.diagram, { sourceNodeId, targetNodeId });
+    this.creatingEdgeSourceNodeId = null;
+    this.edgeCreationPointer = null;
+    this.removeEdgeCreationPreview();
     this.selectedNodeIds.clear();
     this.selectedEdgeId = result.edge.id;
     this.commit(result.diagram, { edgeIds: [result.edge.id] });
@@ -200,6 +237,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   deleteEdge(edgeId: string): void {
+    this.cancelEdgeCreation();
     this.commitTransaction();
     const nextDiagram = deleteDiagramEdges(this.diagram, [edgeId]);
     if (nextDiagram === this.diagram) return;
@@ -215,6 +253,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   deleteSelectedNodes(): void {
+    this.cancelEdgeCreation();
     this.commitTransaction();
     if (this.selectedNodeIds.size === 0) return;
 
@@ -230,6 +269,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   toggleNodeSelection(nodeId: string): void {
+    if (this.creatingEdgeSourceNodeId) return;
     if (!this.hasNode(nodeId)) return;
 
     if (this.selectedNodeIds.has(nodeId)) {
@@ -251,6 +291,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   undo(): void {
+    this.cancelEdgeCreation();
     this.commitTransaction();
     const previous = this.past.pop();
     if (!previous) return;
@@ -261,6 +302,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   redo(): void {
+    this.cancelEdgeCreation();
     this.commitTransaction();
     const next = this.future.pop();
     if (!next) return;
@@ -272,6 +314,9 @@ class DomDiagramEditor implements DiagramEditorController {
 
   destroy(): void {
     this.drag = null;
+    this.creatingEdgeSourceNodeId = null;
+    this.edgeCreationPointer = null;
+    this.removeEdgeCreationPreview();
     this.transaction = null;
     this.container.classList.remove("is-node-dragging");
     this.container.removeEventListener(this.pressEventName, this.handlePress, true);
@@ -292,6 +337,17 @@ class DomDiagramEditor implements DiagramEditorController {
 
     const nodeId = getEventNodeId(event);
     const node = this.diagram.nodes.find((candidate) => candidate.id === nodeId);
+    if (this.creatingEdgeSourceNodeId) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (nodeId && node && nodeId !== this.creatingEdgeSourceNodeId) {
+        this.createEdge(this.creatingEdgeSourceNodeId, nodeId);
+      } else if (!nodeId) {
+        this.cancelEdgeCreation();
+      }
+      return;
+    }
+
     if (!nodeId || !node) {
       const edgeId = getEventEdgeId(event);
       if (!edgeId) return;
@@ -326,6 +382,10 @@ class DomDiagramEditor implements DiagramEditorController {
   };
 
   private readonly handleMove = (event: MouseEvent | PointerEvent): void => {
+    if (this.creatingEdgeSourceNodeId) {
+      this.edgeCreationPointer = { clientX: event.clientX, clientY: event.clientY };
+      this.updateEdgeCreationPreview();
+    }
     if (!this.drag) return;
 
     const svg = this.container.querySelector(".diagram-svg") as SVGSVGElement | null;
@@ -357,6 +417,12 @@ class DomDiagramEditor implements DiagramEditorController {
   };
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === "Escape" && this.creatingEdgeSourceNodeId) {
+      event.preventDefault();
+      this.cancelEdgeCreation();
+      return;
+    }
+
     if (
       (event.key !== "Delete" && event.key !== "Backspace") ||
       (this.selectedNodeIds.size === 0 && !this.selectedEdgeId) ||
@@ -380,6 +446,7 @@ class DomDiagramEditor implements DiagramEditorController {
 
     this.viewportInteractionActive = false;
     this.refreshSelection();
+    this.updateEdgeCreationPreview();
   };
 
   private commit(nextDiagram: DiagramDocument, changes?: DiagramChangeSet): void {
@@ -433,6 +500,63 @@ class DomDiagramEditor implements DiagramEditorController {
     } else {
       this.emitSelectionAnchor(null);
     }
+  }
+
+  private updateEdgeCreationPreview(): void {
+    const sourceNodeId = this.creatingEdgeSourceNodeId;
+    if (!sourceNodeId) {
+      this.removeEdgeCreationPreview();
+      return;
+    }
+
+    const sourceElement = this.container.querySelector(selectNodeById(sourceNodeId));
+    if (!sourceElement) {
+      this.removeEdgeCreationPreview();
+      return;
+    }
+
+    const containerRect = this.container.getBoundingClientRect();
+    const sourceRect = sourceElement.getBoundingClientRect();
+    const start = {
+      x: sourceRect.left + sourceRect.width / 2 - containerRect.left,
+      y: sourceRect.top + sourceRect.height / 2 - containerRect.top,
+    };
+    const end = this.edgeCreationPointer
+      ? {
+        x: this.edgeCreationPointer.clientX - containerRect.left,
+        y: this.edgeCreationPointer.clientY - containerRect.top,
+      }
+      : { x: start.x + 72, y: start.y };
+
+    const preview = this.getEdgeCreationPreview();
+    preview.setAttribute("viewBox", `0 0 ${Math.max(containerRect.width, 1)} ${Math.max(containerRect.height, 1)}`);
+    preview.setAttribute("width", `${Math.max(containerRect.width, 1)}`);
+    preview.setAttribute("height", `${Math.max(containerRect.height, 1)}`);
+
+    const line = preview.querySelector("line");
+    line?.setAttribute("x1", `${start.x}`);
+    line?.setAttribute("y1", `${start.y}`);
+    line?.setAttribute("x2", `${end.x}`);
+    line?.setAttribute("y2", `${end.y}`);
+  }
+
+  private getEdgeCreationPreview(): SVGSVGElement {
+    if (this.edgeCreationPreview) return this.edgeCreationPreview;
+
+    const preview = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    preview.classList.add("edge-creation-preview");
+    preview.setAttribute("aria-hidden", "true");
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.classList.add("edge-creation-preview-line");
+    preview.appendChild(line);
+    this.container.appendChild(preview);
+    this.edgeCreationPreview = preview;
+    return preview;
+  }
+
+  private removeEdgeCreationPreview(): void {
+    this.edgeCreationPreview?.remove();
+    this.edgeCreationPreview = null;
   }
 
   private emitState(): void {

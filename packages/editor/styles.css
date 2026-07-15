@@ -2,6 +2,10 @@
   cursor: move;
 }
 
+.interactive-diagram-editor {
+  position: relative;
+}
+
 .interactive-diagram-editor .node-card,
 .interactive-diagram-editor .node-card * {
   cursor: pointer;
@@ -25,4 +29,18 @@
 .interactive-diagram-editor .edge-selected .edge-path {
   filter: drop-shadow(0 0 3px rgba(47, 111, 237, 0.9));
   stroke-width: 3.4;
+}
+
+.interactive-diagram-editor .edge-creation-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.interactive-diagram-editor .edge-creation-preview-line {
+  stroke: #2f6fed;
+  stroke-dasharray: 8 7;
+  stroke-linecap: round;
+  stroke-width: 2.8;
 }

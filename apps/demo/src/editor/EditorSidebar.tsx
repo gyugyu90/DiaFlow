@@ -1,17 +1,15 @@
-import { PlayCircle, Plus, Trash2 } from "lucide-react";
+import { PlayCircle, Plus } from "lucide-react";
 import type { DiagramNode } from "@interactive-diagram/schema";
 
 export function EditorSidebar({
   nodes,
   selectedNodeIds,
   onCreateNode,
-  onDeleteSelectedNodes,
   onSelectNode,
 }: {
   nodes: DiagramNode[];
   selectedNodeIds: string[];
   onCreateNode: () => void;
-  onDeleteSelectedNodes: () => void;
   onSelectNode: (nodeId: string, additive: boolean) => void;
 }) {
   return (
@@ -29,16 +27,6 @@ export function EditorSidebar({
                 title="Add node"
               >
                 <Plus size={16} aria-hidden="true" />
-              </button>
-              <button
-                className="icon-button delete-button"
-                type="button"
-                onClick={onDeleteSelectedNodes}
-                disabled={selectedNodeIds.length === 0}
-                aria-label="Delete selected nodes"
-                title="Delete selected nodes"
-              >
-                <Trash2 size={16} aria-hidden="true" />
               </button>
             </div>
           </div>

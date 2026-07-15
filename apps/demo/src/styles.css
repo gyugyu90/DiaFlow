@@ -721,14 +721,15 @@ p {
   padding: 0 8px;
 }
 
-.edge-create-control {
-  display: grid;
-  gap: 8px;
-}
-
-.edge-create-control .button {
+.edge-create-button {
   justify-content: center;
   width: 100%;
+}
+
+.edge-create-button.is-active {
+  border-color: var(--line-strong);
+  background: rgba(47, 111, 237, 0.1);
+  color: var(--line-strong);
 }
 
 .edge-inspector {

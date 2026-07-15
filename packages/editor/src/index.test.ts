@@ -395,6 +395,28 @@ describe("createDiagramEditor", () => {
     editor.destroy();
   });
 
+  it("creates an edge by entering edge creation mode and selecting a target node", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+    const targetNode = container.querySelector('[data-node-id="database"]');
+    if (!targetNode) throw new Error("Missing target node");
+
+    editor.beginEdgeCreation("user");
+    expect(editor.getState().creatingEdgeSourceNodeId).toBe("user");
+    expect(editor.getState().selectedNodeIds).toEqual(["user"]);
+    expect(container.querySelector(".edge-creation-preview")).toBeTruthy();
+
+    fireEvent.pointerMove(window, { clientX: 460, clientY: 320 });
+    fireEvent.pointerDown(targetNode, { button: 0, clientX: 460, clientY: 320 });
+
+    expect(editor.getState().creatingEdgeSourceNodeId).toBeNull();
+    expect(editor.getState().selectedEdgeId).toBe("edge_user_database");
+    expect(container.querySelector('[data-edge-id="edge_user_database"]')).toBeTruthy();
+    expect(container.querySelector(".edge-creation-preview")).toBeNull();
+    editor.destroy();
+  });
+
   it("owns node edits and undo/redo history", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

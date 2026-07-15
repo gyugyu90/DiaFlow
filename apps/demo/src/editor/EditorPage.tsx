@@ -32,6 +32,7 @@ export function EditorPage({
   const [sceneIndex, setSceneIndex] = useState(0);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [creatingEdgeSourceNodeId, setCreatingEdgeSourceNodeId] = useState<string | null>(null);
   const [inspectorPosition, setInspectorPosition] = useState<InspectorPosition | null>(null);
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
   const scene = scenes[sceneIndex] ?? null;
@@ -46,6 +47,7 @@ export function EditorPage({
     setSceneIndex(0);
     setSelectedNodeIds([]);
     setSelectedEdgeId(null);
+    setCreatingEdgeSourceNodeId(null);
     setInspectorPosition(null);
     setHistoryState({ canUndo: false, canRedo: false });
   }, [item.id]);
@@ -53,6 +55,7 @@ export function EditorPage({
   function handleEditorStateChange(state: DiagramEditorState) {
     setSelectedNodeIds(state.selectedNodeIds);
     setSelectedEdgeId(state.selectedEdgeId);
+    setCreatingEdgeSourceNodeId(state.creatingEdgeSourceNodeId);
     setHistoryState({ canUndo: state.canUndo, canRedo: state.canRedo });
   }
 
@@ -107,7 +110,6 @@ export function EditorPage({
           nodes={item.diagram.nodes}
           selectedNodeIds={selectedNodeIds}
           onCreateNode={() => editorRef.current?.createNode()}
-          onDeleteSelectedNodes={() => editorRef.current?.deleteSelectedNodes()}
           onSelectNode={(nodeId, additive) => {
             if (additive) editorRef.current?.toggleNodeSelection(nodeId);
             else editorRef.current?.selectNode(nodeId);
@@ -141,14 +143,13 @@ export function EditorPage({
             {selectedNode ? (
               <NodeInspector
                 node={selectedNode}
-                nodes={item.diagram.nodes}
+                creatingEdgeSourceNodeId={creatingEdgeSourceNodeId}
                 position={inspectorPosition}
                 onEditStart={() => editorRef.current?.beginTransaction()}
                 onEditEnd={() => editorRef.current?.commitTransaction()}
                 onChange={(patch) => editorRef.current?.updateNode(selectedNode.id, patch)}
-                onCreateEdge={(targetNodeId) =>
-                  editorRef.current?.createEdge(selectedNode.id, targetNodeId)
-                }
+                onBeginEdgeCreation={() => editorRef.current?.beginEdgeCreation(selectedNode.id)}
+                onCancelEdgeCreation={() => editorRef.current?.cancelEdgeCreation()}
                 onDelete={() => editorRef.current?.deleteSelectedNodes()}
                 onClose={() => editorRef.current?.clearSelection()}
               />

@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useState } from "react";
 import { Link2, Trash2, X } from "lucide-react";
 import type { InspectorPosition, NodePatch } from "@interactive-diagram/editor";
 import { nodeTypeSchema, type DiagramNode } from "@interactive-diagram/schema";
@@ -7,42 +6,30 @@ const nodeTypeOptions = nodeTypeSchema.options;
 const iconOptions = ["user", "browser", "network", "server", "database", "storage"];
 
 export function NodeInspector({
+  creatingEdgeSourceNodeId,
   node,
-  nodes,
   onChange,
+  onBeginEdgeCreation,
+  onCancelEdgeCreation,
   onClose,
-  onCreateEdge,
   onDelete,
   onEditEnd,
   onEditStart,
   position,
 }: {
+  creatingEdgeSourceNodeId: string | null;
   node: DiagramNode;
-  nodes: DiagramNode[];
   onChange: (patch: NodePatch) => void;
+  onBeginEdgeCreation: () => void;
+  onCancelEdgeCreation: () => void;
   onClose: () => void;
-  onCreateEdge: (targetNodeId: string) => void;
   onDelete: () => void;
   onEditEnd: () => void;
   onEditStart: () => void;
   position: InspectorPosition | null;
 }) {
-  const targetNodes = useMemo(() => nodes.filter((candidate) => candidate.id !== node.id), [
-    node.id,
-    nodes,
-  ]);
-  const [targetNodeId, setTargetNodeId] = useState(targetNodes[0]?.id ?? "");
-
-  useEffect(() => {
-    setTargetNodeId((currentTargetNodeId) => {
-      if (currentTargetNodeId && targetNodes.some((candidate) => candidate.id === currentTargetNodeId)) {
-        return currentTargetNodeId;
-      }
-      return targetNodes[0]?.id ?? "";
-    });
-  }, [targetNodes]);
-
   if (!position) return null;
+  const isCreatingEdge = creatingEdgeSourceNodeId === node.id;
 
   return (
     <section
@@ -114,32 +101,15 @@ export function NodeInspector({
         </select>
       </label>
 
-      <div className="edge-create-control">
-        <label>
-          <span>Connect to</span>
-          <select
-            aria-label="Edge target node"
-            value={targetNodeId}
-            onChange={(event) => setTargetNodeId(event.target.value)}
-            disabled={targetNodes.length === 0}
-          >
-            {targetNodes.map((targetNode) => (
-              <option key={targetNode.id} value={targetNode.id}>
-                {targetNode.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="button button-secondary"
-          type="button"
-          onClick={() => onCreateEdge(targetNodeId)}
-          disabled={!targetNodeId}
-        >
-          <Link2 size={16} aria-hidden="true" />
-          <span>Create edge</span>
-        </button>
-      </div>
+      <button
+        className={`button button-secondary edge-create-button ${isCreatingEdge ? "is-active" : ""}`}
+        type="button"
+        onClick={isCreatingEdge ? onCancelEdgeCreation : onBeginEdgeCreation}
+        aria-pressed={isCreatingEdge}
+      >
+        <Link2 size={16} aria-hidden="true" />
+        <span>{isCreatingEdge ? "Cancel edge" : "Create edge"}</span>
+      </button>
     </section>
   );
 }
