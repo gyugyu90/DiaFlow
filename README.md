@@ -201,6 +201,10 @@ The local editor entry point is served at `/`, the sample gallery is served at `
 self-hosted iframe viewer is served at `/viewer/?src=...`, and each diagram editor uses
 `/diagrams/:diagramId/edit`. Static hosts must rewrite client-side routes to `index.html`.
 
+`npm run build` also packages self-hosted embed examples into `dist/diagrams/` and `dist/embed/`.
+Upload the generated `dist/` directory to a static host and open `/embed/` to verify iframe
+embedding with the bundled diagrams.
+
 For AWS Amplify Hosting, add the following 200 rewrite under **Rewrites and redirects** so direct
 editor links and browser refreshes continue to load the application while static assets remain
 untouched:

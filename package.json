@@ -13,13 +13,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config apps/demo/vite.config.ts --host 127.0.0.1",
-    "build": "tsc -b && vite build --config apps/demo/vite.config.ts",
+    "build": "tsc -b && vite build --config apps/demo/vite.config.ts && npm run embed:package",
     "preview": "vite preview --config apps/demo/vite.config.ts --host 127.0.0.1",
     "schema:generate": "npm run build --workspace @interactive-diagram/schema && node scripts/generate-diagram-schema.mjs",
     "schema:check": "npm run build --workspace @interactive-diagram/schema && node scripts/generate-diagram-schema.mjs --check",
     "diagrams:normalize": "npm run build --workspace @interactive-diagram/schema && node scripts/normalize-diagrams.mjs",
     "diagrams:normalize:check": "npm run build --workspace @interactive-diagram/schema && node scripts/normalize-diagrams.mjs --check",
     "diagrams:validate": "npm run build --workspace @interactive-diagram/schema && node scripts/validate-diagrams.mjs",
+    "embed:package": "node scripts/package-embed-examples.mjs",
     "embed:check": "node scripts/check-embed-artifacts.mjs",
     "test": "vitest run --config vitest.config.ts",
     "check": "npm run schema:check && npm run diagrams:normalize:check && npm run diagrams:validate && npm test && npm run build && npm run embed:check"

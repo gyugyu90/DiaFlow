@@ -51,19 +51,58 @@ For a specific scene:
 
 ## Static Hosting Layout
 
-One simple layout is:
+`npm run build` prepares a self-hosted embed bundle in `dist/`:
 
 ```txt
-public/
+dist/
   viewer/
     index.html
-    assets/
+  embed/
+    index.html
+  assets/
   diagrams/
-    checkout.diagram.json
+    basic-web-architecture.diagram.json
+    circuit-breaker-scenes.diagram.json
+    pkce-oauth2-flow.diagram.json
 ```
 
 When DiaFlow is hosted at the site root, use `/viewer/?src=/diagrams/checkout.diagram.json`.
 If your host serves DiaFlow under a subdirectory, keep the `src` path relative to that deployment.
+
+To test the bundled examples on your own static host, upload the generated `dist/` directory and
+open `/embed/`. The example page embeds `/viewer/?src=/diagrams/basic-web-architecture.diagram.json`.
+
+Example iframe snippets for the bundled diagrams:
+
+```html
+<iframe
+  src="/viewer/?src=/diagrams/basic-web-architecture.diagram.json"
+  width="100%"
+  height="520"
+  loading="lazy"
+  title="Basic Web Architecture"
+></iframe>
+```
+
+```html
+<iframe
+  src="/viewer/?src=/diagrams/circuit-breaker-scenes.diagram.json&scene=scene_normal"
+  width="100%"
+  height="520"
+  loading="lazy"
+  title="Circuit Breaker Scenes"
+></iframe>
+```
+
+```html
+<iframe
+  src="/viewer/?src=/diagrams/pkce-oauth2-flow.diagram.json"
+  width="100%"
+  height="520"
+  loading="lazy"
+  title="PKCE OAuth2 Authentication Flow"
+></iframe>
+```
 
 ## Requirements
 
@@ -75,10 +114,11 @@ If your host serves DiaFlow under a subdirectory, keep the `src` path relative t
 
 ## Version Pinning
 
-`npm run build` creates a separate viewer artifact at `dist/viewer/index.html`. Host the generated
-`dist/viewer/` directory with the matching `dist/assets/` files and keep those files together with
-your documentation release. The viewer root exposes `data-viewer-version` with the build version so
-deployed embeds can be inspected later.
+`npm run build` creates a separate viewer artifact at `dist/viewer/index.html` and packages bundled
+example diagrams under `dist/diagrams/`. Host the generated `dist/viewer/`, `dist/assets/`, and
+whichever `.diagram.json` files your embeds reference together with your documentation release. The
+viewer root exposes `data-viewer-version` with the build version so deployed embeds can be inspected
+later.
 
 ## Error States
 
