@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { BuildVersionBadge, FileErrorBanner } from "./AppStatus";
 import { DiagramListPage } from "./DiagramListPage";
 import { DiagramViewModal } from "./DiagramViewModal";
+import { LocalEditorStartPage } from "./LocalEditorStartPage";
 import { EditorPage } from "./editor/EditorPage";
-import { editRoute, listRoute } from "./routes";
+import { editRoute, galleryRoute, listRoute } from "./routes";
 import { useAppRoute } from "./useAppRoute";
 import { useDiagramDocuments } from "./useDiagramDocuments";
 
@@ -21,6 +22,8 @@ export function App() {
   } = useDiagramDocuments();
   const { route, navigate } = useAppRoute();
   const [viewingDiagramId, setViewingDiagramId] = useState<string | null>(null);
+  const localItems = useMemo(() => items.filter((item) => item.source === "local"), [items]);
+  const sampleItems = useMemo(() => items.filter((item) => item.source === "sample"), [items]);
   const selectedDiagram = useMemo(() => route.view === "edit"
     ? items.find((item) => item.id === route.diagramId) ?? null
     : null, [items, route]);
@@ -58,15 +61,23 @@ export function App() {
       {selectedDiagram ? (
         <EditorPage
           item={selectedDiagram}
-          onBack={() => navigate(listRoute)}
+          onBack={() => navigate(selectedDiagram.source === "sample" ? galleryRoute : listRoute)}
           onSave={() => void saveDocument(selectedDiagram)}
           onView={() => setViewingDiagramId(selectedDiagram.id)}
           onDiagramChange={(diagram) => updateDocument(selectedDiagram.id, diagram)}
         />
-      ) : (
+      ) : route.view === "gallery" ? (
         <DiagramListPage
-          items={items}
+          items={sampleItems}
+          onHome={() => navigate(listRoute)}
+          onEdit={(diagramId) => navigate(editRoute(diagramId))}
+          onView={setViewingDiagramId}
+        />
+      ) : (
+        <LocalEditorStartPage
+          items={localItems}
           onCreate={createNewDiagram}
+          onExamples={() => navigate(galleryRoute)}
           onOpenNative={canOpenNativeFiles ? () => void openDiagramWithNativePicker() : undefined}
           onOpen={(file) => void openDiagramFile(file)}
           onEdit={(diagramId) => navigate(editRoute(diagramId))}

@@ -71,8 +71,9 @@ npm run dev
 
 Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/) in a browser.
 
-The first screen contains the bundled examples and actions for opening an existing
-`.diagram.json` file or creating a new empty document.
+The first screen is the local editor entry point for opening an existing `.diagram.json` file or
+creating a new empty document. Bundled examples are available at
+[http://127.0.0.1:5173/examples](http://127.0.0.1:5173/examples).
 
 ## 💾 Work with Local Files
 
@@ -194,7 +195,8 @@ regression tests. See the [testing policy](docs/testing-policy.md) for the expec
 
 ## 🚀 Deployment
 
-The gallery is served at `/`, while each bundled diagram editor uses
+The local editor entry point is served at `/`, the sample gallery is served at `/examples`, and each
+diagram editor uses
 `/diagrams/:diagramId/edit`. Static hosts must rewrite client-side routes to `index.html`.
 
 For AWS Amplify Hosting, add the following 200 rewrite under **Rewrites and redirects** so direct
@@ -228,11 +230,9 @@ untouched:
 
 Here is what comes next for the local-first experience:
 
-1. Define the supported color vocabulary.
-2. Support direct file saving where the browser permits it.
-3. Separate the local editor from the sample gallery entry point.
-4. Produce and document a standalone read-only iframe viewer.
-5. Add port-aware edge creation, followed by scene and group authoring.
+1. Produce and document a standalone read-only iframe viewer.
+2. Add port-aware edge creation.
+3. Add scene and group authoring.
 
 ## 🤝 Contributing
 

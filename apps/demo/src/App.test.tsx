@@ -17,12 +17,32 @@ function getDiagramCard(title: string) {
   return within(card);
 }
 
+function openExamples() {
+  fireEvent.click(screen.getByRole("button", { name: "Examples" }));
+}
+
 describe("App", () => {
-  it("starts on a single-column diagram list with diagram cards", () => {
+  it("starts on the local editor entry point", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
-    expect(screen.getByText("Interactive diagrams")).toBeTruthy();
+    expect(screen.getByText("Local editor")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Open" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "New diagram" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Examples" })).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Local editor start" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Basic Web Architecture" })).toBeNull();
+    expect(screen.getByLabelText("Build version").textContent).toBe("Build test-build");
+  });
+
+  it("opens the sample gallery from the local editor entry point", () => {
+    render(<App />);
+
+    openExamples();
+
+    expect(window.location.pathname).toBe("/examples");
+    expect(screen.getByRole("heading", { name: "Examples" })).toBeTruthy();
+    expect(screen.getByText("Sample diagrams")).toBeTruthy();
     const list = screen.getByRole("region", { name: "Diagram list" });
     expect(within(list).getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
     expect(within(list).getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
@@ -33,7 +53,9 @@ describe("App", () => {
     expect(within(list).queryByText("Nodes")).toBeNull();
     expect(list.querySelectorAll(".diagram-card-thumbnail.is-static")).toHaveLength(3);
     expect(list.querySelectorAll(".diagram-card-thumbnail .diagram-svg")).toHaveLength(3);
-    expect(screen.getByLabelText("Build version").textContent).toBe("Build test-build");
+
+    fireEvent.click(screen.getByRole("button", { name: "Local editor" }));
+    expect(window.location.pathname).toBe("/");
   });
 
   it("creates a new unsaved diagram and opens it in the editor", () => {
@@ -104,36 +126,37 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
   });
 
-  it("opens an edit route directly and returns to the list route", () => {
+  it("opens a sample edit route directly and returns to the gallery route", () => {
     window.history.replaceState(null, "", "/diagrams/circuit-breaker-scenes/edit");
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Back to diagram list" }));
 
-    expect(window.location.pathname).toBe("/");
+    expect(window.location.pathname).toBe("/examples");
     expect(screen.getByRole("region", { name: "Diagram list" })).toBeTruthy();
   });
 
-  it("follows browser history between list and edit routes", async () => {
+  it("follows browser history between gallery and edit routes", async () => {
     render(<App />);
+    openExamples();
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
 
     window.history.back();
 
     await waitFor(() => {
-      expect(window.location.pathname).toBe("/");
+      expect(window.location.pathname).toBe("/examples");
       expect(screen.getByRole("region", { name: "Diagram list" })).toBeTruthy();
     });
   });
 
-  it("returns unknown diagram edit routes to the list", async () => {
+  it("returns unknown diagram edit routes to the local editor start", async () => {
     window.history.replaceState(null, "", "/diagrams/not-found/edit");
     render(<App />);
 
     await waitFor(() => {
       expect(window.location.pathname).toBe("/");
-      expect(screen.getByRole("region", { name: "Diagram list" })).toBeTruthy();
+      expect(screen.getByRole("region", { name: "Local editor start" })).toBeTruthy();
     });
   });
 
@@ -149,6 +172,7 @@ describe("App", () => {
     });
     render(<App />);
 
+    openExamples();
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
     await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
     const userNode = document.querySelector('[data-node-id="user"]');
@@ -218,15 +242,17 @@ describe("App", () => {
   it("returns from edit page to list view", () => {
     render(<App />);
 
+    openExamples();
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("button", { name: "Back to diagram list" }));
 
-    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Examples" })).toBeTruthy();
   });
 
   it("opens the view modal from the edit page", async () => {
     render(<App />);
 
+    openExamples();
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
     fireEvent.click(screen.getByRole("button", { name: "View" }));
 

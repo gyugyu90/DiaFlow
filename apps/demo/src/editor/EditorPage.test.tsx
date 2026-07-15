@@ -21,6 +21,7 @@ function EditorHarness({
 }) {
   const [item, setItem] = useState<DiagramListItem>(() => ({
     id: diagram.id,
+    source: "local",
     title: diagram.metadata.title,
     description: diagram.metadata.description,
     fileName,

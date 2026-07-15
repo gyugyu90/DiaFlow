@@ -19,6 +19,7 @@ function createItem(
   const diagram = parseDiagramDocument(diagramInput);
   return {
     id,
+    source: "sample",
     title: diagram.metadata.title,
     description: diagram.metadata.description,
     fileName,

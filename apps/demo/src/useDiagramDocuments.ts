@@ -17,6 +17,7 @@ import {
 
 export type DiagramListItem = {
   id: string;
+  source: "sample" | "local";
   title: string;
   description?: string;
   fileName: string;
@@ -28,6 +29,7 @@ export type DiagramListItem = {
 const initialDiagrams: DiagramListItem[] = [
   {
     id: "basic-web-architecture",
+    source: "sample",
     title: "Basic Web Architecture",
     description: "Browser traffic through a load balancer to app, database, and object storage.",
     fileName: "basic-web-architecture.diagram.json",
@@ -36,6 +38,7 @@ const initialDiagrams: DiagramListItem[] = [
   },
   {
     id: "circuit-breaker-scenes",
+    source: "sample",
     title: "Circuit Breaker Scenes",
     description: "MSA circuit breaker behavior across normal traffic, failure propagation, open circuit, and recovery.",
     fileName: "circuit-breaker-scenes.diagram.json",
@@ -44,6 +47,7 @@ const initialDiagrams: DiagramListItem[] = [
   },
   {
     id: "pkce-oauth2-flow",
+    source: "sample",
     title: "PKCE OAuth2 Authentication Flow",
     description: "Step-by-step OAuth2 Authorization Code flow with PKCE for a public browser client.",
     fileName: "pkce-oauth2-flow.diagram.json",
@@ -78,6 +82,7 @@ export function useDiagramDocuments() {
     documentSequenceRef.current += 1;
     const item: DiagramListItem = {
       id: `local-${documentSequenceRef.current}-${diagram.id}`,
+      source: "local",
       title: diagram.metadata.title,
       description: diagram.metadata.description,
       fileName,
