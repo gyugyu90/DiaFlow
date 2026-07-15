@@ -36,7 +36,7 @@
         "width": 140,
         "height": 72
       },
-      "icon": "browser"
+      "icon": "material-symbols:web"
     },
     {
       "id": "api_gateway",
@@ -50,7 +50,7 @@
         "width": 160,
         "height": 72
       },
-      "icon": "server"
+      "icon": "material-symbols:dns"
     },
     {
       "id": "order_service",
@@ -64,7 +64,7 @@
         "width": 170,
         "height": 78
       },
-      "icon": "server"
+      "icon": "material-symbols:dns"
     },
     {
       "id": "payment_service",
@@ -78,7 +78,7 @@
         "width": 180,
         "height": 78
       },
-      "icon": "server"
+      "icon": "material-symbols:dns"
     },
     {
       "id": "inventory_service",
@@ -92,7 +92,7 @@
         "width": 180,
         "height": 78
       },
-      "icon": "server"
+      "icon": "material-symbols:dns"
     },
     {
       "id": "payment_db",
@@ -106,7 +106,7 @@
         "width": 160,
         "height": 78
       },
-      "icon": "database"
+      "icon": "material-symbols:database"
     },
     {
       "id": "fallback_cache",

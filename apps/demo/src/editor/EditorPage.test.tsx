@@ -157,14 +157,37 @@ describe("EditorPage", () => {
     fireEvent.change(within(inspector).getByLabelText("Node type"), {
       target: { value: "api" },
     });
-    fireEvent.change(within(inspector).getByLabelText("Node icon"), {
+    fireEvent.click(within(inspector).getByRole("button", { name: "Node icon" }));
+    const iconPicker = screen.getByRole("dialog", { name: "Choose node icon" });
+    fireEvent.change(within(iconPicker).getByLabelText("Search node icons"), {
       target: { value: "server" },
     });
+    fireEvent.click(within(iconPicker).getByRole("button", { name: "Use Server icon" }));
 
     expect(screen.getByRole("dialog", { name: "Edit node Customer" })).toBeTruthy();
     expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("Customer");
     expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("api");
-    expect((screen.getByLabelText("Node icon") as HTMLSelectElement).value).toBe("server");
+    expect(screen.getByRole("button", { name: "Node icon" }).textContent).toContain("Server");
+    expect(document.querySelector(
+      '[data-node-id="user"] [data-icon-id="material-symbols:dns"]',
+    )).toBeTruthy();
+  });
+
+  it("keeps the icon picker open while its icon grid scrolls", async () => {
+    renderBasicDiagram();
+    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) throw new Error("Missing user node");
+
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+    const inspector = screen.getByRole("dialog", { name: "Edit node User" });
+    fireEvent.click(within(inspector).getByRole("button", { name: "Node icon" }));
+    const iconPicker = screen.getByRole("dialog", { name: "Choose node icon" });
+    const iconGrid = iconPicker.querySelector(".node-icon-grid");
+    if (!iconGrid) throw new Error("Missing icon grid");
+
+    fireEvent.scroll(iconGrid);
+    expect(screen.getByRole("dialog", { name: "Choose node icon" })).toBeTruthy();
   });
 
   it("creates an edge from the node inspector", async () => {

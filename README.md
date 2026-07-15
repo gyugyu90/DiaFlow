@@ -41,6 +41,7 @@ skills are available for local use.
 - Deterministic SVG rendering from Diagram JSON
 - Pan, zoom, and an adaptive canvas grid
 - Node creation, cascading deletion, selection, editing, dragging, and Shift-based multi-selection
+- A bundled Material Symbols node icon catalog with a searchable visual picker
 - Edge creation, deletion, selection, and editing, including markers, routing, line styles, colors,
   and labels
 - Scene playback and animated data-flow examples
@@ -227,7 +228,7 @@ untouched:
 
 Here is what comes next for the local-first experience:
 
-1. Define supported icon and color vocabularies.
+1. Define the supported color vocabulary.
 2. Support direct file saving where the browser permits it.
 3. Separate the local editor from the sample gallery entry point.
 4. Produce and document a standalone read-only iframe viewer.
@@ -248,4 +249,5 @@ Before submitting a change:
 
 ## 📄 License
 
-DiaFlow is available under the [MIT License](LICENSE).
+DiaFlow is available under the [MIT License](LICENSE). Selected Material Symbols assets are
+distributed under Apache 2.0; see [Third-Party Notices](THIRD_PARTY_NOTICES.md).

@@ -21,6 +21,9 @@ export type ViewportSnapshot = {
 export class ViewportController {
   private initialViewBox: ViewBox;
   private viewBox: ViewBox;
+  private readonly pressEventName: "pointerdown" | "mousedown";
+  private readonly moveEventName: "pointermove" | "mousemove";
+  private readonly releaseEventName: "pointerup" | "mouseup";
   private pan: PanState = null;
   private zoomEndTimer: number | null = null;
   private zooming = false;
@@ -34,6 +37,10 @@ export class ViewportController {
   ) {
     this.initialViewBox = { ...initialViewBox };
     this.viewBox = { ...viewBox };
+    const supportsPointerEvents = typeof window.PointerEvent === "function";
+    this.pressEventName = supportsPointerEvents ? "pointerdown" : "mousedown";
+    this.moveEventName = supportsPointerEvents ? "pointermove" : "mousemove";
+    this.releaseEventName = supportsPointerEvents ? "pointerup" : "mouseup";
     this.setViewBox(this.viewBox);
     this.wireControls();
   }
@@ -53,59 +60,89 @@ export class ViewportController {
     this.zooming = false;
     this.pan = null;
     this.container.classList.remove("is-panning");
+    this.svg.removeEventListener("wheel", this.handleWheel);
+    this.svg.removeEventListener(this.pressEventName, this.handlePress as EventListener);
+    this.svg.removeEventListener("dblclick", this.handleDoubleClick);
+    this.unwirePanControls();
   }
 
   private wireControls(): void {
-    this.svg.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      if (!this.zooming) {
-        this.zooming = true;
-        this.emitViewportChange("zoom", "start");
-      }
-      this.zoomAt(event.clientX, event.clientY, event.deltaY);
-      this.emitViewportChange("zoom", "change");
-      this.scheduleZoomEnd();
-    }, { passive: false });
-
-    this.svg.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0) return;
-      this.svg.setPointerCapture(event.pointerId);
-      this.pan = {
-        pointerId: event.pointerId,
-        startClientX: event.clientX,
-        startClientY: event.clientY,
-        startViewBox: { ...this.viewBox },
-      };
-      this.container.classList.add("is-panning");
-      this.emitViewportChange("pan", "start");
-    });
-
-    this.svg.addEventListener("pointermove", (event) => {
-      if (!this.pan || this.pan.pointerId !== event.pointerId) return;
-      const scaleX = this.viewBox.width / this.svg.clientWidth;
-      const scaleY = this.viewBox.height / this.svg.clientHeight;
-      const dx = (event.clientX - this.pan.startClientX) * scaleX;
-      const dy = (event.clientY - this.pan.startClientY) * scaleY;
-
-      this.viewBox = {
-        ...this.viewBox,
-        x: this.pan.startViewBox.x - dx,
-        y: this.pan.startViewBox.y - dy,
-      };
-      this.setViewBox(this.viewBox);
-      this.emitViewportChange("pan", "change");
-    });
-
-    this.svg.addEventListener("pointerup", (event) => this.endPan(event));
-    this.svg.addEventListener("pointercancel", (event) => this.endPan(event));
-    this.svg.addEventListener("dblclick", () => {
-      this.emitViewportChange("reset", "start");
-      this.viewBox = { ...this.initialViewBox };
-      this.setViewBox(this.viewBox);
-      this.emitViewportChange("reset", "change");
-      this.emitViewportChange("reset", "end");
-    });
+    this.svg.addEventListener("wheel", this.handleWheel, { passive: false });
+    this.svg.addEventListener(this.pressEventName, this.handlePress as EventListener);
+    this.svg.addEventListener("dblclick", this.handleDoubleClick);
   }
+
+  private wirePanControls(): void {
+    window.addEventListener(this.moveEventName, this.handleMove as EventListener);
+    window.addEventListener(this.releaseEventName, this.handleRelease as EventListener);
+    if (this.pressEventName === "pointerdown") {
+      window.addEventListener("pointercancel", this.handleRelease);
+    }
+  }
+
+  private unwirePanControls(): void {
+    window.removeEventListener(this.moveEventName, this.handleMove as EventListener);
+    window.removeEventListener(this.releaseEventName, this.handleRelease as EventListener);
+    if (this.pressEventName === "pointerdown") {
+      window.removeEventListener("pointercancel", this.handleRelease);
+    }
+  }
+
+  private readonly handleWheel = (event: WheelEvent): void => {
+    event.preventDefault();
+    if (!this.zooming) {
+      this.zooming = true;
+      this.emitViewportChange("zoom", "start");
+    }
+    this.zoomAt(event.clientX, event.clientY, event.deltaY);
+    this.emitViewportChange("zoom", "change");
+    this.scheduleZoomEnd();
+  };
+
+  private readonly handlePress = (event: MouseEvent | PointerEvent): void => {
+    if (event.button !== 0 || this.pan) return;
+    const pointerId = getPointerId(event);
+    if ("pointerId" in event && typeof this.svg.setPointerCapture === "function") {
+      this.svg.setPointerCapture(pointerId);
+    }
+    this.pan = {
+      pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startViewBox: { ...this.viewBox },
+    };
+    this.wirePanControls();
+    this.container.classList.add("is-panning");
+    this.emitViewportChange("pan", "start");
+  };
+
+  private readonly handleMove = (event: MouseEvent | PointerEvent): void => {
+    if (!this.pan || this.pan.pointerId !== getPointerId(event)) return;
+    const scaleX = this.viewBox.width / this.svg.clientWidth;
+    const scaleY = this.viewBox.height / this.svg.clientHeight;
+    const dx = (event.clientX - this.pan.startClientX) * scaleX;
+    const dy = (event.clientY - this.pan.startClientY) * scaleY;
+
+    this.viewBox = {
+      ...this.viewBox,
+      x: this.pan.startViewBox.x - dx,
+      y: this.pan.startViewBox.y - dy,
+    };
+    this.setViewBox(this.viewBox);
+    this.emitViewportChange("pan", "change");
+  };
+
+  private readonly handleRelease = (event: MouseEvent | PointerEvent): void => {
+    this.endPan(event);
+  };
+
+  private readonly handleDoubleClick = (): void => {
+    this.emitViewportChange("reset", "start");
+    this.viewBox = { ...this.initialViewBox };
+    this.setViewBox(this.viewBox);
+    this.emitViewportChange("reset", "change");
+    this.emitViewportChange("reset", "end");
+  };
 
   private scheduleZoomEnd(): void {
     if (this.zoomEndTimer !== null) {
@@ -141,10 +178,14 @@ export class ViewportController {
     this.setViewBox(this.viewBox);
   }
 
-  private endPan(event: PointerEvent): void {
-    if (!this.pan || this.pan.pointerId !== event.pointerId) return;
+  private endPan(event: MouseEvent | PointerEvent): void {
+    const pointerId = getPointerId(event);
+    if (!this.pan || this.pan.pointerId !== pointerId) return;
     this.pan = null;
-    this.svg.releasePointerCapture(event.pointerId);
+    this.unwirePanControls();
+    if ("pointerId" in event && typeof this.svg.releasePointerCapture === "function") {
+      this.svg.releasePointerCapture(pointerId);
+    }
     this.container.classList.remove("is-panning");
     this.emitViewportChange("pan", "end");
   }
@@ -183,4 +224,8 @@ export class ViewportController {
       line.setAttribute("stroke-width", majorWidth.toFixed(2));
     });
   }
+}
+
+function getPointerId(event: MouseEvent | PointerEvent): number {
+  return "pointerId" in event ? event.pointerId : 0;
 }

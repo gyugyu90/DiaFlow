@@ -55,6 +55,7 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 
 - Preserve IDs for existing entities, even when labels or titles change. Add a new stable ID only for a new entity.
 - Preserve unrelated fields, ordering, extension data, viewport, theme, and scene behavior.
+- Preserve an existing custom or legacy icon ID unless the requested change affects that icon. Use a supported namespaced `material-symbols:*` ID for new icon choices; do not invent unsupported IDs.
 - Keep group membership only in `Group.nodeIds`; do not repeat a node ID or place one node in multiple groups.
 - Keep animation membership only in `Animation.edgeIds` and do not repeat an edge ID within one animation.
 - When deleting a node, also delete or update edges that reference it, remove its ID from groups, and remove affected scene node overrides.

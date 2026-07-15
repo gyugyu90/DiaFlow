@@ -1,6 +1,5 @@
 import { createSvg } from "./svg.js";
-
-type IconDrawer = (group: SVGGElement, color: string) => void;
+import { resolveDiagramIcon } from "./icon-catalog.js";
 
 const nodeTypeAccent: Record<string, string> = {
   user: "#27945f",
@@ -18,18 +17,6 @@ const nodeTypeAccent: Record<string, string> = {
   unknown: "#697586",
 };
 
-const iconDrawers: Record<string, IconDrawer> = {
-  user: drawUserIcon,
-  browser: drawBrowserIcon,
-  load_balancer: drawNetworkIcon,
-  network: drawNetworkIcon,
-  app: drawServerIcon,
-  api: drawServerIcon,
-  server: drawServerIcon,
-  database: drawDatabaseIcon,
-  storage: drawStorageIcon,
-};
-
 export function getNodeAccent(type: string): string {
   return nodeTypeAccent[type] ?? nodeTypeAccent.unknown;
 }
@@ -39,45 +26,24 @@ export function drawNodeIcon(
   icon: string,
   color: string,
 ): void {
-  const drawIcon = iconDrawers[icon] ?? drawUnknownIcon;
-  drawIcon(group, color);
-}
+  const definition = resolveDiagramIcon(icon);
+  if (!definition) {
+    group.setAttribute("data-icon-id", "unknown");
+    drawUnknownIcon(group, color);
+    return;
+  }
 
-function drawUserIcon(group: SVGGElement, color: string): void {
-  group.appendChild(createSvg("circle", { cx: 10, cy: 7, r: 6, fill: "none", stroke: color, "stroke-width": 2.3 }));
-  group.appendChild(createSvg("path", { d: "M 0 27 C 2 17, 18 17, 20 27", fill: "none", stroke: color, "stroke-width": 2.3, "stroke-linecap": "round" }));
-}
-
-function drawBrowserIcon(group: SVGGElement, color: string): void {
-  group.appendChild(createSvg("rect", { x: 0, y: 0, width: 26, height: 22, rx: 4, fill: "none", stroke: color, "stroke-width": 2.2 }));
-  group.appendChild(createSvg("path", { d: "M 1 7 H 25", stroke: color, "stroke-width": 2.2 }));
-  group.appendChild(createSvg("circle", { cx: 6, cy: 4, r: 1.2, fill: color }));
-  group.appendChild(createSvg("circle", { cx: 11, cy: 4, r: 1.2, fill: color }));
-}
-
-function drawNetworkIcon(group: SVGGElement, color: string): void {
-  group.appendChild(createSvg("path", { d: "M 13 1 L 25 11 L 13 23 L 1 11 Z", fill: "none", stroke: color, "stroke-width": 2.2, "stroke-linejoin": "round" }));
-  group.appendChild(createSvg("path", { d: "M 8 11 H 18 M 13 6 V 16", stroke: color, "stroke-width": 2.2, "stroke-linecap": "round" }));
-}
-
-function drawServerIcon(group: SVGGElement, color: string): void {
-  group.appendChild(createSvg("rect", { x: 0, y: 0, width: 26, height: 24, rx: 4, fill: "none", stroke: color, "stroke-width": 2.2 }));
-  group.appendChild(createSvg("path", { d: "M 5 8 H 21 M 5 16 H 21", stroke: color, "stroke-width": 2.2, "stroke-linecap": "round" }));
-  group.appendChild(createSvg("circle", { cx: 6, cy: 4, r: 1.4, fill: color }));
-  group.appendChild(createSvg("circle", { cx: 6, cy: 12, r: 1.4, fill: color }));
-  group.appendChild(createSvg("circle", { cx: 6, cy: 20, r: 1.4, fill: color }));
-}
-
-function drawDatabaseIcon(group: SVGGElement, color: string): void {
-  group.appendChild(createSvg("ellipse", { cx: 13, cy: 5, rx: 12, ry: 4, fill: "none", stroke: color, "stroke-width": 2.2 }));
-  group.appendChild(createSvg("path", { d: "M 1 5 V 20 C 1 25, 25 25, 25 20 V 5", fill: "none", stroke: color, "stroke-width": 2.2 }));
-  group.appendChild(createSvg("path", { d: "M 1 13 C 1 18, 25 18, 25 13", fill: "none", stroke: color, "stroke-width": 2.2 }));
-}
-
-function drawStorageIcon(group: SVGGElement, color: string): void {
-  group.appendChild(createSvg("path", { d: "M 3 8 H 23 V 23 H 3 Z", fill: "none", stroke: color, "stroke-width": 2.2, "stroke-linejoin": "round" }));
-  group.appendChild(createSvg("path", { d: "M 3 8 L 8 2 H 28 L 23 8", fill: "none", stroke: color, "stroke-width": 2.2, "stroke-linejoin": "round" }));
-  group.appendChild(createSvg("path", { d: "M 23 8 L 28 2 V 17 L 23 23", fill: "none", stroke: color, "stroke-width": 2.2, "stroke-linejoin": "round" }));
+  group.setAttribute("data-icon-id", definition.id);
+  const symbol = createSvg("svg", {
+    width: 26,
+    height: 26,
+    viewBox: definition.viewBox,
+    "aria-hidden": "true",
+  });
+  definition.paths.forEach((path) => {
+    symbol.appendChild(createSvg("path", { d: path, fill: color }));
+  });
+  group.appendChild(symbol);
 }
 
 function drawUnknownIcon(group: SVGGElement, color: string): void {

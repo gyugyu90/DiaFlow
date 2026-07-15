@@ -2,6 +2,12 @@ import type { DiagramNode, EdgeLabelPlacement } from "@interactive-diagram/schem
 import type { NormalizedNode, Point, ViewBox } from "./types.js";
 
 const EDGE_LABEL_OFFSET = 24;
+const DEFAULT_DIAGRAM_BOUNDS: ViewBox = {
+  x: 0,
+  y: 0,
+  width: 1200,
+  height: 675,
+};
 
 export function normalizeNode(node: DiagramNode): NormalizedNode {
   return {
@@ -11,6 +17,8 @@ export function normalizeNode(node: DiagramNode): NormalizedNode {
 }
 
 export function getDiagramBounds(nodes: NormalizedNode[]): ViewBox {
+  if (nodes.length === 0) return { ...DEFAULT_DIAGRAM_BOUNDS };
+
   const padding = 90;
   const minX = Math.min(...nodes.map((node) => node.position.x)) - padding;
   const minY = Math.min(...nodes.map((node) => node.position.y)) - padding;

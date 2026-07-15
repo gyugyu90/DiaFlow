@@ -9,6 +9,8 @@ export {
   resolveEdgeColor,
 } from "./edge-style.js";
 export type { EdgeColorPreset } from "./edge-style.js";
+export { DIAGRAM_ICON_CATALOG, resolveDiagramIcon } from "./icon-catalog.js";
+export type { DiagramIconCategory, DiagramIconDefinition } from "./icon-catalog.js";
 
 export type {
   DiagramChangeSet,

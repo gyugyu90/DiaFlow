@@ -32,6 +32,7 @@ Target DiaFlow `schemaVersion: "0.2"`. Treat the repository's `packages/schema/s
 - Use stable semantic IDs beginning with a letter. Keep IDs unique within each entity collection.
 - Lay out the primary flow from left to right with non-overlapping node rectangles. Leave enough spacing for edge labels and groups.
 - Make every edge endpoint reference an existing node and existing port when `portId` is present.
+- Use namespaced Material Symbols IDs for new node icons. Recommended values include `material-symbols:person`, `material-symbols:web`, `material-symbols:smartphone`, `material-symbols:dns`, `material-symbols:api`, `material-symbols:deployed_code`, `material-symbols:database`, `material-symbols:storage`, `material-symbols:cached`, `material-symbols:hub`, `material-symbols:lan`, `material-symbols:key`, `material-symbols:lock`, and `material-symbols:shield`. Omit `icon` to use the node type default; do not invent unsupported IDs.
 - Store group membership only in `Group.nodeIds`. Do not add `Node.groupId`, repeat a node ID, or place one node in multiple groups.
 - Store animation membership only in `Animation.edgeIds`. Do not add `Edge.animationId` or repeat an edge ID within one animation.
 - Use `arrow`, `triangle`, `circle`, or `none` for endpoint markers. Use animation and scenes to communicate behavior, not decoration.

@@ -137,6 +137,16 @@ describe("diagramDocumentSchema", () => {
     });
   });
 
+  it("preserves namespaced and unsupported custom icon IDs for runtime resolution", () => {
+    const namespaced = cloneSample();
+    namespaced.nodes[0].icon = "material-symbols:shield";
+    const custom = cloneSample();
+    custom.nodes[0].icon = "custom-company:internal-service";
+
+    expect(parseDiagramDocument(namespaced).nodes[0].icon).toBe("material-symbols:shield");
+    expect(parseDiagramDocument(custom).nodes[0].icon).toBe("custom-company:internal-service");
+  });
+
   it("accepts scene-based circuit breaker samples", () => {
     const diagram = parseDiagramDocument(circuitBreakerDiagram);
 

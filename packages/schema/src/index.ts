@@ -46,7 +46,9 @@ export const nodeSchema = z.object({
   description: z.string().optional().describe("Optional explanation of the node's role."),
   position: pointSchema.describe("Absolute top-left node position on the canvas."),
   size: sizeSchema.optional().describe("Optional node size; the runtime uses its default size when omitted."),
-  icon: z.string().optional().describe("Optional icon name understood by the runtime."),
+  icon: z.string().optional().describe(
+    "Optional namespaced icon ID such as material-symbols:database; legacy names and unsupported custom strings remain readable with runtime fallback behavior.",
+  ),
   ports: z
     .array(
       z.object({

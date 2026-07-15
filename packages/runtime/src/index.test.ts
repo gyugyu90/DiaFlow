@@ -50,6 +50,21 @@ function dispatchWheel(svg: SVGSVGElement, deltaY: number) {
   );
 }
 
+function dispatchMouse(
+  target: EventTarget,
+  type: "mousedown" | "mousemove" | "mouseup",
+  clientX: number,
+  clientY: number,
+) {
+  const event = new MouseEvent(type, {
+    bubbles: true,
+    button: 0,
+    clientX,
+    clientY,
+  });
+  target.dispatchEvent(event);
+}
+
 function getViewBox(svg: SVGSVGElement) {
   const values = svg.getAttribute("viewBox")?.split(" ").map(Number);
   if (!values || values.length !== 4) {
@@ -74,6 +89,9 @@ describe("renderDiagram", () => {
     expect(container.querySelectorAll(".group")).toHaveLength(2);
     expect(container.querySelectorAll(".edge-label")).toHaveLength(5);
     expect(container.querySelectorAll(".packet")).toHaveLength(2);
+    expect(container.querySelector(
+      '[data-node-id="user"] [data-icon-id="material-symbols:person"]',
+    )).toBeTruthy();
   });
 
   it("renders a fixed viewBox without viewport interactions in static mode", () => {
@@ -85,6 +103,54 @@ describe("renderDiagram", () => {
 
     dispatchWheel(svg, -240);
     expect(getViewBox(svg)).toEqual(viewBox);
+  });
+
+  it("keeps an empty diagram viewport valid and interactive", () => {
+    const pointerEvent = window.PointerEvent;
+    Object.defineProperty(window, "PointerEvent", { configurable: true, value: undefined });
+    const emptyDiagram = {
+      ...diagram,
+      nodes: [],
+      edges: [],
+      groups: [],
+      animations: [],
+    };
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const renderer = renderDiagram(container, emptyDiagram);
+    try {
+      const svg = container.querySelector(".diagram-svg") as SVGSVGElement;
+      configureSvgViewport(svg);
+
+      expect(getViewBox(svg)).toEqual({ x: 0, y: 0, width: 1200, height: 675 });
+
+      renderer.setDiagram({
+        ...emptyDiagram,
+        nodes: [{
+          id: "node_1",
+          type: "server",
+          label: "New Node",
+          position: { x: 520, y: 300 },
+        }],
+      }, { nodeIds: ["node_1"] });
+      dispatchWheel(svg, -240);
+
+      const zoomedViewBox = getViewBox(svg);
+      expect(zoomedViewBox.width).toBeLessThan(1200);
+      expect(Object.values(zoomedViewBox).every(Number.isFinite)).toBe(true);
+
+      dispatchMouse(svg, "mousedown", 620, 310);
+      dispatchMouse(window, "mousemove", 720, 360);
+      dispatchMouse(window, "mouseup", 720, 360);
+
+      const pannedViewBox = getViewBox(svg);
+      expect(pannedViewBox.x).toBeLessThan(zoomedViewBox.x);
+      expect(pannedViewBox.y).toBeLessThan(zoomedViewBox.y);
+      expect(pannedViewBox.width).toBe(zoomedViewBox.width);
+    } finally {
+      renderer.destroy();
+      Object.defineProperty(window, "PointerEvent", { configurable: true, value: pointerEvent });
+    }
   });
 
   it("keeps packets hidden until their motion begins", () => {

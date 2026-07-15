@@ -189,7 +189,7 @@ Nodes represent architecture components.
   "description": "Runs the application business logic.",
   "position": { "x": 520, "y": 240 },
   "size": { "width": 160, "height": 80 },
-  "icon": "server",
+  "icon": "material-symbols:dns",
   "ports": [
     { "id": "in", "side": "left" },
     { "id": "out", "side": "right" }
@@ -208,7 +208,7 @@ Nodes represent architecture components.
 | `description` | no | Human-readable explanation. |
 | `position` | yes | Absolute canvas position. |
 | `size` | no | Node size. Renderer may use defaults. |
-| `icon` | no | Icon hint. |
+| `icon` | no | Namespaced icon ID. Omit it to use the node type default. |
 | `ports` | no | Optional connection points. |
 | `data` | no | Extension object for product-specific metadata. |
 
@@ -235,6 +235,35 @@ unknown
 ```
 
 These are semantic types, not strict visual components. The renderer decides how each type appears.
+
+### Node Icon IDs
+
+New documents use namespaced icon IDs. The initial catalog vendors selected 24 px Material Symbols
+Outlined paths and identifies them as `material-symbols:<name>`:
+
+```txt
+material-symbols:person          material-symbols:web
+material-symbols:smartphone      material-symbols:devices
+material-symbols:dns             material-symbols:api
+material-symbols:deployed_code   material-symbols:memory
+material-symbols:terminal        material-symbols:database
+material-symbols:storage         material-symbols:hard_drive
+material-symbols:cached          material-symbols:inventory_2
+material-symbols:hub             material-symbols:router
+material-symbols:lan             material-symbols:account_tree
+material-symbols:public          material-symbols:language
+material-symbols:key             material-symbols:lock
+material-symbols:shield          material-symbols:security
+material-symbols:cloud           material-symbols:cloud_queue
+material-symbols:folder          material-symbols:sync_alt
+material-symbols:send
+```
+
+Unqualified IDs from earlier documents, such as `user`, `browser`, `server`, and `database`, remain
+supported through runtime aliases. An unknown string remains structurally valid and renders the
+fallback icon, which lets a future host provide a custom library without making the document
+unreadable. AI-generated and editor-created documents should use catalog IDs rather than inventing
+custom names.
 
 ## Edge
 
@@ -487,7 +516,7 @@ group style is omitted.
       "label": "User",
       "position": { "x": 80, "y": 220 },
       "size": { "width": 120, "height": 72 },
-      "icon": "user"
+      "icon": "material-symbols:person"
     },
     {
       "id": "browser",
@@ -495,7 +524,7 @@ group style is omitted.
       "label": "Browser",
       "position": { "x": 280, "y": 220 },
       "size": { "width": 140, "height": 72 },
-      "icon": "browser"
+      "icon": "material-symbols:web"
     },
     {
       "id": "load_balancer",
@@ -503,7 +532,7 @@ group style is omitted.
       "label": "Load Balancer",
       "position": { "x": 500, "y": 220 },
       "size": { "width": 160, "height": 72 },
-      "icon": "network"
+      "icon": "material-symbols:hub"
     },
     {
       "id": "app_server",
@@ -511,7 +540,7 @@ group style is omitted.
       "label": "App Server",
       "position": { "x": 740, "y": 160 },
       "size": { "width": 160, "height": 80 },
-      "icon": "server"
+      "icon": "material-symbols:dns"
     },
     {
       "id": "database",
@@ -519,7 +548,7 @@ group style is omitted.
       "label": "Database",
       "position": { "x": 980, "y": 120 },
       "size": { "width": 160, "height": 80 },
-      "icon": "database"
+      "icon": "material-symbols:database"
     },
     {
       "id": "storage",
@@ -527,7 +556,7 @@ group style is omitted.
       "label": "Object Storage",
       "position": { "x": 980, "y": 280 },
       "size": { "width": 160, "height": 80 },
-      "icon": "storage"
+      "icon": "material-symbols:storage"
     }
   ],
   "edges": [

@@ -35,7 +35,7 @@
         "width": 120,
         "height": 72
       },
-      "icon": "user"
+      "icon": "material-symbols:person"
     },
     {
       "id": "browser",
@@ -49,7 +49,7 @@
         "width": 140,
         "height": 72
       },
-      "icon": "browser"
+      "icon": "material-symbols:web"
     },
     {
       "id": "load_balancer",
@@ -63,7 +63,7 @@
         "width": 160,
         "height": 72
       },
-      "icon": "network"
+      "icon": "material-symbols:hub"
     },
     {
       "id": "app_server",
@@ -77,7 +77,7 @@
         "width": 160,
         "height": 80
       },
-      "icon": "server"
+      "icon": "material-symbols:dns"
     },
     {
       "id": "database",
@@ -91,7 +91,7 @@
         "width": 160,
         "height": 80
       },
-      "icon": "database"
+      "icon": "material-symbols:database"
     },
     {
       "id": "storage",
@@ -105,7 +105,7 @@
         "width": 160,
         "height": 80
       },
-      "icon": "storage"
+      "icon": "material-symbols:storage"
     }
   ],
   "edges": [

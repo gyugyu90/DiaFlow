@@ -193,7 +193,7 @@
           },
           "icon": {
             "type": "string",
-            "description": "Optional icon name understood by the runtime."
+            "description": "Optional namespaced icon ID such as material-symbols:database; legacy names and unsupported custom strings remain readable with runtime fallback behavior."
           },
           "ports": {
             "type": "array",

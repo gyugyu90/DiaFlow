@@ -1,9 +1,9 @@
 import { Link2, Trash2, X } from "lucide-react";
 import type { InspectorPosition, NodePatch } from "@interactive-diagram/editor";
 import { nodeTypeSchema, type DiagramNode } from "@interactive-diagram/schema";
+import { NodeIconPicker } from "./NodeIconPicker";
 
 const nodeTypeOptions = nodeTypeSchema.options;
-const iconOptions = ["user", "browser", "network", "server", "database", "storage"];
 
 export function NodeInspector({
   creatingEdgeSourceNodeId,
@@ -85,21 +85,14 @@ export function NodeInspector({
         </select>
       </label>
 
-      <label>
+      <div className="node-icon-field">
         <span>Icon</span>
-        <select
-          aria-label="Node icon"
-          value={node.icon ?? ""}
-          onChange={(event) => onChange({ icon: event.target.value || undefined })}
-        >
-          <option value="">Use node type</option>
-          {iconOptions.map((icon) => (
-            <option key={icon} value={icon}>
-              {icon}
-            </option>
-          ))}
-        </select>
-      </label>
+        <NodeIconPicker
+          defaultIconId={node.type}
+          value={node.icon}
+          onChange={(icon) => onChange({ icon })}
+        />
+      </div>
 
       <button
         className={`button button-secondary edge-create-button ${isCreatingEdge ? "is-active" : ""}`}
