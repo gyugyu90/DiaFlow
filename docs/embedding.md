@@ -22,6 +22,7 @@ Optional query parameters:
 | Parameter | Description |
 | --- | --- |
 | `scene` | Initial scene ID to render. The viewer shows an error when the ID is not in the diagram. |
+| `controls` | `1` or `0`. Defaults to `1`. Disable to hide in-frame scene navigation controls. |
 | `interactive` | `1` or `0`. Defaults to `1`. Disable to render a fixed read-only SVG view. |
 | `animations` | `1` or `0`. Defaults to `1`. Disable to stop flow animations. |
 
@@ -42,6 +43,18 @@ For a specific scene:
 ```html
 <iframe
   src="/viewer/?src=/diagrams/checkout.diagram.json&scene=scene_normal"
+  width="100%"
+  height="520"
+  loading="lazy"
+  title="Checkout architecture"
+></iframe>
+```
+
+To hide scene navigation controls:
+
+```html
+<iframe
+  src="/viewer/?src=/diagrams/checkout.diagram.json&controls=0"
   width="100%"
   height="520"
   loading="lazy"
@@ -86,7 +99,7 @@ Example iframe snippets for the bundled diagrams:
 
 ```html
 <iframe
-  src="/viewer/?src=/diagrams/circuit-breaker-scenes.diagram.json&scene=scene_normal"
+  src="/viewer/?src=/diagrams/circuit-breaker-scenes.diagram.json&scene=scene_normal&controls=1"
   width="100%"
   height="520"
   loading="lazy"

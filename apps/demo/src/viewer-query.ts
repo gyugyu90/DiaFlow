@@ -1,5 +1,6 @@
 export type ViewerQuery = {
   animations: boolean;
+  controls: boolean;
   interactive: boolean;
   sceneId: string | null;
   src: string | null;
@@ -10,6 +11,7 @@ export function parseViewerQuery(search: string): ViewerQuery {
 
   return {
     animations: parseBooleanParam(params.get("animations"), true),
+    controls: parseBooleanParam(params.get("controls"), true),
     interactive: parseBooleanParam(params.get("interactive"), true),
     sceneId: normalizeOptionalParam(params.get("scene")),
     src: normalizeOptionalParam(params.get("src")),

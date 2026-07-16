@@ -271,7 +271,8 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("img", { name: "Basic Web Architecture" })).toBeTruthy();
+    expect(await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" }))
+      .toBeTruthy();
     expect(window.location.pathname).toBe("/viewer/");
     expect(window.location.search).toBe("?src=/diagrams/basic.diagram.json");
     expect(screen.queryByRole("button", { name: "New diagram" })).toBeNull();

@@ -13,8 +13,10 @@
       }
 
       iframe {
+        display: block;
         width: 100%;
         height: 520px;
+        margin: 0 0 24px;
         border: 1px solid #d7dee8;
         border-radius: 8px;
       }
@@ -26,6 +28,12 @@
       src="/viewer/?src=/diagrams/basic-web-architecture.diagram.json"
       loading="lazy"
       title="Basic Web Architecture"
+    ></iframe>
+    <h2>Circuit breaker scenes</h2>
+    <iframe
+      src="/viewer/?src=/diagrams/circuit-breaker-scenes.diagram.json&scene=scene_normal&controls=1"
+      loading="lazy"
+      title="Circuit Breaker Scenes"
     ></iframe>
   </body>
 </html>
