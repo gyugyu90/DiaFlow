@@ -5,13 +5,17 @@ import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json
 import {
   addDiagramEdge,
   addDiagramNode,
+  addDiagramScene,
   createDiagramEditor,
   deleteDiagramEdges,
   deleteDiagramNodes,
+  deleteDiagramScene,
+  moveDiagramScene,
   moveDiagramNodes,
   updateDiagramEdge,
   updateDiagramMetadata,
   updateDiagramNode,
+  updateDiagramScene,
 } from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);
@@ -248,6 +252,32 @@ describe("diagram editor model", () => {
     expect(getPosition(updated, "load_balancer")).toEqual(getPosition(diagram, "load_balancer"));
     expect(getPosition(diagram, "user")).not.toEqual(getPosition(updated, "user"));
   });
+
+  it("creates, updates, reorders, and deletes scenes without mutating the source", () => {
+    const first = addDiagramScene(diagram);
+    const second = addDiagramScene(first.diagram);
+    const updated = updateDiagramScene(second.diagram, second.scene.id, {
+      title: "Failure",
+      description: "Requests fail before recovery.",
+    });
+    const reordered = moveDiagramScene(updated, second.scene.id, 0);
+    const deleted = deleteDiagramScene(reordered, first.scene.id);
+
+    expect(first.scene).toEqual({ id: "scene_1", title: "New Scene" });
+    expect(second.scene).toEqual({ id: "scene_2", title: "New Scene 2" });
+    expect(updated.scenes?.find((scene) => scene.id === "scene_2")).toMatchObject({
+      title: "Failure",
+      description: "Requests fail before recovery.",
+    });
+    expect(reordered.scenes?.map((scene) => scene.id)).toEqual([
+      "scene_2",
+      "scene_default",
+      "scene_1",
+    ]);
+    expect(deleted.scenes?.map((scene) => scene.id)).toEqual(["scene_2", "scene_default"]);
+    expect(diagram.scenes).toEqual([{ id: "scene_default", title: "Default Scene" }]);
+    expect(() => parseDiagramDocument(deleted)).not.toThrow();
+  });
 });
 
 describe("createDiagramEditor", () => {
@@ -481,6 +511,42 @@ describe("createDiagramEditor", () => {
     expect(editor.getState().diagram.metadata.description).toBeTruthy();
     editor.redo();
     expect(editor.getState().diagram.metadata.title).toBe("Edited Architecture");
+    editor.destroy();
+  });
+
+  it("owns scene management and restores it through history", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram);
+
+    const sceneId = editor.createScene();
+    expect(sceneId).toBe("scene_1");
+    editor.beginTransaction();
+    editor.updateScene(sceneId, { title: "Failure" });
+    editor.updateScene(sceneId, { description: "The dependency is unavailable." });
+    editor.commitTransaction();
+    editor.moveScene(sceneId, 0);
+    expect(editor.getState().diagram.scenes?.[0]).toMatchObject({
+      id: "scene_1",
+      title: "Failure",
+      description: "The dependency is unavailable.",
+    });
+
+    editor.deleteScene(sceneId);
+    expect(editor.getState().diagram.scenes?.some((scene) => scene.id === sceneId)).toBe(false);
+    editor.undo();
+    expect(editor.getState().diagram.scenes?.[0].id).toBe(sceneId);
+    editor.undo();
+    expect(editor.getState().diagram.scenes?.at(-1)?.id).toBe(sceneId);
+    editor.undo();
+    expect(editor.getState().diagram.scenes?.at(-1)).toEqual({
+      id: sceneId,
+      title: "New Scene",
+    });
+    editor.undo();
+    expect(editor.getState().diagram.scenes).toEqual([
+      { id: "scene_default", title: "Default Scene" },
+    ]);
     editor.destroy();
   });
 

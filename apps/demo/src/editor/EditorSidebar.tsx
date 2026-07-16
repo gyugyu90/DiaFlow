@@ -1,16 +1,40 @@
 import { PlayCircle, Plus } from "lucide-react";
-import type { DiagramNode } from "@interactive-diagram/schema";
+import type { DiagramNode, DiagramScene } from "@interactive-diagram/schema";
+import { SceneEditorPanel } from "./SceneEditorPanel";
 
 export function EditorSidebar({
   nodes,
+  scenes,
+  selectedSceneId,
   selectedNodeIds,
   onCreateNode,
+  onCreateScene,
+  onCancelSceneEdit,
+  onDeleteScene,
+  onEndSceneEdit,
+  onMoveScene,
   onSelectNode,
+  onSelectScene,
+  onStartSceneEdit,
+  onUpdateScene,
 }: {
   nodes: DiagramNode[];
+  scenes: DiagramScene[];
+  selectedSceneId: string | null;
   selectedNodeIds: string[];
   onCreateNode: () => void;
+  onCreateScene: () => void;
+  onCancelSceneEdit: () => void;
+  onDeleteScene: (sceneId: string) => void;
+  onEndSceneEdit: () => void;
+  onMoveScene: (sceneId: string, targetIndex: number) => void;
   onSelectNode: (nodeId: string, additive: boolean) => void;
+  onSelectScene: (sceneId: string) => void;
+  onStartSceneEdit: () => void;
+  onUpdateScene: (
+    sceneId: string,
+    patch: Partial<Pick<DiagramScene, "title" | "description">>,
+  ) => void;
 }) {
   return (
     <aside className="side-panel" aria-label="Diagram side view">
@@ -46,6 +70,18 @@ export function EditorSidebar({
             ))}
           </ol>
         </section>
+        <SceneEditorPanel
+          scenes={scenes}
+          selectedSceneId={selectedSceneId}
+          onAdd={onCreateScene}
+          onCancelEdit={onCancelSceneEdit}
+          onDelete={onDeleteScene}
+          onEditEnd={onEndSceneEdit}
+          onEditStart={onStartSceneEdit}
+          onMove={onMoveScene}
+          onSelect={onSelectScene}
+          onUpdate={onUpdateScene}
+        />
       </div>
 
       <form className="prompt-bar">

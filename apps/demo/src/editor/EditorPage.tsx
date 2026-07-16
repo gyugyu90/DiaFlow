@@ -29,13 +29,15 @@ export function EditorPage({
 }) {
   const editorRef = useRef<DiagramEditorController | null>(null);
   const scenes = item.diagram.scenes ?? [];
-  const [sceneIndex, setSceneIndex] = useState(0);
+  const [activeSceneId, setActiveSceneId] = useState<string | null>(() => scenes[0]?.id ?? null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [creatingEdgeSourceNodeId, setCreatingEdgeSourceNodeId] = useState<string | null>(null);
   const [inspectorPosition, setInspectorPosition] = useState<InspectorPosition | null>(null);
   const [historyState, setHistoryState] = useState({ canUndo: false, canRedo: false });
-  const scene = scenes[sceneIndex] ?? null;
+  const activeSceneIndex = scenes.findIndex((candidate) => candidate.id === activeSceneId);
+  const sceneIndex = activeSceneIndex >= 0 ? activeSceneIndex : scenes.length > 0 ? 0 : -1;
+  const scene = sceneIndex >= 0 ? scenes[sceneIndex] : null;
   const selectedNode = selectedNodeIds.length === 1
     ? item.diagram.nodes.find((node) => node.id === selectedNodeIds[0]) ?? null
     : null;
@@ -44,13 +46,18 @@ export function EditorPage({
     : null;
 
   useEffect(() => {
-    setSceneIndex(0);
+    setActiveSceneId(item.diagram.scenes?.[0]?.id ?? null);
     setSelectedNodeIds([]);
     setSelectedEdgeId(null);
     setCreatingEdgeSourceNodeId(null);
     setInspectorPosition(null);
     setHistoryState({ canUndo: false, canRedo: false });
   }, [item.id]);
+
+  useEffect(() => {
+    if (activeSceneId && scenes.some((candidate) => candidate.id === activeSceneId)) return;
+    setActiveSceneId(scenes[0]?.id ?? null);
+  }, [activeSceneId, scenes]);
 
   function handleEditorStateChange(state: DiagramEditorState) {
     setSelectedNodeIds(state.selectedNodeIds);
@@ -112,12 +119,30 @@ export function EditorPage({
       <section className="editor-layout">
         <EditorSidebar
           nodes={item.diagram.nodes}
+          scenes={scenes}
+          selectedSceneId={scene?.id ?? null}
           selectedNodeIds={selectedNodeIds}
           onCreateNode={() => editorRef.current?.createNode()}
+          onCreateScene={() => {
+            const sceneId = editorRef.current?.createScene();
+            if (sceneId) setActiveSceneId(sceneId);
+          }}
+          onCancelSceneEdit={() => editorRef.current?.cancelTransaction()}
+          onDeleteScene={(sceneId) => {
+            const deletedIndex = scenes.findIndex((candidate) => candidate.id === sceneId);
+            const nextScene = scenes[deletedIndex + 1] ?? scenes[deletedIndex - 1] ?? null;
+            editorRef.current?.deleteScene(sceneId);
+            setActiveSceneId(nextScene?.id ?? null);
+          }}
+          onEndSceneEdit={() => editorRef.current?.commitTransaction()}
+          onMoveScene={(sceneId, targetIndex) => editorRef.current?.moveScene(sceneId, targetIndex)}
           onSelectNode={(nodeId, additive) => {
             if (additive) editorRef.current?.toggleNodeSelection(nodeId);
             else editorRef.current?.selectNode(nodeId);
           }}
+          onSelectScene={setActiveSceneId}
+          onStartSceneEdit={() => editorRef.current?.beginTransaction()}
+          onUpdateScene={(sceneId, patch) => editorRef.current?.updateScene(sceneId, patch)}
         />
 
         <section
@@ -128,8 +153,10 @@ export function EditorPage({
             scene={scene}
             sceneIndex={sceneIndex}
             sceneCount={scenes.length}
-            onPrevious={() => setSceneIndex((index) => Math.max(0, index - 1))}
-            onNext={() => setSceneIndex((index) => Math.min(scenes.length - 1, index + 1))}
+            onPrevious={() => setActiveSceneId(scenes[Math.max(0, sceneIndex - 1)]?.id ?? null)}
+            onNext={() => setActiveSceneId(
+              scenes[Math.min(scenes.length - 1, sceneIndex + 1)]?.id ?? null,
+            )}
           />
           <div className="diagram-edit-surface">
             <DiagramEditorViewport

@@ -369,4 +369,40 @@ describe("EditorPage", () => {
     expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
       .toBe("scene_normal");
   });
+
+  it("creates, edits, reorders, deletes, and restores scenes", () => {
+    renderBasicDiagram();
+
+    const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
+    const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    fireEvent.click(within(sideView).getByRole("button", { name: "Add scene" }));
+
+    expect((within(sideView).getByLabelText("Scene title") as HTMLInputElement).value)
+      .toBe("New Scene");
+    expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
+      .toBe("scene_1");
+    expect(within(canvas).getByText("Scene 2 / 2")).toBeTruthy();
+
+    const titleInput = within(sideView).getByLabelText("Scene title");
+    fireEvent.focus(titleInput);
+    fireEvent.change(titleInput, { target: { value: "Failure" } });
+    fireEvent.blur(titleInput);
+    const descriptionInput = within(sideView).getByLabelText("Scene description");
+    fireEvent.focus(descriptionInput);
+    fireEvent.change(descriptionInput, { target: { value: "Dependency unavailable" } });
+    fireEvent.blur(descriptionInput);
+
+    expect(within(canvas).getByRole("heading", { name: "Failure" })).toBeTruthy();
+    expect(within(canvas).getByText("Dependency unavailable")).toBeTruthy();
+
+    fireEvent.click(within(sideView).getByRole("button", { name: "Move scene Failure up" }));
+    expect(within(canvas).getByText("Scene 1 / 2")).toBeTruthy();
+
+    fireEvent.click(within(sideView).getByRole("button", { name: "Delete scene Failure" }));
+    expect(within(canvas).getByRole("heading", { name: "Default Scene" })).toBeTruthy();
+    expect(within(sideView).queryByText("Failure")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
+    expect(within(sideView).getByText("Failure")).toBeTruthy();
+  });
 });

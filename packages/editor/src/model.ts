@@ -1,5 +1,10 @@
-import type { DiagramDocument, DiagramEdge, DiagramNode } from "@interactive-diagram/schema";
-import type { DiagramMetadataPatch, EdgePatch, NodePatch } from "./types.js";
+import type {
+  DiagramDocument,
+  DiagramEdge,
+  DiagramNode,
+  DiagramScene,
+} from "@interactive-diagram/schema";
+import type { DiagramMetadataPatch, EdgePatch, NodePatch, ScenePatch } from "./types.js";
 
 export type NewNodeInput = Partial<Pick<DiagramNode, "label" | "type" | "icon" | "position">>;
 export type NewEdgeInput = {
@@ -16,6 +21,11 @@ export type AddDiagramNodeResult = {
 export type AddDiagramEdgeResult = {
   diagram: DiagramDocument;
   edge: DiagramEdge;
+};
+
+export type AddDiagramSceneResult = {
+  diagram: DiagramDocument;
+  scene: DiagramScene;
 };
 
 export function addDiagramNode(
@@ -64,6 +74,76 @@ export function addDiagramEdge(
   return {
     diagram: { ...diagram, edges: [...diagram.edges, edge] },
     edge,
+  };
+}
+
+export function addDiagramScene(diagram: DiagramDocument): AddDiagramSceneResult {
+  const sequence = getNextSceneSequence(diagram);
+  const scene: DiagramScene = {
+    id: `scene_${sequence}`,
+    title: sequence === 1 ? "New Scene" : `New Scene ${sequence}`,
+  };
+
+  return {
+    diagram: { ...diagram, scenes: [...(diagram.scenes ?? []), scene] },
+    scene,
+  };
+}
+
+export function deleteDiagramScene(
+  diagram: DiagramDocument,
+  sceneId: string,
+): DiagramDocument {
+  if (!diagram.scenes?.some((scene) => scene.id === sceneId)) return diagram;
+
+  const scenes = diagram.scenes.filter((scene) => scene.id !== sceneId);
+  if (scenes.length > 0) return { ...diagram, scenes };
+
+  const nextDiagram = { ...diagram };
+  delete nextDiagram.scenes;
+  return nextDiagram;
+}
+
+export function moveDiagramScene(
+  diagram: DiagramDocument,
+  sceneId: string,
+  targetIndex: number,
+): DiagramDocument {
+  const scenes = diagram.scenes;
+  if (!scenes) return diagram;
+
+  const currentIndex = scenes.findIndex((scene) => scene.id === sceneId);
+  const nextIndex = Math.max(0, Math.min(targetIndex, scenes.length - 1));
+  if (currentIndex < 0 || currentIndex === nextIndex) return diagram;
+
+  const nextScenes = [...scenes];
+  const [scene] = nextScenes.splice(currentIndex, 1);
+  nextScenes.splice(nextIndex, 0, scene);
+  return { ...diagram, scenes: nextScenes };
+}
+
+export function updateDiagramScene(
+  diagram: DiagramDocument,
+  sceneId: string,
+  patch: ScenePatch,
+): DiagramDocument {
+  const scene = diagram.scenes?.find((candidate) => candidate.id === sceneId);
+  if (!scene) return diagram;
+
+  const nextScene = { ...scene };
+  if (patch.title !== undefined) nextScene.title = patch.title;
+  if (Object.hasOwn(patch, "description")) {
+    if (patch.description === undefined) delete nextScene.description;
+    else nextScene.description = patch.description;
+  }
+  if (
+    nextScene.title === scene.title
+    && nextScene.description === scene.description
+  ) return diagram;
+
+  return {
+    ...diagram,
+    scenes: diagram.scenes?.map((candidate) => candidate.id === sceneId ? nextScene : candidate),
   };
 }
 
@@ -245,6 +325,13 @@ function getNextNodeSequence(diagram: DiagramDocument): number {
   const nodeIds = new Set(diagram.nodes.map((node) => node.id));
   let sequence = 1;
   while (nodeIds.has(`node_${sequence}`)) sequence += 1;
+  return sequence;
+}
+
+function getNextSceneSequence(diagram: DiagramDocument): number {
+  const sceneIds = new Set(diagram.scenes?.map((scene) => scene.id) ?? []);
+  let sequence = 1;
+  while (sceneIds.has(`scene_${sequence}`)) sequence += 1;
   return sequence;
 }
 

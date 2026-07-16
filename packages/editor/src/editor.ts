@@ -17,12 +17,16 @@ import {
 import {
   addDiagramEdge,
   addDiagramNode,
+  addDiagramScene,
   deleteDiagramEdges,
   deleteDiagramNodes,
+  deleteDiagramScene,
   moveDiagramNodes,
+  moveDiagramScene,
   updateDiagramEdge,
   updateDiagramMetadata,
   updateDiagramNode,
+  updateDiagramScene,
 } from "./model.js";
 import type {
   DiagramEditorController,
@@ -32,6 +36,7 @@ import type {
   EdgePatch,
   InspectorPosition,
   NodePatch,
+  ScenePatch,
 } from "./types.js";
 
 type DragState = {
@@ -225,6 +230,13 @@ class DomDiagramEditor implements DiagramEditorController {
     return result.node.id;
   }
 
+  createScene(): string {
+    this.commitTransaction();
+    const result = addDiagramScene(this.diagram);
+    this.commit(result.diagram);
+    return result.scene.id;
+  }
+
   createEdge(sourceNodeId: string, targetNodeId: string): string | null {
     this.commitTransaction();
     if (!this.hasNode(sourceNodeId) || !this.hasNode(targetNodeId)) return null;
@@ -249,6 +261,11 @@ class DomDiagramEditor implements DiagramEditorController {
       this.selectedEdgeId = null;
     }
     this.commit(nextDiagram);
+  }
+
+  deleteScene(sceneId: string): void {
+    this.commitTransaction();
+    this.commit(deleteDiagramScene(this.diagram, sceneId));
   }
 
   deleteSelectedEdge(): void {
@@ -292,6 +309,15 @@ class DomDiagramEditor implements DiagramEditorController {
 
   updateMetadata(patch: DiagramMetadataPatch): void {
     this.commit(updateDiagramMetadata(this.diagram, patch));
+  }
+
+  moveScene(sceneId: string, targetIndex: number): void {
+    this.commitTransaction();
+    this.commit(moveDiagramScene(this.diagram, sceneId, targetIndex));
+  }
+
+  updateScene(sceneId: string, patch: ScenePatch): void {
+    this.commit(updateDiagramScene(this.diagram, sceneId, patch));
   }
 
   undo(): void {
