@@ -1,4 +1,4 @@
-import { Link2, Trash2, X } from "lucide-react";
+import { Link2, RotateCcw, Trash2, X } from "lucide-react";
 import type { InspectorPosition, NodePatch } from "@interactive-diagram/editor";
 import { nodeTypeSchema, type DiagramNode } from "@interactive-diagram/schema";
 import { NodeIconPicker } from "./NodeIconPicker";
@@ -8,6 +8,7 @@ const nodeTypeOptions = nodeTypeSchema.options;
 export function NodeInspector({
   creatingEdgeSourceNodeId,
   node,
+  overriddenFields,
   onChange,
   onBeginEdgeCreation,
   onCancelEdgeCreation,
@@ -15,10 +16,13 @@ export function NodeInspector({
   onDelete,
   onEditEnd,
   onEditStart,
+  onResetOverrides,
   position,
+  sceneOverrideMode,
 }: {
   creatingEdgeSourceNodeId: string | null;
   node: DiagramNode;
+  overriddenFields: string[];
   onChange: (patch: NodePatch) => void;
   onBeginEdgeCreation: () => void;
   onCancelEdgeCreation: () => void;
@@ -26,30 +30,47 @@ export function NodeInspector({
   onDelete: () => void;
   onEditEnd: () => void;
   onEditStart: () => void;
+  onResetOverrides: () => void;
   position: InspectorPosition | null;
+  sceneOverrideMode: boolean;
 }) {
   if (!position) return null;
   const isCreatingEdge = creatingEdgeSourceNodeId === node.id;
 
   return (
     <section
-      className="node-inspector"
+      className={`node-inspector ${sceneOverrideMode ? "is-scene-override-inspector" : ""}`}
       style={{ left: position.left, top: position.top }}
       role="dialog"
       aria-label={`Edit node ${node.label}`}
     >
       <header>
         <div>
-          <p className="eyebrow">Node</p>
+          <p className="eyebrow">
+            Node
+            {sceneOverrideMode ? <span className="scene-override-badge">Scene</span> : null}
+          </p>
           <h3>{node.label}</h3>
         </div>
         <div className="inspector-actions">
+          {sceneOverrideMode && overriddenFields.length > 0 ? (
+            <button
+              className="icon-button reset-override-button"
+              type="button"
+              onClick={onResetOverrides}
+              aria-label={`Reset scene overrides for node ${node.label}`}
+              title="Reset scene overrides"
+            >
+              <RotateCcw size={16} aria-hidden="true" />
+            </button>
+          ) : null}
           <button
             className="icon-button delete-button"
             type="button"
+            disabled={sceneOverrideMode}
             onClick={onDelete}
             aria-label={`Delete node ${node.label}`}
-            title="Delete node"
+            title={sceneOverrideMode ? "Unavailable in scene override mode" : "Delete node"}
           >
             <Trash2 size={16} aria-hidden="true" />
           </button>
@@ -59,8 +80,8 @@ export function NodeInspector({
         </div>
       </header>
 
-      <label>
-        <span>Name</span>
+      <label className={overriddenFields.includes("label") ? "is-overridden-field" : ""}>
+        <span>Name <OverrideDot visible={overriddenFields.includes("label")} /></span>
         <input
           aria-label="Node name"
           value={node.label}
@@ -70,8 +91,8 @@ export function NodeInspector({
         />
       </label>
 
-      <label>
-        <span>Type</span>
+      <label className={overriddenFields.includes("type") ? "is-overridden-field" : ""}>
+        <span>Type <OverrideDot visible={overriddenFields.includes("type")} /></span>
         <select
           aria-label="Node type"
           value={node.type}
@@ -85,8 +106,8 @@ export function NodeInspector({
         </select>
       </label>
 
-      <div className="node-icon-field">
-        <span>Icon</span>
+      <div className={`node-icon-field ${overriddenFields.includes("icon") ? "is-overridden-field" : ""}`}>
+        <span>Icon <OverrideDot visible={overriddenFields.includes("icon")} /></span>
         <NodeIconPicker
           defaultIconId={node.type}
           value={node.icon}
@@ -97,12 +118,20 @@ export function NodeInspector({
       <button
         className={`button button-secondary edge-create-button ${isCreatingEdge ? "is-active" : ""}`}
         type="button"
+        disabled={sceneOverrideMode}
         onClick={isCreatingEdge ? onCancelEdgeCreation : onBeginEdgeCreation}
         aria-pressed={isCreatingEdge}
+        title={sceneOverrideMode ? "Unavailable in scene override mode" : undefined}
       >
         <Link2 size={16} aria-hidden="true" />
         <span>{isCreatingEdge ? "Cancel edge" : "Create edge"}</span>
       </button>
     </section>
   );
+}
+
+function OverrideDot({ visible }: { visible: boolean }) {
+  return visible
+    ? <i className="override-dot" title="Overridden in this scene" aria-label="Overridden in this scene" />
+    : null;
 }

@@ -13,6 +13,7 @@ export type EdgePatch = Partial<Pick<DiagramEdge, "label">> & {
   style?: Partial<NonNullable<DiagramEdge["style"]>>;
 };
 export type ScenePatch = Partial<Pick<DiagramScene, "title" | "description">>;
+export type EditorEditScope = "diagram" | "scene";
 
 export type InspectorPosition = {
   left: number;
@@ -22,6 +23,7 @@ export type InspectorPosition = {
 export type DiagramEditorState = {
   creatingEdgeSourceNodeId: string | null;
   diagram: DiagramDocument;
+  editScope: EditorEditScope;
   selectedNodeId: string | null;
   selectedNodeIds: string[];
   selectedEdgeId: string | null;
@@ -30,6 +32,7 @@ export type DiagramEditorState = {
 };
 
 export type DiagramEditorOptions = {
+  editScope?: EditorEditScope;
   sceneId?: string | null;
   onDiagramChange?: (diagram: DiagramDocument) => void;
   onStateChange?: (state: DiagramEditorState) => void;
@@ -45,7 +48,7 @@ export type DiagramEditorController = {
   clearSelection(): void;
   commitTransaction(): void;
   createEdge(sourceNodeId: string, targetNodeId: string): string | null;
-  createNode(): string;
+  createNode(): string | null;
   createScene(): string;
   deleteEdge(edgeId: string): void;
   deleteScene(sceneId: string): void;
@@ -53,10 +56,13 @@ export type DiagramEditorController = {
   deleteSelectedNodes(): void;
   destroy(): void;
   getState(): DiagramEditorState;
+  resetEdgeOverrides(edgeId: string): void;
+  resetNodeOverrides(nodeId: string): void;
   redo(): void;
   selectEdge(edgeId: string): void;
   selectNode(nodeId: string): void;
   setDiagram(diagram: DiagramDocument): void;
+  setEditScope(editScope: EditorEditScope): void;
   setScene(sceneId: string | null): void;
   moveScene(sceneId: string, targetIndex: number): void;
   toggleNodeSelection(nodeId: string): void;

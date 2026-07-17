@@ -45,6 +45,10 @@ function applyNodeOverride(
   if (!override) return node;
   return {
     ...node,
+    label: override.label ?? node.label,
+    type: override.type ?? node.type,
+    icon: override.icon ?? node.icon,
+    position: override.position ?? node.position,
     data: {
       ...node.data,
       tone: override.tone,
@@ -63,7 +67,7 @@ function applyEdgeOverride(
     ...edge.style,
     ...override.style,
   };
-  if (override.tone) {
+  if (override.tone && !override.style?.color) {
     style.color = toneToEdgeColor(override.tone);
   }
   if (override.disabled) {

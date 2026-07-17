@@ -1,9 +1,12 @@
 import { PlayCircle, Plus } from "lucide-react";
+import type { EditorEditScope } from "@interactive-diagram/editor";
 import type { DiagramNode, DiagramScene } from "@interactive-diagram/schema";
 import { SceneEditorPanel } from "./SceneEditorPanel";
 
 export function EditorSidebar({
   nodes,
+  editScope,
+  overrideCount,
   scenes,
   selectedSceneId,
   selectedNodeIds,
@@ -12,6 +15,7 @@ export function EditorSidebar({
   onCancelSceneEdit,
   onDeleteScene,
   onEndSceneEdit,
+  onEditScopeChange,
   onMoveScene,
   onSelectNode,
   onSelectScene,
@@ -19,6 +23,8 @@ export function EditorSidebar({
   onUpdateScene,
 }: {
   nodes: DiagramNode[];
+  editScope: EditorEditScope;
+  overrideCount: number;
   scenes: DiagramScene[];
   selectedSceneId: string | null;
   selectedNodeIds: string[];
@@ -27,6 +33,7 @@ export function EditorSidebar({
   onCancelSceneEdit: () => void;
   onDeleteScene: (sceneId: string) => void;
   onEndSceneEdit: () => void;
+  onEditScopeChange: (editScope: EditorEditScope) => void;
   onMoveScene: (sceneId: string, targetIndex: number) => void;
   onSelectNode: (nodeId: string, additive: boolean) => void;
   onSelectScene: (sceneId: string) => void;
@@ -46,9 +53,10 @@ export function EditorSidebar({
               <button
                 className="icon-button"
                 type="button"
+                disabled={editScope === "scene"}
                 onClick={onCreateNode}
                 aria-label="Add node"
-                title="Add node"
+                title={editScope === "scene" ? "Unavailable in scene override mode" : "Add node"}
               >
                 <Plus size={16} aria-hidden="true" />
               </button>
@@ -72,11 +80,14 @@ export function EditorSidebar({
         </section>
         <SceneEditorPanel
           scenes={scenes}
+          editScope={editScope}
+          overrideCount={overrideCount}
           selectedSceneId={selectedSceneId}
           onAdd={onCreateScene}
           onCancelEdit={onCancelSceneEdit}
           onDelete={onDeleteScene}
           onEditEnd={onEndSceneEdit}
+          onEditScopeChange={onEditScopeChange}
           onEditStart={onStartSceneEdit}
           onMove={onMoveScene}
           onSelect={onSelectScene}

@@ -450,7 +450,9 @@ Animation = meaning over time
 
 Scenes describe step-by-step changes over the same diagram.
 
-They do not replace nodes or edges. A scene selects active animations and can override edge labels, edge style, edge tone, node tone, or disabled state for that step.
+They do not replace nodes or edges. A scene selects active animations and can override node
+labels, types, icons, positions, tones, and statuses, plus edge labels, styles, tones, and disabled
+states for that step.
 
 `animationIds` cannot contain duplicates. Each scene can contain at most one `nodeOverride` per
 node and one `edgeOverride` per edge so that override precedence is never ambiguous.
@@ -474,6 +476,8 @@ New documents start with one `scene_default` scene. The `scenes` field remains o
   "nodeOverrides": [
     {
       "nodeId": "payment_service",
+      "label": "Payment Service (Unavailable)",
+      "position": { "x": 720, "y": 280 },
       "tone": "muted"
     }
   ]
@@ -489,7 +493,7 @@ New documents start with one `scene_default` scene. The `scenes` field remains o
 | `description` | no | Short explanation for viewer/editor UI. |
 | `animationIds` | no | Animation IDs active in this scene. If omitted, all enabled animations are rendered. |
 | `edgeOverrides` | no | Per-edge label, style, tone, or disabled-state changes. |
-| `nodeOverrides` | no | Per-node visual tone or status changes. |
+| `nodeOverrides` | no | Per-node label, type, icon, position, tone, or status changes. |
 
 Initial scene tones:
 
@@ -501,7 +505,7 @@ danger
 muted
 ```
 
-Scenes are useful for explaining changing runtime behavior without moving the architecture itself.
+Scenes are useful for explaining changing runtime behavior without duplicating the shared graph.
 When a scene disables an edge, that edge is also excluded from active animations for the scene.
 
 ## Group

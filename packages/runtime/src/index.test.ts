@@ -283,6 +283,33 @@ describe("renderDiagram", () => {
     expect(container.querySelector('[data-animation-id="anim_fallback_response"]')).toBeTruthy();
   });
 
+  it("renders scene-specific node labels, types, icons, and positions", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const sceneDiagram = parseDiagramDocument({
+      ...diagram,
+      scenes: [{
+        id: "scene_node_override",
+        title: "Node override",
+        nodeOverrides: [{
+          nodeId: "user",
+          label: "Scene Customer",
+          type: "api",
+          icon: "material-symbols:dns",
+          position: { x: 420, y: 260 },
+        }],
+      }],
+    });
+
+    renderDiagram(container, sceneDiagram, { sceneId: "scene_node_override" });
+
+    const userNode = container.querySelector('[data-node-id="user"]');
+    expect(userNode?.textContent).toContain("Scene Customer");
+    expect(userNode?.textContent).toContain("api");
+    expect(userNode?.getAttribute("transform")).toBe("translate(420 260)");
+    expect(userNode?.querySelector('[data-icon-id="material-symbols:dns"]')).toBeTruthy();
+  });
+
   it("does not animate edges disabled by a scene", () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
@@ -301,6 +328,29 @@ describe("renderDiagram", () => {
     const animation = container.querySelector('[data-animation-id="anim_normal_request"]');
     expect(animation?.querySelectorAll(".packet")).toHaveLength(4);
     expect(animation?.querySelector('mpath[href="#path-edge_order_payment"]')).toBeNull();
+  });
+
+  it("prefers an explicit scene edge color over its semantic tone", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const sceneDiagram = parseDiagramDocument({
+      ...diagram,
+      scenes: [{
+        id: "scene_edge_color",
+        title: "Edge color",
+        edgeOverrides: [{
+          edgeId: "edge_user_browser",
+          tone: "danger",
+          style: { color: "#123456" },
+        }],
+      }],
+    });
+
+    renderDiagram(container, sceneDiagram, { sceneId: "scene_edge_color" });
+
+    expect(container.querySelector(
+      '[data-edge-id="edge_user_browser"] .edge-path',
+    )?.getAttribute("stroke")).toBe("#123456");
   });
 
   it("re-renders when switching scenes through renderer options", () => {

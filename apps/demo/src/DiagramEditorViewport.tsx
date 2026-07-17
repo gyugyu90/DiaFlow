@@ -3,6 +3,7 @@ import {
   createDiagramEditor,
   type DiagramEditorController,
   type DiagramEditorState,
+  type EditorEditScope,
   type InspectorPosition,
 } from "@interactive-diagram/editor";
 import type { DiagramDocument } from "@interactive-diagram/schema";
@@ -10,6 +11,7 @@ import type { DiagramDocument } from "@interactive-diagram/schema";
 export function DiagramEditorViewport({
   className,
   diagram,
+  editScope,
   onDiagramChange,
   onReady,
   onSelectionAnchorChange,
@@ -18,6 +20,7 @@ export function DiagramEditorViewport({
 }: {
   className?: string;
   diagram: DiagramDocument;
+  editScope: EditorEditScope;
   onDiagramChange: (diagram: DiagramDocument) => void;
   onReady: (editor: DiagramEditorController | null) => void;
   onSelectionAnchorChange: (position: InspectorPosition | null) => void;
@@ -43,6 +46,7 @@ export function DiagramEditorViewport({
     if (!rootRef.current) return;
 
     const editor = createDiagramEditor(rootRef.current, diagram, {
+      editScope,
       sceneId,
       onDiagramChange: (nextDiagram) => callbacksRef.current.onDiagramChange(nextDiagram),
       onSelectionAnchorChange: (position) =>
@@ -66,6 +70,10 @@ export function DiagramEditorViewport({
   useEffect(() => {
     editorRef.current?.setScene(sceneId ?? null);
   }, [sceneId]);
+
+  useEffect(() => {
+    editorRef.current?.setEditScope(editScope);
+  }, [editScope]);
 
   return <div ref={rootRef} className={`diagram-root ${className ?? ""}`} />;
 }

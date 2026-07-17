@@ -1,4 +1,4 @@
-import { Trash2, X } from "lucide-react";
+import { RotateCcw, Trash2, X } from "lucide-react";
 import type { EdgePatch, InspectorPosition } from "@interactive-diagram/editor";
 import {
   EDGE_COLOR_OPTIONS,
@@ -26,20 +26,26 @@ const customColorOption = "custom" as const;
 
 export function EdgeInspector({
   edge,
+  overriddenFields,
   onChange,
   onClose,
   onDelete,
   onEditEnd,
   onEditStart,
+  onResetOverrides,
   position,
+  sceneOverrideMode,
 }: {
   edge: DiagramEdge;
+  overriddenFields: string[];
   onChange: (patch: EdgePatch) => void;
   onClose: () => void;
   onDelete: () => void;
   onEditEnd: () => void;
   onEditStart: () => void;
+  onResetOverrides: () => void;
   position: InspectorPosition | null;
+  sceneOverrideMode: boolean;
 }) {
   if (!position) return null;
 
@@ -50,23 +56,38 @@ export function EdgeInspector({
 
   return (
     <section
-      className="node-inspector edge-inspector"
+      className={`node-inspector edge-inspector ${sceneOverrideMode ? "is-scene-override-inspector" : ""}`}
       style={{ left: position.left, top: position.top }}
       role="dialog"
       aria-label={`Edit edge ${edge.label || edge.id}`}
     >
       <header>
         <div>
-          <p className="eyebrow">Edge</p>
+          <p className="eyebrow">
+            Edge
+            {sceneOverrideMode ? <span className="scene-override-badge">Scene</span> : null}
+          </p>
           <h3>{edge.label || edge.id}</h3>
         </div>
         <div className="inspector-actions">
+          {sceneOverrideMode && overriddenFields.length > 0 ? (
+            <button
+              className="icon-button reset-override-button"
+              type="button"
+              onClick={onResetOverrides}
+              aria-label={`Reset scene overrides for edge ${edge.label || edge.id}`}
+              title="Reset scene overrides"
+            >
+              <RotateCcw size={16} aria-hidden="true" />
+            </button>
+          ) : null}
           <button
             className="icon-button delete-button"
             type="button"
+            disabled={sceneOverrideMode}
             onClick={onDelete}
             aria-label={`Delete edge ${edge.label || edge.id}`}
-            title="Delete edge"
+            title={sceneOverrideMode ? "Unavailable in scene override mode" : "Delete edge"}
           >
             <Trash2 size={16} aria-hidden="true" />
           </button>
@@ -76,8 +97,8 @@ export function EdgeInspector({
         </div>
       </header>
 
-      <label className="edge-label-field">
-        <span>Label</span>
+      <label className={`edge-label-field ${overriddenFields.includes("label") ? "is-overridden-field" : ""}`}>
+        <span>Label <OverrideDot visible={overriddenFields.includes("label")} /></span>
         <input
           aria-label="Edge label"
           value={edge.label ?? ""}
@@ -89,18 +110,21 @@ export function EdgeInspector({
 
       <EdgeSelect
         label="Start marker"
+        overridden={overriddenFields.includes("startMarker")}
         value={startMarker}
         options={edgeMarkerOptions}
         onChange={(value) => onChange({ style: { startMarker: edgeMarkerSchema.parse(value) } })}
       />
       <EdgeSelect
         label="End marker"
+        overridden={overriddenFields.includes("endMarker")}
         value={endMarker}
         options={edgeMarkerOptions}
         onChange={(value) => onChange({ style: { endMarker: edgeMarkerSchema.parse(value) } })}
       />
       <EdgeSelect
         label="Line"
+        overridden={overriddenFields.includes("line")}
         value={edge.style?.line ?? "solid"}
         options={edgeLineOptions}
         onChange={(value) => onChange({
@@ -109,14 +133,15 @@ export function EdgeInspector({
       />
       <EdgeSelect
         label="Routing"
+        overridden={overriddenFields.includes("routing")}
         value={edge.style?.routing ?? "smooth"}
         options={edgeRoutingOptions}
         onChange={(value) => onChange({
           style: { routing: value as NonNullable<DiagramEdge["style"]>["routing"] },
         })}
       />
-      <label>
-        <span>Color</span>
+      <label className={overriddenFields.includes("color") ? "is-overridden-field" : ""}>
+        <span>Color <OverrideDot visible={overriddenFields.includes("color")} /></span>
         <div className="edge-color-control">
           <i style={{ backgroundColor: resolvedColor }} aria-hidden="true" />
           <select
@@ -142,6 +167,7 @@ export function EdgeInspector({
       </label>
       <EdgeSelect
         label="Label position"
+        overridden={overriddenFields.includes("labelPlacement")}
         value={edge.style?.labelPlacement ?? "above"}
         options={edgeLabelPlacementOptions}
         onChange={(value) => onChange({
@@ -158,21 +184,29 @@ function EdgeSelect({
   label,
   onChange,
   options,
+  overridden,
   value,
 }: {
   label: string;
   onChange: (value: string) => void;
   options: readonly string[];
+  overridden: boolean;
   value: string;
 }) {
   return (
-    <label>
-      <span>{label}</span>
+    <label className={overridden ? "is-overridden-field" : ""}>
+      <span>{label} <OverrideDot visible={overridden} /></span>
       <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => <option key={option}>{option}</option>)}
       </select>
     </label>
   );
+}
+
+function OverrideDot({ visible }: { visible: boolean }) {
+  return visible
+    ? <i className="override-dot" title="Overridden in this scene" aria-label="Overridden in this scene" />
+    : null;
 }
 
 function getEdgeColorOption(color: string | undefined): EdgeColorPreset | typeof customColorOption {

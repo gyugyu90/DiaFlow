@@ -89,7 +89,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Opened Architecture" })).toBeTruthy();
     expect(screen.getByText("opened-architecture.diagram.json")).toBeTruthy();
     expect(screen.getByText("Saved")).toBeTruthy();
-    await screen.findByRole("img", { name: "Opened Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Opened Architecture" });
     expect(document.querySelectorAll("[data-node-id]")).toHaveLength(6);
   });
 
@@ -174,7 +174,7 @@ describe("App", () => {
 
     openExamples();
     fireEvent.click(getDiagramCard("Basic Web Architecture").getByRole("button", { name: "Edit" }));
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
     fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
@@ -223,7 +223,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Native Architecture" })).toBeTruthy();
     expect(screen.getByText("native-architecture.diagram.json")).toBeTruthy();
     expect(screen.getByText("Saved")).toBeTruthy();
-    await screen.findByRole("img", { name: "Native Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Native Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
     fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });

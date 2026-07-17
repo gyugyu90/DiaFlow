@@ -63,7 +63,9 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 - When deleting an edge, remove its ID from animations and scene edge overrides. Remove or adjust animations that would otherwise have an empty `edgeIds` array.
 - When deleting an animation, remove its ID from every scene's `animationIds`.
 - When changing ports, repair every edge endpoint that references the changed port.
-- Keep scenes as overrides over shared nodes and edges; do not duplicate the full graph per scene.
+- Keep scenes as overrides over shared node and edge topology; do not duplicate the full graph per
+  scene. Use node overrides for scene-specific label, type, icon, position, tone, or status changes,
+  and edge overrides for scene-specific label, style, tone, or disabled-state changes.
 - Keep `Scene.animationIds` unique and preserve at most one node or edge override for each target in a scene.
 - Put arbitrary extensions only in `Node.data`, `Edge.data`, or `Animation.payload`; structural objects are strict.
 - Do not make unrelated visual cleanup or schema migrations unless requested.

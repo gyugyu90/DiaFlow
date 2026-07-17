@@ -199,6 +199,10 @@ export const sceneEdgeOverrideSchema = z.object({
 
 export const sceneNodeOverrideSchema = z.object({
   nodeId: idSchema.describe("Node identifier affected in this scene."),
+  label: z.string().min(1).optional().describe("Scene-specific node label."),
+  type: nodeTypeSchema.optional().describe("Scene-specific semantic node type."),
+  icon: z.string().optional().describe("Scene-specific node icon ID."),
+  position: pointSchema.optional().describe("Scene-specific node position."),
   tone: sceneToneSchema.optional().describe("Scene-specific semantic node tone."),
   status: z.string().optional().describe("Optional scene-specific node status text."),
 }).strict().describe("Scene-specific changes applied to one node.");

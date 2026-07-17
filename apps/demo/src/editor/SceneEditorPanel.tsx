@@ -1,27 +1,34 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import type { EditorEditScope } from "@interactive-diagram/editor";
 import type { DiagramScene } from "@interactive-diagram/schema";
 
 type SceneField = "title" | "description";
 
 export function SceneEditorPanel({
   scenes,
+  editScope,
+  overrideCount,
   selectedSceneId,
   onAdd,
   onCancelEdit,
   onDelete,
   onEditEnd,
+  onEditScopeChange,
   onEditStart,
   onMove,
   onSelect,
   onUpdate,
 }: {
   scenes: DiagramScene[];
+  editScope: EditorEditScope;
+  overrideCount: number;
   selectedSceneId: string | null;
   onAdd: () => void;
   onCancelEdit: () => void;
   onDelete: (sceneId: string) => void;
   onEditEnd: () => void;
+  onEditScopeChange: (editScope: EditorEditScope) => void;
   onEditStart: () => void;
   onMove: (sceneId: string, targetIndex: number) => void;
   onSelect: (sceneId: string) => void;
@@ -118,6 +125,30 @@ export function SceneEditorPanel({
 
           {selectedScene ? (
             <div className="scene-editor-fields">
+              <div className="scene-edit-scope">
+                <div className="scene-edit-scope-heading">
+                  <span>Edit scope</span>
+                  <small>{overrideCount} {overrideCount === 1 ? "override" : "overrides"}</small>
+                </div>
+                <div className="segmented-control" role="group" aria-label="Edit scope">
+                  <button
+                    type="button"
+                    aria-pressed={editScope === "diagram"}
+                    className={editScope === "diagram" ? "is-active" : ""}
+                    onClick={() => onEditScopeChange("diagram")}
+                  >
+                    Diagram
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={editScope === "scene"}
+                    className={editScope === "scene" ? "is-active" : ""}
+                    onClick={() => onEditScopeChange("scene")}
+                  >
+                    Scene
+                  </button>
+                </div>
+              </div>
               <div className="scene-editor-actions">
                 <span>Scene {selectedIndex + 1} of {scenes.length}</span>
                 <div>

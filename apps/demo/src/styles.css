@@ -710,6 +710,61 @@ p {
   padding-top: 2px;
 }
 
+.scene-edit-scope {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+
+.scene-edit-scope-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.scene-edit-scope-heading span,
+.scene-edit-scope-heading small {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.scene-edit-scope-heading span {
+  color: var(--muted);
+}
+
+.scene-edit-scope-heading small {
+  color: var(--line-strong);
+}
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 3px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #eef2f7;
+}
+
+.segmented-control button {
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.segmented-control button.is-active {
+  background: var(--surface);
+  color: var(--line-strong);
+  box-shadow: 0 1px 4px rgba(35, 48, 72, 0.12);
+}
+
 .scene-editor-actions,
 .scene-editor-actions > div {
   display: flex;
@@ -898,6 +953,45 @@ p {
   font-weight: 800;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.node-inspector .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.scene-override-badge {
+  padding: 2px 5px;
+  border: 1px solid rgba(47, 111, 237, 0.32);
+  border-radius: 4px;
+  background: rgba(47, 111, 237, 0.08);
+  color: var(--line-strong);
+  font-size: 9px;
+  line-height: 1.1;
+}
+
+.is-scene-override-inspector {
+  border-color: rgba(47, 111, 237, 0.42);
+}
+
+.is-overridden-field {
+  margin-left: -9px;
+  padding-left: 6px;
+  border-left: 3px solid var(--line-strong);
+}
+
+.override-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  vertical-align: 1px;
+}
+
+.reset-override-button {
+  color: var(--line-strong);
 }
 
 .node-icon-field {
@@ -1181,6 +1275,20 @@ p {
 .viewer-diagram-root .diagram-svg,
 .editor-diagram-root .diagram-svg {
   min-height: 0;
+}
+
+.interactive-diagram-editor.is-scene-override-mode
+  .node-card.node-scene-overridden
+  .node-box {
+  stroke: var(--line-strong);
+  stroke-width: 3;
+}
+
+.interactive-diagram-editor.is-scene-override-mode
+  .edge.edge-scene-overridden
+  .edge-path {
+  stroke-width: 4;
+  filter: drop-shadow(0 0 3px rgba(47, 111, 237, 0.46));
 }
 
 @media (max-width: 860px) {

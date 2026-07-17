@@ -38,7 +38,9 @@ Target DiaFlow `schemaVersion: "0.2"`. Treat the repository's `packages/schema/s
 - Store animation membership only in `Animation.edgeIds`. Do not add `Edge.animationId` or repeat an edge ID within one animation.
 - Use `arrow`, `triangle`, `circle`, or `none` for endpoint markers. Use animation and scenes to communicate behavior, not decoration.
 - Create at least one scene. Use a `Default Scene` when the request has no scenario progression.
-- Keep nodes and edges shared across scenes. Express step-specific changes through `nodeOverrides`, `edgeOverrides`, and `animationIds`.
+- Keep node and edge topology shared across scenes. Express step-specific node label, type, icon,
+  position, tone, or status changes through `nodeOverrides`; express edge label, style, tone, or
+  disabled-state changes through `edgeOverrides`; select active animations with `animationIds`.
 - Keep `Scene.animationIds` unique and add at most one node or edge override for each target in a scene.
 - Preserve arbitrary domain extensions only inside `Node.data`, `Edge.data`, or `Animation.payload`; structural objects reject unknown fields.
 - Use ISO 8601 UTC timestamps when timestamps are included.

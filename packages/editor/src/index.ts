@@ -8,11 +8,16 @@ export {
   deleteDiagramScene,
   moveDiagramNode,
   moveDiagramNodes,
+  moveDiagramSceneNodes,
   moveDiagramScene,
+  resetDiagramSceneEdgeOverride,
+  resetDiagramSceneNodeOverride,
   updateDiagramEdge,
   updateDiagramMetadata,
   updateDiagramNode,
   updateDiagramScene,
+  updateDiagramSceneEdgeOverride,
+  updateDiagramSceneNodeOverride,
 } from "./model.js";
 export type {
   AddDiagramEdgeResult,
@@ -20,6 +25,7 @@ export type {
   AddDiagramSceneResult,
   NewEdgeInput,
   NewNodeInput,
+  SceneNodeOverridePatch,
 } from "./model.js";
 export type {
   DiagramEditorController,
@@ -27,6 +33,7 @@ export type {
   DiagramEditorState,
   DiagramMetadataPatch,
   EdgePatch,
+  EditorEditScope,
   InspectorPosition,
   NodePatch,
   ScenePatch,

@@ -161,6 +161,29 @@ describe("diagramDocumentSchema", () => {
     expect(diagram.scenes?.[2].edgeOverrides?.some((override) => override.disabled)).toBe(true);
   });
 
+  it("accepts scene-specific node content and position overrides", () => {
+    const input = cloneSample();
+    input.scenes = [{
+      id: "scene_node_override",
+      title: "Node override",
+      nodeOverrides: [{
+        nodeId: "user",
+        label: "Scene Customer",
+        type: "api",
+        icon: "material-symbols:dns",
+        position: { x: 420, y: 260 },
+      }],
+    }];
+
+    expect(parseDiagramDocument(input).scenes?.[0].nodeOverrides?.[0]).toMatchObject({
+      nodeId: "user",
+      label: "Scene Customer",
+      type: "api",
+      icon: "material-symbols:dns",
+      position: { x: 420, y: 260 },
+    });
+  });
+
   it("rejects unsupported scene tones", () => {
     const invalid = structuredClone(circuitBreakerDiagram);
     invalid.scenes[0].nodeOverrides[0].tone = "critical";

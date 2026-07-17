@@ -735,6 +735,57 @@
                   "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
                   "description": "Node identifier affected in this scene."
                 },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Scene-specific node label."
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "browser",
+                    "mobile",
+                    "load_balancer",
+                    "api",
+                    "app",
+                    "server",
+                    "worker",
+                    "database",
+                    "cache",
+                    "queue",
+                    "storage",
+                    "cdn",
+                    "external_service",
+                    "network",
+                    "group",
+                    "unknown"
+                  ],
+                  "description": "Scene-specific semantic node type."
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "Scene-specific node icon ID."
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "number",
+                      "description": "Horizontal canvas coordinate in diagram units."
+                    },
+                    "y": {
+                      "type": "number",
+                      "description": "Vertical canvas coordinate in diagram units."
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "additionalProperties": false,
+                  "description": "Scene-specific node position."
+                },
                 "tone": {
                   "type": "string",
                   "enum": [

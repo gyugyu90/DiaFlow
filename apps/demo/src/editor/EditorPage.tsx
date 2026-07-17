@@ -3,8 +3,10 @@ import { ArrowLeft, Download, Eye, Redo2, Save, Undo2 } from "lucide-react";
 import type {
   DiagramEditorController,
   DiagramEditorState,
+  EditorEditScope,
   InspectorPosition,
 } from "@interactive-diagram/editor";
+import { applyScene } from "@interactive-diagram/runtime";
 import type { DiagramDocument } from "@interactive-diagram/schema";
 import { DiagramEditorViewport } from "../DiagramEditorViewport";
 import { SceneControls } from "../SceneControls";
@@ -30,6 +32,7 @@ export function EditorPage({
   const editorRef = useRef<DiagramEditorController | null>(null);
   const scenes = item.diagram.scenes ?? [];
   const [activeSceneId, setActiveSceneId] = useState<string | null>(() => scenes[0]?.id ?? null);
+  const [editScope, setEditScope] = useState<EditorEditScope>("diagram");
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [creatingEdgeSourceNodeId, setCreatingEdgeSourceNodeId] = useState<string | null>(null);
@@ -38,15 +41,26 @@ export function EditorPage({
   const activeSceneIndex = scenes.findIndex((candidate) => candidate.id === activeSceneId);
   const sceneIndex = activeSceneIndex >= 0 ? activeSceneIndex : scenes.length > 0 ? 0 : -1;
   const scene = sceneIndex >= 0 ? scenes[sceneIndex] : null;
+  const effectiveDiagram = editScope === "scene" && scene
+    ? applyScene(item.diagram, scene)
+    : item.diagram;
+  const overrideCount = (scene?.nodeOverrides?.length ?? 0) + (scene?.edgeOverrides?.length ?? 0);
   const selectedNode = selectedNodeIds.length === 1
-    ? item.diagram.nodes.find((node) => node.id === selectedNodeIds[0]) ?? null
+    ? effectiveDiagram.nodes.find((node) => node.id === selectedNodeIds[0]) ?? null
     : null;
   const selectedEdge = selectedEdgeId
-    ? item.diagram.edges.find((edge) => edge.id === selectedEdgeId) ?? null
+    ? effectiveDiagram.edges.find((edge) => edge.id === selectedEdgeId) ?? null
+    : null;
+  const selectedNodeOverride = editScope === "scene" && selectedNode
+    ? scene?.nodeOverrides?.find((override) => override.nodeId === selectedNode.id) ?? null
+    : null;
+  const selectedEdgeOverride = editScope === "scene" && selectedEdge
+    ? scene?.edgeOverrides?.find((override) => override.edgeId === selectedEdge.id) ?? null
     : null;
 
   useEffect(() => {
     setActiveSceneId(item.diagram.scenes?.[0]?.id ?? null);
+    setEditScope("diagram");
     setSelectedNodeIds([]);
     setSelectedEdgeId(null);
     setCreatingEdgeSourceNodeId(null);
@@ -59,10 +73,16 @@ export function EditorPage({
     setActiveSceneId(scenes[0]?.id ?? null);
   }, [activeSceneId, scenes]);
 
+  useEffect(() => {
+    if (scene || editScope === "diagram") return;
+    setEditScope("diagram");
+  }, [editScope, scene]);
+
   function handleEditorStateChange(state: DiagramEditorState) {
     setSelectedNodeIds(state.selectedNodeIds);
     setSelectedEdgeId(state.selectedEdgeId);
     setCreatingEdgeSourceNodeId(state.creatingEdgeSourceNodeId);
+    setEditScope(state.editScope);
     setHistoryState({ canUndo: state.canUndo, canRedo: state.canRedo });
   }
 
@@ -118,7 +138,9 @@ export function EditorPage({
 
       <section className="editor-layout">
         <EditorSidebar
-          nodes={item.diagram.nodes}
+          nodes={effectiveDiagram.nodes}
+          editScope={editScope}
+          overrideCount={overrideCount}
           scenes={scenes}
           selectedSceneId={scene?.id ?? null}
           selectedNodeIds={selectedNodeIds}
@@ -135,6 +157,10 @@ export function EditorPage({
             setActiveSceneId(nextScene?.id ?? null);
           }}
           onEndSceneEdit={() => editorRef.current?.commitTransaction()}
+          onEditScopeChange={(nextScope) => {
+            setEditScope(nextScope);
+            editorRef.current?.setEditScope(nextScope);
+          }}
           onMoveScene={(sceneId, targetIndex) => editorRef.current?.moveScene(sceneId, targetIndex)}
           onSelectNode={(nodeId, additive) => {
             if (additive) editorRef.current?.toggleNodeSelection(nodeId);
@@ -146,22 +172,25 @@ export function EditorPage({
         />
 
         <section
-          className={`editor-workspace ${scene ? "has-scene-controls" : ""}`}
+          className={`editor-workspace ${editScope === "scene" && scene ? "has-scene-controls" : ""}`}
           aria-label="Diagram editor canvas"
         >
-          <SceneControls
-            scene={scene}
-            sceneIndex={sceneIndex}
-            sceneCount={scenes.length}
-            onPrevious={() => setActiveSceneId(scenes[Math.max(0, sceneIndex - 1)]?.id ?? null)}
-            onNext={() => setActiveSceneId(
-              scenes[Math.min(scenes.length - 1, sceneIndex + 1)]?.id ?? null,
-            )}
-          />
+          {editScope === "scene" ? (
+            <SceneControls
+              scene={scene}
+              sceneIndex={sceneIndex}
+              sceneCount={scenes.length}
+              onPrevious={() => setActiveSceneId(scenes[Math.max(0, sceneIndex - 1)]?.id ?? null)}
+              onNext={() => setActiveSceneId(
+                scenes[Math.min(scenes.length - 1, sceneIndex + 1)]?.id ?? null,
+              )}
+            />
+          ) : null}
           <div className="diagram-edit-surface">
             <DiagramEditorViewport
               key={item.id}
               diagram={item.diagram}
+              editScope={editScope}
               sceneId={scene?.id ?? null}
               className="editor-diagram-root"
               onDiagramChange={onDiagramChange}
@@ -174,6 +203,10 @@ export function EditorPage({
             {selectedNode && !creatingEdgeSourceNodeId ? (
               <NodeInspector
                 node={selectedNode}
+                sceneOverrideMode={editScope === "scene"}
+                overriddenFields={selectedNodeOverride
+                  ? Object.keys(selectedNodeOverride).filter((key) => key !== "nodeId")
+                  : []}
                 creatingEdgeSourceNodeId={creatingEdgeSourceNodeId}
                 position={inspectorPosition}
                 onEditStart={() => editorRef.current?.beginTransaction()}
@@ -182,17 +215,26 @@ export function EditorPage({
                 onBeginEdgeCreation={() => editorRef.current?.beginEdgeCreation(selectedNode.id)}
                 onCancelEdgeCreation={() => editorRef.current?.cancelEdgeCreation()}
                 onDelete={() => editorRef.current?.deleteSelectedNodes()}
+                onResetOverrides={() => editorRef.current?.resetNodeOverrides(selectedNode.id)}
                 onClose={() => editorRef.current?.clearSelection()}
               />
             ) : null}
             {selectedEdge ? (
               <EdgeInspector
                 edge={selectedEdge}
+                sceneOverrideMode={editScope === "scene"}
+                overriddenFields={[
+                  ...(selectedEdgeOverride?.label !== undefined ? ["label"] : []),
+                  ...(selectedEdgeOverride?.tone !== undefined ? ["tone"] : []),
+                  ...(selectedEdgeOverride?.disabled !== undefined ? ["disabled"] : []),
+                  ...Object.keys(selectedEdgeOverride?.style ?? {}),
+                ]}
                 position={inspectorPosition}
                 onEditStart={() => editorRef.current?.beginTransaction()}
                 onEditEnd={() => editorRef.current?.commitTransaction()}
                 onChange={(patch) => editorRef.current?.updateEdge(selectedEdge.id, patch)}
                 onDelete={() => editorRef.current?.deleteEdge(selectedEdge.id)}
+                onResetOverrides={() => editorRef.current?.resetEdgeOverrides(selectedEdge.id)}
                 onClose={() => editorRef.current?.clearSelection()}
               />
             ) : null}

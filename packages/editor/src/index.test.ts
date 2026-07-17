@@ -10,12 +10,17 @@ import {
   deleteDiagramEdges,
   deleteDiagramNodes,
   deleteDiagramScene,
+  moveDiagramSceneNodes,
   moveDiagramScene,
   moveDiagramNodes,
+  resetDiagramSceneEdgeOverride,
+  resetDiagramSceneNodeOverride,
   updateDiagramEdge,
   updateDiagramMetadata,
   updateDiagramNode,
   updateDiagramScene,
+  updateDiagramSceneEdgeOverride,
+  updateDiagramSceneNodeOverride,
 } from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);
@@ -277,6 +282,71 @@ describe("diagram editor model", () => {
     expect(deleted.scenes?.map((scene) => scene.id)).toEqual(["scene_2", "scene_default"]);
     expect(diagram.scenes).toEqual([{ id: "scene_default", title: "Default Scene" }]);
     expect(() => parseDiagramDocument(deleted)).not.toThrow();
+  });
+
+  it("records scene node and edge overrides and removes values equal to the diagram", () => {
+    const nodeUpdated = updateDiagramSceneNodeOverride(diagram, "scene_default", "user", {
+      label: "Scene Customer",
+      type: "api",
+      position: { x: 140, y: 180 },
+    });
+    const edgeUpdated = updateDiagramSceneEdgeOverride(
+      nodeUpdated,
+      "scene_default",
+      "edge_user_browser",
+      {
+        label: "Scene request",
+        style: { color: "danger", line: "dashed" },
+      },
+    );
+
+    expect(edgeUpdated.nodes.find((node) => node.id === "user")?.label).toBe("User");
+    expect(edgeUpdated.scenes?.[0].nodeOverrides?.[0]).toMatchObject({
+      nodeId: "user",
+      label: "Scene Customer",
+      type: "api",
+      position: { x: 140, y: 180 },
+    });
+    expect(edgeUpdated.scenes?.[0].edgeOverrides?.[0]).toMatchObject({
+      edgeId: "edge_user_browser",
+      label: "Scene request",
+      style: { color: "danger", line: "dashed" },
+    });
+
+    const nodeResetByValue = updateDiagramSceneNodeOverride(
+      edgeUpdated,
+      "scene_default",
+      "user",
+      { label: "User", type: "user", position: diagram.nodes[0].position },
+    );
+    expect(nodeResetByValue.scenes?.[0].nodeOverrides).toBeUndefined();
+    expect(resetDiagramSceneEdgeOverride(
+      nodeResetByValue,
+      "scene_default",
+      "edge_user_browser",
+    ).scenes?.[0].edgeOverrides).toBeUndefined();
+    expect(() => parseDiagramDocument(edgeUpdated)).not.toThrow();
+  });
+
+  it("moves nodes through scene position overrides without changing base positions", () => {
+    const originalPosition = diagram.nodes.find((node) => node.id === "user")!.position;
+    const updated = moveDiagramSceneNodes(
+      diagram,
+      "scene_default",
+      ["user"],
+      { x: 35, y: -20 },
+    );
+
+    expect(updated.nodes.find((node) => node.id === "user")?.position).toEqual(originalPosition);
+    expect(updated.scenes?.[0].nodeOverrides?.[0]).toMatchObject({
+      nodeId: "user",
+      position: {
+        x: originalPosition.x + 35,
+        y: originalPosition.y - 20,
+      },
+    });
+    expect(resetDiagramSceneNodeOverride(updated, "scene_default", "user").scenes?.[0].nodeOverrides)
+      .toBeUndefined();
   });
 });
 
@@ -547,6 +617,65 @@ describe("createDiagramEditor", () => {
     expect(editor.getState().diagram.scenes).toEqual([
       { id: "scene_default", title: "Default Scene" },
     ]);
+    editor.destroy();
+  });
+
+  it("edits scene overrides while blocking structural changes", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const editor = createDiagramEditor(container, diagram, {
+      editScope: "scene",
+      sceneId: "scene_default",
+    });
+
+    expect(editor.getState().editScope).toBe("scene");
+    expect(editor.createNode()).toBeNull();
+    editor.selectNode("user");
+    editor.deleteSelectedNodes();
+    expect(editor.getState().diagram.nodes.some((node) => node.id === "user")).toBe(true);
+
+    editor.updateNode("user", { label: "Scene Customer", type: "api" });
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.label).toBe("User");
+    expect(editor.getState().diagram.scenes?.[0].nodeOverrides?.[0]).toMatchObject({
+      nodeId: "user",
+      label: "Scene Customer",
+      type: "api",
+    });
+    expect(container.querySelector('[data-node-id="user"]')?.textContent).toContain("Scene Customer");
+    expect(container.querySelector('[data-node-id="user"]')?.classList.contains(
+      "node-scene-overridden",
+    )).toBe(true);
+
+    editor.updateEdge("edge_user_browser", {
+      label: "Scene request",
+      style: { line: "dashed", color: "danger" },
+    });
+    expect(editor.getState().diagram.edges[0].label).toBe("Uses");
+    expect(editor.getState().diagram.scenes?.[0].edgeOverrides?.[0]).toMatchObject({
+      edgeId: "edge_user_browser",
+      label: "Scene request",
+      style: { line: "dashed", color: "danger" },
+    });
+    expect(container.querySelector('[data-edge-id="edge_user_browser"]')?.classList.contains(
+      "edge-scene-overridden",
+    )).toBe(true);
+
+    editor.resetNodeOverrides("user");
+    expect(editor.getState().diagram.scenes?.[0].nodeOverrides).toBeUndefined();
+    expect(container.querySelector('[data-node-id="user"]')?.textContent).toContain("User");
+    editor.resetEdgeOverrides("edge_user_browser");
+    expect(editor.getState().diagram.scenes?.[0].edgeOverrides).toBeUndefined();
+
+    const originalPosition = diagram.nodes.find((node) => node.id === "user")!.position;
+    const sceneUserNode = container.querySelector('[data-node-id="user"]');
+    if (!sceneUserNode) throw new Error("Missing scene user node");
+    fireEvent.pointerDown(sceneUserNode, { button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(window, { clientX: 150, clientY: 125 });
+    fireEvent.pointerUp(window);
+    expect(editor.getState().diagram.nodes.find((node) => node.id === "user")?.position)
+      .toEqual(originalPosition);
+    expect(editor.getState().diagram.scenes?.[0].nodeOverrides?.[0].position)
+      .not.toEqual(originalPosition);
     editor.destroy();
   });
 

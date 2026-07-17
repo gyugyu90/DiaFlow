@@ -3,6 +3,8 @@ import type {
   DiagramEdge,
   DiagramNode,
   DiagramScene,
+  DiagramSceneEdgeOverride,
+  DiagramSceneNodeOverride,
 } from "@interactive-diagram/schema";
 import type { DiagramMetadataPatch, EdgePatch, NodePatch, ScenePatch } from "./types.js";
 
@@ -27,6 +29,10 @@ export type AddDiagramSceneResult = {
   diagram: DiagramDocument;
   scene: DiagramScene;
 };
+
+export type SceneNodeOverridePatch = Partial<
+  Pick<DiagramSceneNodeOverride, "label" | "type" | "icon" | "position">
+>;
 
 export function addDiagramNode(
   diagram: DiagramDocument,
@@ -145,6 +151,123 @@ export function updateDiagramScene(
     ...diagram,
     scenes: diagram.scenes?.map((candidate) => candidate.id === sceneId ? nextScene : candidate),
   };
+}
+
+export function updateDiagramSceneNodeOverride(
+  diagram: DiagramDocument,
+  sceneId: string,
+  nodeId: string,
+  patch: SceneNodeOverridePatch,
+): DiagramDocument {
+  const scene = diagram.scenes?.find((candidate) => candidate.id === sceneId);
+  const node = diagram.nodes.find((candidate) => candidate.id === nodeId);
+  if (!scene || !node) return diagram;
+
+  const existing = scene.nodeOverrides?.find((override) => override.nodeId === nodeId);
+  const nextOverride: DiagramSceneNodeOverride = { ...existing, nodeId };
+
+  if (Object.hasOwn(patch, "label")) {
+    if (patch.label === undefined || patch.label === node.label) delete nextOverride.label;
+    else nextOverride.label = patch.label;
+  }
+  if (Object.hasOwn(patch, "type")) {
+    if (patch.type === undefined || patch.type === node.type) delete nextOverride.type;
+    else nextOverride.type = patch.type;
+  }
+  if (Object.hasOwn(patch, "icon")) {
+    if (patch.icon === undefined || patch.icon === node.icon) delete nextOverride.icon;
+    else nextOverride.icon = patch.icon;
+  }
+  if (Object.hasOwn(patch, "position")) {
+    if (!patch.position || isSamePoint(patch.position, node.position)) delete nextOverride.position;
+    else nextOverride.position = patch.position;
+  }
+
+  return replaceSceneNodeOverride(
+    diagram,
+    sceneId,
+    isEmptyNodeOverride(nextOverride) ? null : nextOverride,
+    nodeId,
+  );
+}
+
+export function updateDiagramSceneEdgeOverride(
+  diagram: DiagramDocument,
+  sceneId: string,
+  edgeId: string,
+  patch: EdgePatch,
+): DiagramDocument {
+  const scene = diagram.scenes?.find((candidate) => candidate.id === sceneId);
+  const edge = diagram.edges.find((candidate) => candidate.id === edgeId);
+  if (!scene || !edge) return diagram;
+
+  const existing = scene.edgeOverrides?.find((override) => override.edgeId === edgeId);
+  const nextOverride: DiagramSceneEdgeOverride = { ...existing, edgeId };
+
+  if (Object.hasOwn(patch, "label")) {
+    if (patch.label === edge.label) delete nextOverride.label;
+    else nextOverride.label = patch.label;
+  }
+  if (patch.style) {
+    const mergedStyle = { ...existing?.style, ...patch.style };
+    const nextStyle = Object.fromEntries(
+      Object.entries(mergedStyle).filter(([key, value]) =>
+        edge.style?.[key as keyof NonNullable<DiagramEdge["style"]>] !== value
+      ),
+    ) as NonNullable<DiagramSceneEdgeOverride["style"]>;
+    if (Object.keys(nextStyle).length > 0) nextOverride.style = nextStyle;
+    else delete nextOverride.style;
+  }
+
+  return replaceSceneEdgeOverride(
+    diagram,
+    sceneId,
+    isEmptyEdgeOverride(nextOverride) ? null : nextOverride,
+    edgeId,
+  );
+}
+
+export function resetDiagramSceneNodeOverride(
+  diagram: DiagramDocument,
+  sceneId: string,
+  nodeId: string,
+): DiagramDocument {
+  return replaceSceneNodeOverride(diagram, sceneId, null, nodeId);
+}
+
+export function resetDiagramSceneEdgeOverride(
+  diagram: DiagramDocument,
+  sceneId: string,
+  edgeId: string,
+): DiagramDocument {
+  return replaceSceneEdgeOverride(diagram, sceneId, null, edgeId);
+}
+
+export function moveDiagramSceneNodes(
+  diagram: DiagramDocument,
+  sceneId: string,
+  nodeIds: Iterable<string>,
+  delta: DiagramNode["position"],
+): DiagramDocument {
+  if (delta.x === 0 && delta.y === 0) return diagram;
+
+  const selectedNodeIds = new Set(nodeIds);
+  const scene = diagram.scenes?.find((candidate) => candidate.id === sceneId);
+  if (!scene || selectedNodeIds.size === 0) return diagram;
+
+  let nextDiagram = diagram;
+  for (const node of diagram.nodes) {
+    if (!selectedNodeIds.has(node.id)) continue;
+    const override = scene.nodeOverrides?.find((candidate) => candidate.nodeId === node.id);
+    const position = override?.position ?? node.position;
+    nextDiagram = updateDiagramSceneNodeOverride(nextDiagram, sceneId, node.id, {
+      position: {
+        x: position.x + delta.x,
+        y: position.y + delta.y,
+      },
+    });
+  }
+  return nextDiagram;
 }
 
 export function deleteDiagramNodes(
@@ -367,6 +490,127 @@ function getNewNodePosition(nodes: DiagramNode[]): DiagramNode["position"] {
 
 function isSamePatch(node: DiagramNode, patch: NodePatch): boolean {
   return Object.entries(patch).every(([key, value]) => node[key as keyof NodePatch] === value);
+}
+
+function replaceSceneNodeOverride(
+  diagram: DiagramDocument,
+  sceneId: string,
+  override: DiagramSceneNodeOverride | null,
+  nodeId: string,
+): DiagramDocument {
+  const scene = diagram.scenes?.find((candidate) => candidate.id === sceneId);
+  if (!scene) return diagram;
+
+  const current = scene.nodeOverrides?.find((candidate) => candidate.nodeId === nodeId);
+  if (!current && !override) return diagram;
+  if (current && override && isSameNodeOverride(current, override)) return diagram;
+
+  let nodeOverrides: DiagramSceneNodeOverride[];
+  if (!override) {
+    nodeOverrides = scene.nodeOverrides?.filter((candidate) => candidate.nodeId !== nodeId) ?? [];
+  } else if (current) {
+    nodeOverrides = scene.nodeOverrides!.map((candidate) =>
+      candidate.nodeId === nodeId ? override : candidate
+    );
+  } else {
+    nodeOverrides = [...(scene.nodeOverrides ?? []), override];
+  }
+  const nextScene = { ...scene };
+  if (nodeOverrides.length > 0) nextScene.nodeOverrides = nodeOverrides;
+  else delete nextScene.nodeOverrides;
+  return replaceDiagramScene(diagram, nextScene);
+}
+
+function replaceSceneEdgeOverride(
+  diagram: DiagramDocument,
+  sceneId: string,
+  override: DiagramSceneEdgeOverride | null,
+  edgeId: string,
+): DiagramDocument {
+  const scene = diagram.scenes?.find((candidate) => candidate.id === sceneId);
+  if (!scene) return diagram;
+
+  const current = scene.edgeOverrides?.find((candidate) => candidate.edgeId === edgeId);
+  if (!current && !override) return diagram;
+  if (current && override && isSameEdgeOverride(current, override)) return diagram;
+
+  let edgeOverrides: DiagramSceneEdgeOverride[];
+  if (!override) {
+    edgeOverrides = scene.edgeOverrides?.filter((candidate) => candidate.edgeId !== edgeId) ?? [];
+  } else if (current) {
+    edgeOverrides = scene.edgeOverrides!.map((candidate) =>
+      candidate.edgeId === edgeId ? override : candidate
+    );
+  } else {
+    edgeOverrides = [...(scene.edgeOverrides ?? []), override];
+  }
+  const nextScene = { ...scene };
+  if (edgeOverrides.length > 0) nextScene.edgeOverrides = edgeOverrides;
+  else delete nextScene.edgeOverrides;
+  return replaceDiagramScene(diagram, nextScene);
+}
+
+function replaceDiagramScene(
+  diagram: DiagramDocument,
+  nextScene: DiagramScene,
+): DiagramDocument {
+  return {
+    ...diagram,
+    scenes: diagram.scenes?.map((scene) => scene.id === nextScene.id ? nextScene : scene),
+  };
+}
+
+function isEmptyNodeOverride(override: DiagramSceneNodeOverride): boolean {
+  return Object.keys(override).every((key) => key === "nodeId");
+}
+
+function isEmptyEdgeOverride(override: DiagramSceneEdgeOverride): boolean {
+  return Object.keys(override).every((key) => key === "edgeId");
+}
+
+function isSamePoint(
+  first: DiagramNode["position"],
+  second: DiagramNode["position"],
+): boolean {
+  return first.x === second.x && first.y === second.y;
+}
+
+function isSameNodeOverride(
+  first: DiagramSceneNodeOverride,
+  second: DiagramSceneNodeOverride,
+): boolean {
+  return first.nodeId === second.nodeId
+    && first.label === second.label
+    && first.type === second.type
+    && first.icon === second.icon
+    && first.tone === second.tone
+    && first.status === second.status
+    && (
+      first.position && second.position
+        ? isSamePoint(first.position, second.position)
+        : first.position === second.position
+    );
+}
+
+function isSameEdgeOverride(
+  first: DiagramSceneEdgeOverride,
+  second: DiagramSceneEdgeOverride,
+): boolean {
+  if (
+    first.edgeId !== second.edgeId
+    || first.label !== second.label
+    || first.disabled !== second.disabled
+    || first.tone !== second.tone
+  ) return false;
+
+  const styleKeys = new Set([
+    ...Object.keys(first.style ?? {}),
+    ...Object.keys(second.style ?? {}),
+  ]);
+  return Array.from(styleKeys).every((key) =>
+    first.style?.[key as keyof NonNullable<DiagramSceneEdgeOverride["style"]>] ===
+      second.style?.[key as keyof NonNullable<DiagramSceneEdgeOverride["style"]>],
+  );
 }
 
 function isSameEdge(edge: DiagramEdge, nextEdge: DiagramEdge): boolean {

@@ -22,11 +22,16 @@ import {
   deleteDiagramNodes,
   deleteDiagramScene,
   moveDiagramNodes,
+  moveDiagramSceneNodes,
   moveDiagramScene,
+  resetDiagramSceneEdgeOverride,
+  resetDiagramSceneNodeOverride,
   updateDiagramEdge,
   updateDiagramMetadata,
   updateDiagramNode,
   updateDiagramScene,
+  updateDiagramSceneEdgeOverride,
+  updateDiagramSceneNodeOverride,
 } from "./model.js";
 import type {
   DiagramEditorController,
@@ -34,6 +39,7 @@ import type {
   DiagramEditorState,
   DiagramMetadataPatch,
   EdgePatch,
+  EditorEditScope,
   InspectorPosition,
   NodePatch,
   ScenePatch,
@@ -61,6 +67,7 @@ class DomDiagramEditor implements DiagramEditorController {
   private readonly renderer: DiagramRenderer;
   private readonly pressEventName: "pointerdown" | "mousedown";
   private diagram: DiagramDocument;
+  private editScope: EditorEditScope;
   private sceneId: string | null;
   private selectedNodeIds = new Set<string>();
   private selectedEdgeId: string | null = null;
@@ -80,12 +87,14 @@ class DomDiagramEditor implements DiagramEditorController {
     private readonly options: DiagramEditorOptions,
   ) {
     this.diagram = diagram;
+    this.editScope = options.editScope === "scene" && options.sceneId ? "scene" : "diagram";
     this.sceneId = options.sceneId ?? null;
     this.renderer = renderDiagram(container, diagram, {
-      sceneId: this.sceneId,
+      sceneId: this.getRenderedSceneId(),
       onViewportChange: this.handleViewportChange,
     });
     container.classList.add("interactive-diagram-editor");
+    container.classList.toggle("is-scene-override-mode", this.isSceneOverrideMode());
     this.pressEventName = typeof window.PointerEvent === "function" ? "pointerdown" : "mousedown";
 
     container.addEventListener(this.pressEventName, this.handlePress, true);
@@ -103,6 +112,7 @@ class DomDiagramEditor implements DiagramEditorController {
     return {
       creatingEdgeSourceNodeId: this.creatingEdgeSourceNodeId,
       diagram: this.diagram,
+      editScope: this.editScope,
       selectedNodeId: selectedNodeIds.length === 1 ? selectedNodeIds[0] : null,
       selectedNodeIds,
       selectedEdgeId: this.selectedEdgeId,
@@ -135,8 +145,26 @@ class DomDiagramEditor implements DiagramEditorController {
   setScene(sceneId: string | null): void {
     if (sceneId === this.sceneId) return;
     this.sceneId = sceneId;
-    this.renderer.setOptions({ sceneId });
+    if (!sceneId && this.editScope === "scene") {
+      this.editScope = "diagram";
+    }
+    this.container.classList.toggle("is-scene-override-mode", this.isSceneOverrideMode());
+    this.renderer.setOptions({ sceneId: this.getRenderedSceneId() });
     this.refreshSelection();
+    this.emitState();
+  }
+
+  setEditScope(editScope: EditorEditScope): void {
+    const nextScope = editScope === "scene" && this.sceneId ? "scene" : "diagram";
+    if (nextScope === this.editScope) return;
+
+    this.commitTransaction();
+    this.cancelEdgeCreation();
+    this.editScope = nextScope;
+    this.container.classList.toggle("is-scene-override-mode", this.isSceneOverrideMode());
+    this.renderer.setOptions({ sceneId: this.getRenderedSceneId() });
+    this.refreshSelection();
+    this.emitState();
   }
 
   selectNode(nodeId: string): void {
@@ -197,6 +225,7 @@ class DomDiagramEditor implements DiagramEditorController {
 
   beginEdgeCreation(sourceNodeId: string): void {
     this.commitTransaction();
+    if (this.isSceneOverrideMode()) return;
     if (!this.hasNode(sourceNodeId)) return;
 
     this.creatingEdgeSourceNodeId = sourceNodeId;
@@ -220,7 +249,8 @@ class DomDiagramEditor implements DiagramEditorController {
     this.emitState();
   }
 
-  createNode(): string {
+  createNode(): string | null {
+    if (this.isSceneOverrideMode()) return null;
     this.cancelEdgeCreation();
     this.commitTransaction();
     const result = addDiagramNode(this.diagram);
@@ -239,6 +269,7 @@ class DomDiagramEditor implements DiagramEditorController {
 
   createEdge(sourceNodeId: string, targetNodeId: string): string | null {
     this.commitTransaction();
+    if (this.isSceneOverrideMode()) return null;
     if (!this.hasNode(sourceNodeId) || !this.hasNode(targetNodeId)) return null;
 
     const result = addDiagramEdge(this.diagram, { sourceNodeId, targetNodeId });
@@ -253,6 +284,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   deleteEdge(edgeId: string): void {
+    if (this.isSceneOverrideMode()) return;
     this.cancelEdgeCreation();
     this.commitTransaction();
     const nextDiagram = deleteDiagramEdges(this.diagram, [edgeId]);
@@ -274,6 +306,7 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   deleteSelectedNodes(): void {
+    if (this.isSceneOverrideMode()) return;
     this.cancelEdgeCreation();
     this.commitTransaction();
     if (this.selectedNodeIds.size === 0) return;
@@ -286,7 +319,10 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   updateNode(nodeId: string, patch: NodePatch): void {
-    this.commit(updateDiagramNode(this.diagram, nodeId, patch), { nodeIds: [nodeId] });
+    const nextDiagram = this.isSceneOverrideMode()
+      ? updateDiagramSceneNodeOverride(this.diagram, this.sceneId!, nodeId, patch)
+      : updateDiagramNode(this.diagram, nodeId, patch);
+    this.commit(nextDiagram, { nodeIds: [nodeId] });
   }
 
   toggleNodeSelection(nodeId: string): void {
@@ -304,7 +340,10 @@ class DomDiagramEditor implements DiagramEditorController {
   }
 
   updateEdge(edgeId: string, patch: EdgePatch): void {
-    this.commit(updateDiagramEdge(this.diagram, edgeId, patch), { edgeIds: [edgeId] });
+    const nextDiagram = this.isSceneOverrideMode()
+      ? updateDiagramSceneEdgeOverride(this.diagram, this.sceneId!, edgeId, patch)
+      : updateDiagramEdge(this.diagram, edgeId, patch);
+    this.commit(nextDiagram, { edgeIds: [edgeId] });
   }
 
   updateMetadata(patch: DiagramMetadataPatch): void {
@@ -318,6 +357,22 @@ class DomDiagramEditor implements DiagramEditorController {
 
   updateScene(sceneId: string, patch: ScenePatch): void {
     this.commit(updateDiagramScene(this.diagram, sceneId, patch));
+  }
+
+  resetNodeOverrides(nodeId: string): void {
+    if (!this.isSceneOverrideMode()) return;
+    this.commit(
+      resetDiagramSceneNodeOverride(this.diagram, this.sceneId!, nodeId),
+      { nodeIds: [nodeId] },
+    );
+  }
+
+  resetEdgeOverrides(edgeId: string): void {
+    if (!this.isSceneOverrideMode()) return;
+    this.commit(
+      resetDiagramSceneEdgeOverride(this.diagram, this.sceneId!, edgeId),
+      { edgeIds: [edgeId] },
+    );
   }
 
   undo(): void {
@@ -359,6 +414,7 @@ class DomDiagramEditor implements DiagramEditorController {
     window.removeEventListener("keydown", this.handleKeyDown);
     this.renderer.destroy();
     this.container.classList.remove("interactive-diagram-editor");
+    this.container.classList.remove("is-scene-override-mode");
   }
 
   private readonly handlePress = (event: Event): void => {
@@ -423,10 +479,13 @@ class DomDiagramEditor implements DiagramEditorController {
     const svg = this.container.querySelector(".diagram-svg") as SVGSVGElement | null;
     if (!svg) return;
     const pointer = getSvgPoint(svg, event.clientX, event.clientY);
-    const nextDiagram = moveDiagramNodes(this.drag.originalDiagram, this.drag.nodeIds, {
+    const delta = {
       x: Math.round(pointer.x - this.drag.startPointer.x),
       y: Math.round(pointer.y - this.drag.startPointer.y),
-    });
+    };
+    const nextDiagram = this.isSceneOverrideMode()
+      ? moveDiagramSceneNodes(this.drag.originalDiagram, this.sceneId!, this.drag.nodeIds, delta)
+      : moveDiagramNodes(this.drag.originalDiagram, this.drag.nodeIds, delta);
     if (nextDiagram === this.diagram) return;
 
     this.applyDiagram(nextDiagram, { nodeIds: this.drag.nodeIds });
@@ -463,6 +522,7 @@ class DomDiagramEditor implements DiagramEditorController {
     ) return;
 
     event.preventDefault();
+    if (this.isSceneOverrideMode()) return;
     if (this.selectedNodeIds.size > 0) this.deleteSelectedNodes();
     else this.deleteSelectedEdge();
   };
@@ -532,6 +592,35 @@ class DomDiagramEditor implements DiagramEditorController {
     } else {
       this.emitSelectionAnchor(null);
     }
+    this.refreshOverrideMarkers();
+  }
+
+  private refreshOverrideMarkers(): void {
+    this.container.querySelectorAll(".node-scene-overridden").forEach((node) => {
+      node.classList.remove("node-scene-overridden");
+    });
+    this.container.querySelectorAll(".edge-scene-overridden").forEach((edge) => {
+      edge.classList.remove("edge-scene-overridden");
+    });
+    if (!this.isSceneOverrideMode()) return;
+
+    const scene = this.diagram.scenes?.find((candidate) => candidate.id === this.sceneId);
+    for (const override of scene?.nodeOverrides ?? []) {
+      this.container.querySelector(selectNodeById(override.nodeId))
+        ?.classList.add("node-scene-overridden");
+    }
+    for (const override of scene?.edgeOverrides ?? []) {
+      this.container.querySelector(selectEdgeById(override.edgeId))
+        ?.classList.add("edge-scene-overridden");
+    }
+  }
+
+  private isSceneOverrideMode(): boolean {
+    return this.editScope === "scene" && this.sceneId !== null;
+  }
+
+  private getRenderedSceneId(): string | null {
+    return this.isSceneOverrideMode() ? this.sceneId : null;
   }
 
   private updateEdgeCreationPreview(): void {

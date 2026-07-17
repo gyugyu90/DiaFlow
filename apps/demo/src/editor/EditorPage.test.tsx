@@ -56,7 +56,7 @@ function renderBasicDiagram() {
 }
 
 describe("EditorPage", () => {
-  it("renders metadata, side view, prompt, canvas, and scene controls", () => {
+  it("renders metadata, side view, prompt, canvas, and edit scope controls", () => {
     renderBasicDiagram();
 
     expect(screen.getByRole("heading", { name: "Basic Web Architecture" })).toBeTruthy();
@@ -68,9 +68,12 @@ describe("EditorPage", () => {
     expect(within(sideView).queryByLabelText("Diagram title")).toBeNull();
     expect(within(documentHeading).getByRole("button", { name: "Edit diagram title" })).toBeTruthy();
     expect(within(documentHeading).getByRole("button", { name: "Edit diagram description" })).toBeTruthy();
-    expect(canvas.classList.contains("has-scene-controls")).toBe(true);
-    expect(within(canvas).getByRole("region", { name: "Scene controls" })).toBeTruthy();
-    expect(within(canvas).getByRole("heading", { name: "Default Scene" })).toBeTruthy();
+    expect(canvas.classList.contains("has-scene-controls")).toBe(false);
+    expect(within(canvas).queryByRole("region", { name: "Scene controls" })).toBeNull();
+    expect(within(sideView).getByRole("button", { name: "Diagram" }).getAttribute("aria-pressed"))
+      .toBe("true");
+    expect(within(sideView).getByRole("button", { name: "Scene" }).getAttribute("aria-pressed"))
+      .toBe("false");
     expect(within(sideView).getByLabelText("Diagram prompt")).toBeTruthy();
     expect(within(canvas).queryByLabelText("Diagram prompt")).toBeNull();
     expect(document.querySelector(".editor-diagram-root .diagram-svg")).toBeTruthy();
@@ -127,7 +130,7 @@ describe("EditorPage", () => {
 
   it("deletes connected edges with a selected node and restores them with undo", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const browserNode = document.querySelector('[data-node-id="browser"]');
     if (!browserNode) throw new Error("Missing browser node");
     expect(document.querySelectorAll("[data-edge-id]")).toHaveLength(5);
@@ -145,7 +148,7 @@ describe("EditorPage", () => {
 
   it("opens a node inspector and edits node fields", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
 
@@ -176,7 +179,7 @@ describe("EditorPage", () => {
 
   it("keeps the icon picker open while its icon grid scrolls", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
 
@@ -193,7 +196,7 @@ describe("EditorPage", () => {
 
   it("creates an edge from the node inspector", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     const databaseNode = document.querySelector('[data-node-id="database"]');
     if (!userNode) throw new Error("Missing user node");
@@ -214,7 +217,7 @@ describe("EditorPage", () => {
 
   it("deletes a node from the node inspector and restores it with undo", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
 
@@ -230,7 +233,7 @@ describe("EditorPage", () => {
 
   it("shift-selects multiple nodes and hides the node inspector", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     const browserNode = document.querySelector('[data-node-id="browser"]');
     if (!userNode || !browserNode) throw new Error("Missing nodes for multi-selection test");
@@ -253,7 +256,7 @@ describe("EditorPage", () => {
 
   it("opens an edge inspector and edits endpoint markers and line style", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
     if (!edgeHitArea) throw new Error("Missing edge hit area");
     fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 100, clientY: 100 });
@@ -285,7 +288,7 @@ describe("EditorPage", () => {
 
   it("edits an edge custom hex color", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
     if (!edgeHitArea) throw new Error("Missing edge hit area");
     fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 100, clientY: 100 });
@@ -304,7 +307,7 @@ describe("EditorPage", () => {
 
   it("deletes an edge from the edge inspector and restores it with undo", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
     if (!edgeHitArea) throw new Error("Missing edge hit area");
 
@@ -320,7 +323,7 @@ describe("EditorPage", () => {
 
   it("only starts node dragging after the node is selected", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const root = document.querySelector(".editor-diagram-root");
     const browserNode = document.querySelector('[data-node-id="browser"]');
     if (!root || !browserNode) throw new Error("Missing editor root or browser node");
@@ -336,7 +339,7 @@ describe("EditorPage", () => {
 
   it("connects undo and redo controls to node changes", async () => {
     renderBasicDiagram();
-    await screen.findByRole("img", { name: "Basic Web Architecture: Default Scene" });
+    await screen.findByRole("img", { name: "Basic Web Architecture" });
     const userNode = document.querySelector('[data-node-id="user"]');
     if (!userNode) throw new Error("Missing user node");
     fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
@@ -357,13 +360,18 @@ describe("EditorPage", () => {
     expect(screen.getByRole("dialog", { name: "Edit node Customer" })).toBeTruthy();
   });
 
-  it("opens a scene-based diagram on its first scene", () => {
+  it("opens a scene-based diagram in diagram scope and switches to its first scene", () => {
     render(
       <EditorHarness diagram={parseDiagramDocument(circuitBreakerDiagram)} />,
     );
 
     expect(screen.getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
     const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
+    expect(canvas.classList.contains("has-scene-controls")).toBe(false);
+    expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
+      .toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Scene" }));
     expect(canvas.classList.contains("has-scene-controls")).toBe(true);
     expect(screen.getByRole("region", { name: "Scene controls" })).toBeTruthy();
     expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
@@ -379,6 +387,7 @@ describe("EditorPage", () => {
 
     expect((within(sideView).getByLabelText("Scene title") as HTMLInputElement).value)
       .toBe("New Scene");
+    fireEvent.click(within(sideView).getByRole("button", { name: "Scene" }));
     expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
       .toBe("scene_1");
     expect(within(canvas).getByText("Scene 2 / 2")).toBeTruthy();
@@ -404,5 +413,78 @@ describe("EditorPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Undo edit" }));
     expect(within(sideView).getByText("Failure")).toBeTruthy();
+  });
+
+  it("stores node edits as scene overrides and resets them to diagram values", async () => {
+    renderBasicDiagram();
+
+    const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
+    fireEvent.click(within(sideView).getByRole("button", { name: "Scene" }));
+    expect((within(sideView).getByRole("button", { name: "Add node" }) as HTMLButtonElement).disabled)
+      .toBe(true);
+
+    const userNode = document.querySelector('[data-node-id="user"]');
+    if (!userNode) throw new Error("Missing user node");
+    fireEvent.pointerDown(userNode, { button: 0, clientX: 100, clientY: 100 });
+
+    const nameInput = screen.getByLabelText("Node name");
+    fireEvent.focus(nameInput);
+    fireEvent.change(nameInput, { target: { value: "Scene Customer" } });
+    fireEvent.blur(nameInput);
+
+    expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("Scene Customer");
+    expect(document.querySelector('[data-node-id="user"]')?.classList.contains("node-scene-overridden"))
+      .toBe(true);
+    expect(screen.getByLabelText("Overridden in this scene")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Delete node Scene Customer" }) as HTMLButtonElement).disabled)
+      .toBe(true);
+
+    fireEvent.click(within(sideView).getByRole("button", { name: "Diagram" }));
+    expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("User");
+
+    fireEvent.click(within(sideView).getByRole("button", { name: "Scene" }));
+    expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("Scene Customer");
+    fireEvent.click(screen.getByRole("button", {
+      name: "Reset scene overrides for node Scene Customer",
+    }));
+    expect(document.querySelector('[data-node-id="user"]')?.textContent).toContain("User");
+    expect(document.querySelector('[data-node-id="user"]')?.classList.contains("node-scene-overridden"))
+      .toBe(false);
+  });
+
+  it("stores edge edits as scene overrides and keeps structural actions disabled", () => {
+    renderBasicDiagram();
+
+    const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
+    fireEvent.click(within(sideView).getByRole("button", { name: "Scene" }));
+    const edgeHitArea = document.querySelector('[data-edge-id="edge_user_browser"] .edge-hit-area');
+    if (!edgeHitArea) throw new Error("Missing edge hit area");
+    fireEvent.pointerDown(edgeHitArea, { button: 0, clientX: 230, clientY: 180 });
+
+    const labelInput = screen.getByLabelText("Edge label");
+    fireEvent.focus(labelInput);
+    fireEvent.change(labelInput, { target: { value: "Scene request" } });
+    fireEvent.blur(labelInput);
+    fireEvent.change(screen.getByLabelText("Line"), { target: { value: "dashed" } });
+
+    expect(document.querySelector('[data-edge-id="edge_user_browser"]')?.classList.contains(
+      "edge-scene-overridden",
+    )).toBe(true);
+    expect((screen.getByRole("button", {
+      name: "Delete edge Scene request",
+    }) as HTMLButtonElement).disabled).toBe(true);
+
+    fireEvent.click(within(sideView).getByRole("button", { name: "Diagram" }));
+    expect(document.querySelector('[data-edge-id="edge_user_browser"]')?.textContent)
+      .toContain("Uses");
+
+    fireEvent.click(within(sideView).getByRole("button", { name: "Scene" }));
+    expect(document.querySelector('[data-edge-id="edge_user_browser"]')?.textContent)
+      .toContain("Scene request");
+    fireEvent.click(screen.getByRole("button", {
+      name: "Reset scene overrides for edge Scene request",
+    }));
+    expect(document.querySelector('[data-edge-id="edge_user_browser"]')?.textContent)
+      .toContain("Uses");
   });
 });
