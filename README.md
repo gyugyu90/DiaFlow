@@ -31,9 +31,8 @@ defaults. The same JSON therefore carries its behavior without relying on hidden
 - 🤖 **Readable by people and AI.** Diagram JSON gives humans, editors, validators, and language models
   one explicit format they can all inspect and modify.
 
-These principles describe the product direction. The local editor and scene runtime already cover
-part of this experience; standalone embedding remains roadmap work, while the first public LLM
-skills are available for local use.
+These principles describe the product direction. The local editor, scene runtime, standalone
+self-hosted viewer, and first public LLM skills are available for local use today.
 
 ## ✨ What Works Today
 
@@ -44,10 +43,11 @@ skills are available for local use.
 - A bundled Material Symbols node icon catalog with a searchable visual picker
 - Edge creation, deletion, selection, and editing, including markers, routing, line styles, colors,
   and labels
-- Scene playback and animated data-flow examples
+- Scene creation, ordering, metadata editing, playback, and animated data-flow examples
+- Scene-scoped node and edge property overrides with visual change indicators and reset controls
 - Local `New diagram`, `Open`, `Save`, and `Save as` workflows
 - Dirty-state tracking and unsaved-page warnings
-- A self-hosted read-only iframe viewer at `/viewer/?src=...`
+- A standalone self-hosted iframe viewer with scene navigation at `/viewer/?src=...`
 - Runtime, editor, and schema packages with regression tests
 
 ## 🚀 Quick Start
@@ -224,9 +224,11 @@ untouched:
 
 - Edge creation currently connects nodes; selecting explicit source and target ports is not yet
   available.
-- Deleting a node also deletes every edge connected to it.
+- Deleting a node from the diagram also deletes every edge connected to it.
 - Direct `Save` is available only when the browser exposes the File System Access API.
-- Group and scene authoring are not available in the editor.
+- Groups can be rendered from Diagram JSON, but group authoring is not yet available in the editor.
+- Scenes currently share diagram-wide nodes and edges. Scene edit scope can override their
+  properties and positions, but it cannot yet add, hide, or delete topology for one scene only.
 - The prompt field does not call an AI service.
 - The iframe viewer is self-hosted and read-only. Script embed and React SDK options are not
   available yet.
@@ -237,9 +239,9 @@ untouched:
 
 Here is what comes next for the local-first experience:
 
-1. Package a standalone viewer build artifact with runtime versioning guidance.
-2. Add port-aware edge creation.
-3. Add scene and group authoring.
+1. Define scene-specific node and edge visibility, creation, and deletion behavior.
+2. Add group authoring and port-aware edge creation.
+3. Verify responsive iframe rendering and expand static-hosting deployment guidance.
 
 ## 🤝 Contributing
 
