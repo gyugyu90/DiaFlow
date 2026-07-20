@@ -6,7 +6,7 @@
     "title": "PKCE OAuth2 Authentication Flow",
     "description": "Step-by-step OAuth2 Authorization Code flow with PKCE for a public browser client.",
     "createdAt": "2026-07-15T00:00:00.000Z",
-    "updatedAt": "2026-07-15T00:00:00.000Z",
+    "updatedAt": "2026-07-20T22:23:09.000Z",
     "tags": [
       "oauth2",
       "pkce",
@@ -28,8 +28,8 @@
     {
       "id": "user",
       "type": "user",
-      "label": "사용자",
-      "description": "브라우저에서 공개 OAuth 클라이언트를 사용하는 최종 사용자입니다.",
+      "label": "User",
+      "description": "The end user who uses a public OAuth client in the browser.",
       "position": {
         "x": 60,
         "y": 250
@@ -43,8 +43,8 @@
     {
       "id": "browser_client",
       "type": "browser",
-      "label": "브라우저 앱",
-      "description": "Client secret을 안전하게 보관할 수 없는 public OAuth client입니다.",
+      "label": "Browser App",
+      "description": "A public OAuth client that cannot securely store a client secret.",
       "position": {
         "x": 260,
         "y": 250
@@ -58,8 +58,8 @@
     {
       "id": "pkce_state",
       "type": "storage",
-      "label": "PKCE 상태",
-      "description": "code_verifier, state, nonce를 브라우저 세션에 임시 저장합니다.",
+      "label": "PKCE State",
+      "description": "Temporarily stores code_verifier, state, and nonce in the browser session.",
       "position": {
         "x": 260,
         "y": 420
@@ -73,8 +73,8 @@
     {
       "id": "authorization_server",
       "type": "external_service",
-      "label": "인증 서버",
-      "description": "로그인, 동의, authorization code 발급, PKCE 검증을 담당합니다.",
+      "label": "Authorization Server",
+      "description": "Handles sign-in, consent, authorization code issuance, and PKCE verification.",
       "position": {
         "x": 540,
         "y": 250
@@ -88,8 +88,8 @@
     {
       "id": "login_consent",
       "type": "app",
-      "label": "로그인/동의 화면",
-      "description": "사용자 인증과 권한 동의를 처리하는 인증 서버의 사용자 인터페이스입니다.",
+      "label": "Login and Consent",
+      "description": "The authorization server interface for user authentication and consent.",
       "position": {
         "x": 540,
         "y": 80
@@ -104,7 +104,7 @@
       "id": "token_endpoint",
       "type": "api",
       "label": "Token Endpoint",
-      "description": "authorization code와 code_verifier를 받아 access token을 발급합니다.",
+      "description": "Accepts the authorization code and code_verifier to issue an access token.",
       "position": {
         "x": 820,
         "y": 250
@@ -119,7 +119,7 @@
       "id": "resource_api",
       "type": "api",
       "label": "Protected API",
-      "description": "access token으로 보호되는 리소스 서버 API입니다.",
+      "description": "A resource server API protected by an access token.",
       "position": {
         "x": 1100,
         "y": 250
@@ -140,7 +140,7 @@
       "target": {
         "nodeId": "browser_client"
       },
-      "label": "앱 사용",
+      "label": "Use app",
       "direction": "forward",
       "style": {
         "line": "solid",
@@ -159,7 +159,7 @@
       "target": {
         "nodeId": "pkce_state"
       },
-      "label": "code_verifier 저장",
+      "label": "Store code_verifier",
       "direction": "forward",
       "style": {
         "line": "dashed",
@@ -208,7 +208,7 @@
       "target": {
         "nodeId": "login_consent"
       },
-      "label": "로그인/동의 표시",
+      "label": "Show login and consent",
       "direction": "forward",
       "style": {
         "line": "solid",
@@ -227,7 +227,7 @@
       "target": {
         "nodeId": "login_consent"
       },
-      "label": "인증 및 동의",
+      "label": "Authenticate and consent",
       "direction": "forward",
       "style": {
         "line": "solid",
@@ -271,7 +271,7 @@
       "target": {
         "nodeId": "browser_client"
       },
-      "label": "code_verifier 로드",
+      "label": "Load code_verifier",
       "direction": "forward",
       "style": {
         "line": "dashed",
@@ -318,7 +318,7 @@
       "target": {
         "nodeId": "authorization_server"
       },
-      "label": "S256 검증",
+      "label": "Verify S256",
       "direction": "bidirectional",
       "style": {
         "line": "solid",
@@ -436,7 +436,7 @@
       "direction": "forward",
       "speed": 0.8,
       "loop": true,
-      "label": "PKCE 값 생성",
+      "label": "Generate PKCE values",
       "payload": {
         "produces": [
           "code_verifier",
@@ -468,7 +468,7 @@
       "direction": "forward",
       "speed": 0.9,
       "loop": true,
-      "label": "사용자 로그인과 동의"
+      "label": "User login and consent"
     },
     {
       "id": "anim_authorization_code",
@@ -480,7 +480,7 @@
       "direction": "forward",
       "speed": 1,
       "loop": true,
-      "label": "Authorization code 반환"
+      "label": "Return authorization code"
     },
     {
       "id": "anim_token_exchange",
@@ -494,7 +494,7 @@
       "direction": "forward",
       "speed": 1.1,
       "loop": true,
-      "label": "Code를 token으로 교환",
+      "label": "Exchange code for token",
       "payload": {
         "security": "The code is useless without the original code_verifier."
       }
@@ -522,21 +522,21 @@
       "direction": "forward",
       "speed": 1,
       "loop": true,
-      "label": "Access token으로 API 호출"
+      "label": "Call API with access token"
     }
   ],
   "scenes": [
     {
       "id": "scene_generate_pkce",
-      "title": "1. PKCE 값 생성",
-      "description": "브라우저 앱은 랜덤 code_verifier를 만들고 S256 방식으로 code_challenge를 계산한 뒤 verifier를 로컬 세션에 보관합니다.",
+      "title": "1. Generate PKCE Values",
+      "description": "The browser app generates a random code_verifier, derives a code_challenge with S256, and stores the verifier in the local session.",
       "animationIds": [
         "anim_generate_pkce"
       ],
       "edgeOverrides": [
         {
           "edgeId": "edge_client_store_verifier",
-          "label": "code_verifier 저장",
+          "label": "Store code_verifier",
           "tone": "active"
         },
         {
@@ -594,12 +594,12 @@
         {
           "nodeId": "browser_client",
           "tone": "active",
-          "status": "code_challenge 생성"
+          "status": "Generate code_challenge"
         },
         {
           "nodeId": "pkce_state",
           "tone": "active",
-          "status": "code_verifier 보관"
+          "status": "Store code_verifier"
         },
         {
           "nodeId": "authorization_server",
@@ -617,8 +617,8 @@
     },
     {
       "id": "scene_authorization_request",
-      "title": "2. 인증 요청",
-      "description": "브라우저 앱은 authorization endpoint로 사용자를 리다이렉트하며 code_challenge와 state를 함께 전달합니다.",
+      "title": "2. Authorization Request",
+      "description": "The browser app redirects the user to the authorization endpoint with code_challenge and state.",
       "animationIds": [
         "anim_authorization_request"
       ],
@@ -633,7 +633,7 @@
         },
         {
           "edgeId": "edge_client_auth_request",
-          "label": "code_challenge 포함",
+          "label": "Include code_challenge",
           "tone": "active"
         },
         {
@@ -686,22 +686,22 @@
         {
           "nodeId": "user",
           "tone": "active",
-          "status": "로그인 시작"
+          "status": "Start sign-in"
         },
         {
           "nodeId": "browser_client",
           "tone": "active",
-          "status": "authorization request 전송"
+          "status": "Send authorization request"
         },
         {
           "nodeId": "pkce_state",
           "tone": "normal",
-          "status": "verifier 유지"
+          "status": "Retain verifier"
         },
         {
           "nodeId": "authorization_server",
           "tone": "active",
-          "status": "challenge와 state 수신"
+          "status": "Receive challenge and state"
         },
         {
           "nodeId": "token_endpoint",
@@ -715,8 +715,8 @@
     },
     {
       "id": "scene_login_consent",
-      "title": "3. 로그인과 동의",
-      "description": "인증 서버는 사용자에게 로그인과 권한 동의를 요구하고 승인되면 authorization code를 준비합니다.",
+      "title": "3. Login and Consent",
+      "description": "The authorization server asks the user to sign in and grant consent, then prepares an authorization code after approval.",
       "animationIds": [
         "anim_user_authentication"
       ],
@@ -727,12 +727,12 @@
         },
         {
           "edgeId": "edge_auth_login",
-          "label": "로그인 화면",
+          "label": "Show login",
           "tone": "active"
         },
         {
           "edgeId": "edge_user_login",
-          "label": "자격 증명 + 동의",
+          "label": "Credentials and consent",
           "tone": "active"
         },
         {
@@ -775,22 +775,22 @@
         {
           "nodeId": "user",
           "tone": "active",
-          "status": "인증 및 권한 승인"
+          "status": "Approve authentication and authorization"
         },
         {
           "nodeId": "authorization_server",
           "tone": "active",
-          "status": "authorization code 준비"
+          "status": "Prepare authorization code"
         },
         {
           "nodeId": "login_consent",
           "tone": "active",
-          "status": "로그인/동의 처리"
+          "status": "Process login and consent"
         },
         {
           "nodeId": "pkce_state",
           "tone": "normal",
-          "status": "verifier 유지"
+          "status": "Retain verifier"
         },
         {
           "nodeId": "token_endpoint",
@@ -804,8 +804,8 @@
     },
     {
       "id": "scene_code_redirect",
-      "title": "4. Authorization Code 반환",
-      "description": "인증 서버는 redirect_uri로 authorization code와 state를 반환합니다. 브라우저 앱은 state를 비교해 요청 무결성을 확인합니다.",
+      "title": "4. Return Authorization Code",
+      "description": "The authorization server returns the authorization code and state to redirect_uri. The browser app compares state to verify request integrity.",
       "animationIds": [
         "anim_authorization_code"
       ],
@@ -850,17 +850,17 @@
         {
           "nodeId": "browser_client",
           "tone": "active",
-          "status": "state 검증"
+          "status": "Validate state"
         },
         {
           "nodeId": "authorization_server",
           "tone": "active",
-          "status": "authorization code 발급"
+          "status": "Issue authorization code"
         },
         {
           "nodeId": "pkce_state",
           "tone": "normal",
-          "status": "verifier 유지"
+          "status": "Retain verifier"
         },
         {
           "nodeId": "token_endpoint",
@@ -874,8 +874,8 @@
     },
     {
       "id": "scene_token_exchange",
-      "title": "5. 토큰 교환과 PKCE 검증",
-      "description": "브라우저 앱은 authorization code와 원본 code_verifier를 token endpoint로 전송합니다. 서버는 저장된 code_challenge와 verifier의 S256 결과를 비교합니다.",
+      "title": "5. Token Exchange and PKCE Verification",
+      "description": "The browser app sends the authorization code and original code_verifier to the token endpoint. The server compares the stored code_challenge with the verifier's S256 result.",
       "animationIds": [
         "anim_token_exchange",
         "anim_token_response"
@@ -883,7 +883,7 @@
       "edgeOverrides": [
         {
           "edgeId": "edge_client_read_verifier",
-          "label": "원본 verifier 로드",
+          "label": "Load original verifier",
           "tone": "active"
         },
         {
@@ -898,7 +898,7 @@
         },
         {
           "edgeId": "edge_token_response",
-          "label": "access token 발급",
+          "label": "Issue access token",
           "tone": "active"
         },
         {
@@ -916,22 +916,22 @@
         {
           "nodeId": "browser_client",
           "tone": "active",
-          "status": "token request 전송"
+          "status": "Send token request"
         },
         {
           "nodeId": "pkce_state",
           "tone": "active",
-          "status": "verifier 제공"
+          "status": "Provide verifier"
         },
         {
           "nodeId": "authorization_server",
           "tone": "active",
-          "status": "PKCE 검증"
+          "status": "Verify PKCE"
         },
         {
           "nodeId": "token_endpoint",
           "tone": "active",
-          "status": "토큰 발급"
+          "status": "Issue token"
         },
         {
           "nodeId": "resource_api",
@@ -941,8 +941,8 @@
     },
     {
       "id": "scene_api_access",
-      "title": "6. 보호된 API 호출",
-      "description": "브라우저 앱은 발급받은 access token을 Authorization 헤더에 담아 보호된 API를 호출합니다.",
+      "title": "6. Call Protected API",
+      "description": "The browser app calls the protected API with the issued access token in the Authorization header.",
       "animationIds": [
         "anim_api_call"
       ],
@@ -958,7 +958,7 @@
         },
         {
           "edgeId": "edge_api_response",
-          "label": "보호 리소스 응답",
+          "label": "Protected resource response",
           "tone": "active"
         }
       ],
@@ -966,12 +966,12 @@
         {
           "nodeId": "browser_client",
           "tone": "active",
-          "status": "access token 보유"
+          "status": "Hold access token"
         },
         {
           "nodeId": "resource_api",
           "tone": "active",
-          "status": "token 검증 후 응답"
+          "status": "Validate token and respond"
         },
         {
           "nodeId": "authorization_server",
@@ -984,7 +984,7 @@
         {
           "nodeId": "pkce_state",
           "tone": "muted",
-          "status": "사용 완료"
+          "status": "Complete"
         }
       ]
     }
