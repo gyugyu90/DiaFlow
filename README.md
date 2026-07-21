@@ -114,6 +114,7 @@ See the following resources:
 
 - [Diagram JSON design draft](docs/diagram-json-schema-draft.md)
 - [Self-hosted embedding guide](docs/embedding.md)
+- [Advanced self-hosting and Netlify deployment guide](docs/self-hosting.md)
 - [JSON Schema](schemas/diagram.schema.json)
 - [Basic web architecture example](examples/basic-web-architecture.diagram.json)
 - [Circuit breaker scenes example](examples/circuit-breaker-scenes.diagram.json)
@@ -204,6 +205,10 @@ self-hosted iframe viewer is served at `/viewer/?src=...`, and each diagram edit
 `npm run build` also packages self-hosted embed examples into `dist/diagrams/` and `dist/embed/`.
 Upload the generated `dist/` directory to a static host and open `/embed/` to verify iframe
 embedding with the bundled diagrams.
+
+To deploy a diagram created in the local editor, follow the
+[advanced self-hosting guide](docs/self-hosting.md). It explains where to place local Diagram JSON
+files, how they are copied into `dist/`, and how to configure Git-based Netlify deployment.
 
 For AWS Amplify Hosting, add the following 200 rewrite under **Rewrites and redirects** so direct
 editor links and browser refreshes continue to load the application while static assets remain

@@ -5,6 +5,9 @@ DiaFlow's MVP embed path is self-hosted. You host the built viewer files and you
 
 No DiaFlow account, database, upload API, or hosted diagram service is required.
 
+For the complete workflow from a locally saved diagram to a Git-based Netlify deployment, see
+[Self-Hosting Your Own Diagrams](self-hosting.md).
+
 ## Viewer URL
 
 ```txt
