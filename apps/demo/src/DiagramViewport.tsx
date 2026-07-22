@@ -41,7 +41,10 @@ export function DiagramViewport({
   }, [sceneId]);
 
   useEffect(() => {
-    rendererRef.current?.setOptions({ animations, interactive });
+    rendererRef.current?.setOptions({
+      ...(animations === undefined ? {} : { animations }),
+      ...(interactive === undefined ? {} : { interactive }),
+    });
   }, [animations, interactive]);
 
   return <div ref={rootRef} className={`diagram-root ${className ?? ""}`} />;

@@ -43,6 +43,8 @@ describe("DiagramViewModal", () => {
     expect(within(modal).getByRole("button", { name: "Close viewer" })).toBeTruthy();
     expect(modal.querySelector(".diagram-svg")).toBeTruthy();
     expect(modal.querySelectorAll("[data-node-id]")).toHaveLength(6);
+    expect(modal.querySelector(".diagram-root")?.classList.contains("animations-off")).toBe(false);
+    expect(modal.querySelectorAll(".packet").length).toBeGreaterThan(0);
   });
 
   it("requests close from the viewer toolbar", () => {
