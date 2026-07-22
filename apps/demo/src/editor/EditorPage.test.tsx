@@ -360,22 +360,23 @@ describe("EditorPage", () => {
     expect(screen.getByRole("dialog", { name: "Edit node Customer" })).toBeTruthy();
   });
 
-  it("opens a scene-based diagram in diagram scope and switches to its first scene", () => {
+  it("opens a multi-scene diagram on its first scene to match the viewer", () => {
     render(
       <EditorHarness diagram={parseDiagramDocument(circuitBreakerDiagram)} />,
     );
 
     expect(screen.getByRole("heading", { name: "Circuit Breaker Scenes" })).toBeTruthy();
     const canvas = screen.getByRole("region", { name: "Diagram editor canvas" });
-    expect(canvas.classList.contains("has-scene-controls")).toBe(false);
-    expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
-      .toBeNull();
-
-    fireEvent.click(screen.getByRole("button", { name: "Scene" }));
+    const sideView = screen.getByRole("complementary", { name: "Diagram side view" });
     expect(canvas.classList.contains("has-scene-controls")).toBe(true);
+    expect(within(sideView).getByRole("button", { name: "Scene" }).getAttribute("aria-pressed"))
+      .toBe("true");
     expect(screen.getByRole("region", { name: "Scene controls" })).toBeTruthy();
     expect(document.querySelector(".editor-diagram-root")?.getAttribute("data-scene-id"))
       .toBe("scene_normal");
+    expect(Array.from(document.querySelectorAll(".animation")).map((element) =>
+      element.getAttribute("data-animation-id")
+    )).toEqual(["anim_normal_request", "anim_normal_response"]);
   });
 
   it("creates, edits, reorders, deletes, and restores scenes", () => {

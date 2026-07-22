@@ -32,7 +32,9 @@ export function EditorPage({
   const editorRef = useRef<DiagramEditorController | null>(null);
   const scenes = item.diagram.scenes ?? [];
   const [activeSceneId, setActiveSceneId] = useState<string | null>(() => scenes[0]?.id ?? null);
-  const [editScope, setEditScope] = useState<EditorEditScope>("diagram");
+  const [editScope, setEditScope] = useState<EditorEditScope>(() =>
+    getInitialEditScope(item.diagram)
+  );
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [creatingEdgeSourceNodeId, setCreatingEdgeSourceNodeId] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export function EditorPage({
 
   useEffect(() => {
     setActiveSceneId(item.diagram.scenes?.[0]?.id ?? null);
-    setEditScope("diagram");
+    setEditScope(getInitialEditScope(item.diagram));
     setSelectedNodeIds([]);
     setSelectedEdgeId(null);
     setCreatingEdgeSourceNodeId(null);
@@ -243,4 +245,8 @@ export function EditorPage({
       </section>
     </main>
   );
+}
+
+function getInitialEditScope(diagram: DiagramDocument): EditorEditScope {
+  return (diagram.scenes?.length ?? 0) > 1 ? "scene" : "diagram";
 }
