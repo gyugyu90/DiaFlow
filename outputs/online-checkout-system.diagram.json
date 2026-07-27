@@ -308,7 +308,10 @@
         },
         {
           "edgeId": "edge_order_api_postgresql",
-          "tone": "active"
+          "tone": "active",
+          "style": {
+            "routing": "smooth"
+          }
         },
         {
           "edgeId": "edge_order_api_payment_provider",
@@ -324,11 +327,16 @@
       "nodeOverrides": [
         {
           "nodeId": "customer",
+          "icon": "material-symbols:smartphone",
           "tone": "active",
           "status": "Checking out"
         },
         {
           "nodeId": "web_storefront",
+          "position": {
+            "x": 312,
+            "y": 202
+          },
           "tone": "active"
         },
         {
@@ -338,6 +346,10 @@
         },
         {
           "nodeId": "postgresql",
+          "position": {
+            "x": 993,
+            "y": 438
+          },
           "tone": "active",
           "status": "Order stored"
         },
