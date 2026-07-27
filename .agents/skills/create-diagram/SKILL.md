@@ -46,6 +46,17 @@ Target DiaFlow `schemaVersion: "0.2"`. Treat the repository's `packages/schema/s
 - Use ISO 8601 UTC timestamps when timestamps are included.
 - Format the result as readable JSON with a trailing newline.
 
+## Optional Local Preview
+
+After successful normalization and validation, check whether the local DiaFlow development server is reachable at its expected local address without starting it.
+
+- If the server is running, report its URL and tell the user to open the generated `.diagram.json` through the editor.
+- If the server is not running and the task is interactive, ask whether the user wants to start it. Start it from the DiaFlow repository root only after confirmation, then report the actual URL printed by the development server.
+- If the user already requested a local preview or server startup, treat that as confirmation and do not ask again.
+- Skip the preview offer for batch, CI, or explicitly file-only requests.
+- Do not treat preview availability or server startup failure as diagram-generation failure.
+- Do not copy the diagram into application or public directories solely for preview.
+
 ## Output Boundary
 
 Create or modify only the requested `.diagram.json` artifact. Do not implement renderer or editor code as part of diagram generation. Do not paste the entire document in the final response unless the user asks to see it.
