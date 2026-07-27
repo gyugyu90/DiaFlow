@@ -1,0 +1,480 @@
+{
+  "schemaVersion": "0.2",
+  "id": "online_checkout_system",
+  "kind": "architecture",
+  "metadata": {
+    "title": "Online Checkout System",
+    "description": "Checkout order creation, persistence, and payment processing across customer-facing and external services.",
+    "tags": [
+      "checkout",
+      "orders",
+      "payments"
+    ]
+  },
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "theme": {
+    "mode": "light",
+    "accent": "blue",
+    "background": "#f8fafc"
+  },
+  "nodes": [
+    {
+      "id": "customer",
+      "type": "user",
+      "label": "Customer",
+      "description": "A shopper placing an order.",
+      "position": {
+        "x": 70,
+        "y": 290
+      },
+      "size": {
+        "width": 140,
+        "height": 76
+      },
+      "icon": "material-symbols:person"
+    },
+    {
+      "id": "web_storefront",
+      "type": "browser",
+      "label": "Web Storefront",
+      "description": "The customer-facing checkout application.",
+      "position": {
+        "x": 310,
+        "y": 290
+      },
+      "size": {
+        "width": 180,
+        "height": 76
+      },
+      "icon": "material-symbols:web"
+    },
+    {
+      "id": "order_api",
+      "type": "api",
+      "label": "Order API",
+      "description": "Creates orders, persists them, and initiates payment.",
+      "position": {
+        "x": 610,
+        "y": 290
+      },
+      "size": {
+        "width": 160,
+        "height": 76
+      },
+      "icon": "material-symbols:api"
+    },
+    {
+      "id": "payment_provider",
+      "type": "external_service",
+      "label": "Payment Provider",
+      "description": "External service that authorizes payment.",
+      "position": {
+        "x": 920,
+        "y": 150
+      },
+      "size": {
+        "width": 190,
+        "height": 76
+      },
+      "icon": "material-symbols:credit_card"
+    },
+    {
+      "id": "postgresql",
+      "type": "database",
+      "label": "PostgreSQL",
+      "description": "Stores the order record.",
+      "position": {
+        "x": 920,
+        "y": 430
+      },
+      "size": {
+        "width": 170,
+        "height": 76
+      },
+      "icon": "material-symbols:database"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_customer_storefront",
+      "source": {
+        "nodeId": "customer"
+      },
+      "target": {
+        "nodeId": "web_storefront"
+      },
+      "label": "Start checkout",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "straight",
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    },
+    {
+      "id": "edge_storefront_order_api",
+      "source": {
+        "nodeId": "web_storefront"
+      },
+      "target": {
+        "nodeId": "order_api"
+      },
+      "label": "Submit order",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "straight",
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    },
+    {
+      "id": "edge_order_api_postgresql",
+      "source": {
+        "nodeId": "order_api"
+      },
+      "target": {
+        "nodeId": "postgresql"
+      },
+      "label": "Store order",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "orthogonal",
+        "color": "info",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    },
+    {
+      "id": "edge_order_api_payment_provider",
+      "source": {
+        "nodeId": "order_api"
+      },
+      "target": {
+        "nodeId": "payment_provider"
+      },
+      "label": "Request payment",
+      "direction": "forward",
+      "style": {
+        "line": "solid",
+        "routing": "orthogonal",
+        "color": "accent",
+        "labelPlacement": "above",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    },
+    {
+      "id": "edge_payment_provider_order_api",
+      "source": {
+        "nodeId": "payment_provider"
+      },
+      "target": {
+        "nodeId": "order_api"
+      },
+      "label": "Payment result",
+      "direction": "forward",
+      "style": {
+        "line": "dotted",
+        "routing": "orthogonal",
+        "color": "muted",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    },
+    {
+      "id": "edge_order_api_storefront",
+      "source": {
+        "nodeId": "order_api"
+      },
+      "target": {
+        "nodeId": "web_storefront"
+      },
+      "label": "Order status",
+      "direction": "forward",
+      "style": {
+        "line": "dotted",
+        "routing": "straight",
+        "color": "muted",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    },
+    {
+      "id": "edge_storefront_customer",
+      "source": {
+        "nodeId": "web_storefront"
+      },
+      "target": {
+        "nodeId": "customer"
+      },
+      "label": "Checkout result",
+      "direction": "forward",
+      "style": {
+        "line": "dotted",
+        "routing": "straight",
+        "color": "muted",
+        "labelPlacement": "below",
+        "startMarker": "none",
+        "endMarker": "arrow"
+      }
+    }
+  ],
+  "animations": [
+    {
+      "id": "anim_checkout_started",
+      "type": "request",
+      "edgeIds": [
+        "edge_customer_storefront",
+        "edge_storefront_order_api",
+        "edge_order_api_postgresql"
+      ],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Checkout request"
+    },
+    {
+      "id": "anim_payment_request",
+      "type": "request",
+      "edgeIds": [
+        "edge_storefront_order_api",
+        "edge_order_api_payment_provider"
+      ],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1.1,
+      "loop": true,
+      "label": "Payment request"
+    },
+    {
+      "id": "anim_payment_approved",
+      "type": "response",
+      "edgeIds": [
+        "edge_payment_provider_order_api",
+        "edge_order_api_storefront",
+        "edge_storefront_customer"
+      ],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1,
+      "loop": true,
+      "label": "Approved payment response"
+    },
+    {
+      "id": "anim_payment_retry",
+      "type": "retry",
+      "edgeIds": [
+        "edge_order_api_payment_provider",
+        "edge_payment_provider_order_api"
+      ],
+      "enabled": true,
+      "direction": "forward",
+      "speed": 1.5,
+      "loop": true,
+      "label": "Payment retry"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "scene_checkout_started",
+      "title": "Checkout started",
+      "description": "The customer starts checkout, and the Order API persists the submitted order.",
+      "animationIds": [
+        "anim_checkout_started"
+      ],
+      "edgeOverrides": [
+        {
+          "edgeId": "edge_customer_storefront",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_storefront_order_api",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_api_postgresql",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_api_payment_provider",
+          "disabled": true,
+          "tone": "muted"
+        },
+        {
+          "edgeId": "edge_payment_provider_order_api",
+          "disabled": true,
+          "tone": "muted"
+        }
+      ],
+      "nodeOverrides": [
+        {
+          "nodeId": "customer",
+          "tone": "active",
+          "status": "Checking out"
+        },
+        {
+          "nodeId": "web_storefront",
+          "tone": "active"
+        },
+        {
+          "nodeId": "order_api",
+          "tone": "active",
+          "status": "Creating order"
+        },
+        {
+          "nodeId": "postgresql",
+          "tone": "active",
+          "status": "Order stored"
+        },
+        {
+          "nodeId": "payment_provider",
+          "tone": "muted",
+          "status": "Not requested"
+        }
+      ]
+    },
+    {
+      "id": "scene_payment_approved",
+      "title": "Payment approved",
+      "description": "The Order API requests payment, receives approval, and confirms the checkout to the customer.",
+      "animationIds": [
+        "anim_payment_request",
+        "anim_payment_approved"
+      ],
+      "edgeOverrides": [
+        {
+          "edgeId": "edge_storefront_order_api",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_order_api_payment_provider",
+          "tone": "active"
+        },
+        {
+          "edgeId": "edge_payment_provider_order_api",
+          "label": "Payment approved",
+          "tone": "active",
+          "style": {
+            "color": "success"
+          }
+        },
+        {
+          "edgeId": "edge_order_api_storefront",
+          "label": "Order confirmed",
+          "tone": "active",
+          "style": {
+            "color": "success"
+          }
+        },
+        {
+          "edgeId": "edge_storefront_customer",
+          "label": "Confirmation",
+          "tone": "active",
+          "style": {
+            "color": "success"
+          }
+        }
+      ],
+      "nodeOverrides": [
+        {
+          "nodeId": "web_storefront",
+          "tone": "active"
+        },
+        {
+          "nodeId": "order_api",
+          "tone": "active",
+          "status": "Confirming order"
+        },
+        {
+          "nodeId": "payment_provider",
+          "tone": "active",
+          "status": "Approved"
+        },
+        {
+          "nodeId": "customer",
+          "tone": "active",
+          "status": "Order confirmed"
+        }
+      ]
+    },
+    {
+      "id": "scene_payment_failed_retrying",
+      "title": "Payment failed and retrying",
+      "description": "The payment provider rejects the request, and the Order API retries payment while the order remains stored.",
+      "animationIds": [
+        "anim_payment_retry"
+      ],
+      "edgeOverrides": [
+        {
+          "edgeId": "edge_order_api_payment_provider",
+          "label": "Retry payment",
+          "tone": "warning",
+          "style": {
+            "color": "warning"
+          }
+        },
+        {
+          "edgeId": "edge_payment_provider_order_api",
+          "label": "Payment failed",
+          "tone": "danger",
+          "style": {
+            "line": "dashed",
+            "color": "danger"
+          }
+        },
+        {
+          "edgeId": "edge_order_api_storefront",
+          "label": "Retrying payment",
+          "tone": "warning"
+        },
+        {
+          "edgeId": "edge_storefront_customer",
+          "label": "Payment pending",
+          "tone": "warning"
+        }
+      ],
+      "nodeOverrides": [
+        {
+          "nodeId": "order_api",
+          "tone": "warning",
+          "status": "Retrying payment"
+        },
+        {
+          "nodeId": "payment_provider",
+          "tone": "danger",
+          "status": "Payment failed"
+        },
+        {
+          "nodeId": "web_storefront",
+          "tone": "warning",
+          "status": "Payment pending"
+        },
+        {
+          "nodeId": "customer",
+          "tone": "warning",
+          "status": "Retrying"
+        },
+        {
+          "nodeId": "postgresql",
+          "tone": "active",
+          "status": "Order retained"
+        }
+      ]
+    }
+  ]
+}
