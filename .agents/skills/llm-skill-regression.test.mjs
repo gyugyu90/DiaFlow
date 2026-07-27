@@ -10,7 +10,7 @@ import {
 const createExamplePaths = [
   "examples/basic-web-architecture.diagram.json",
   "examples/circuit-breaker-scenes.diagram.json",
-  "pkce-oauth2-flow.diagram.json",
+  "examples/pkce-oauth2-flow.diagram.json",
 ];
 
 describe("LLM skill regression coverage", () => {
