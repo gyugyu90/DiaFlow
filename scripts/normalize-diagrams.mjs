@@ -5,7 +5,7 @@ import { serializeDiagramDocument } from "../packages/schema/dist/index.js";
 const args = process.argv.slice(2);
 const checkOnly = args.includes("--check");
 const inputs = args.filter((arg) => arg !== "--check");
-const targets = inputs.length > 0 ? inputs : ["examples"];
+const targets = inputs.length > 0 ? inputs : ["examples", "outputs"];
 const files = (await Promise.all(targets.map(collectDiagramFiles))).flat().sort();
 
 if (files.length === 0) {

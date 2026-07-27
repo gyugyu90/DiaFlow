@@ -73,7 +73,8 @@ npm run dev
 Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/) in a browser.
 
 The first screen is the local editor entry point for opening an existing `.diagram.json` file or
-creating a new empty document. Bundled examples are available at
+creating a new empty document. Diagram JSON files under [`outputs/`](outputs/) are automatically
+listed on this page; refresh after adding a file while the development server is running. Bundled examples are available at
 [http://127.0.0.1:5173/examples](http://127.0.0.1:5173/examples).
 
 ## 💾 Work with Local Files
@@ -159,7 +160,9 @@ DiaFlow service. If a newly added skill does not appear in Codex, restart Codex 
 repository.
 
 Both skills target `schemaVersion: "0.2"` and run the repository validator before completing a
-change. Keep the skills, examples, and schema documentation synchronized when the contract changes.
+change. `create-diagram` writes to `outputs/` by default, so its result appears on the local editor
+home page after refresh. Keep the skills, examples, and schema documentation synchronized when the
+contract changes.
 
 ## 🏗️ Project Structure
 
@@ -172,7 +175,8 @@ packages/
   runtime/    Read-only SVG rendering, viewport behavior, and scene playback
   editor/     Selection, dragging, property editing, and edit history
 
-examples/     Example .diagram.json documents
+examples/     Bundled example .diagram.json documents
+outputs/      Default local workspace for generated .diagram.json documents
 schemas/      Generated public JSON Schema
 scripts/      Schema generation and Diagram JSON validation tools
 .agents/
@@ -202,7 +206,8 @@ The local editor entry point is served at `/`, the sample gallery is served at `
 self-hosted iframe viewer is served at `/viewer/?src=...`, and each diagram editor uses
 `/diagrams/:diagramId/edit`. Static hosts must rewrite client-side routes to `index.html`.
 
-`npm run build` also packages self-hosted embed examples into `dist/diagrams/` and `dist/embed/`.
+`npm run build` also packages self-hosted embed examples and every `outputs/**/*.diagram.json` file
+into `dist/diagrams/`, plus the iframe test page in `dist/embed/`.
 Upload the generated `dist/` directory to a static host and open `/embed/` to verify iframe
 embedding with the bundled diagrams.
 

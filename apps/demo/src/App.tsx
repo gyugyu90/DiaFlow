@@ -23,7 +23,7 @@ export function App() {
   } = useDiagramDocuments();
   const { route, navigate } = useAppRoute();
   const [viewingDiagramId, setViewingDiagramId] = useState<string | null>(null);
-  const localItems = useMemo(() => items.filter((item) => item.source === "local"), [items]);
+  const localItems = useMemo(() => items.filter((item) => item.source !== "sample"), [items]);
   const sampleItems = useMemo(() => items.filter((item) => item.source === "sample"), [items]);
   const selectedDiagram = useMemo(() => route.view === "edit"
     ? items.find((item) => item.id === route.diagramId) ?? null

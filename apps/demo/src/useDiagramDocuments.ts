@@ -17,7 +17,7 @@ import {
 
 export type DiagramListItem = {
   id: string;
-  source: "sample" | "local";
+  source: "sample" | "output" | "local";
   title: string;
   description?: string;
   fileName: string;
@@ -25,6 +25,12 @@ export type DiagramListItem = {
   isDirty: boolean;
   diagram: DiagramDocument;
 };
+
+const outputDiagramFiles = import.meta.glob("../../../outputs/**/*.diagram.json", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+}) as Record<string, string>;
 
 const initialDiagrams: DiagramListItem[] = [
   {
@@ -54,7 +60,29 @@ const initialDiagrams: DiagramListItem[] = [
     isDirty: false,
     diagram: parseDiagramDocument(pkceOauth2Diagram),
   },
+  ...createOutputDiagramItems(outputDiagramFiles),
 ];
+
+export function createOutputDiagramItems(
+  files: Record<string, string>,
+): DiagramListItem[] {
+  return Object.entries(files)
+    .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+    .map(([path, source]) => {
+      const relativePath = path.replace(/^.*\/outputs\//, "");
+      const diagram = parseDiagramDocument(JSON.parse(source));
+
+      return {
+        id: `output:${relativePath}`,
+        source: "output" as const,
+        title: diagram.metadata.title,
+        description: diagram.metadata.description,
+        fileName: `outputs/${relativePath}`,
+        isDirty: false,
+        diagram,
+      };
+    });
+}
 
 export function useDiagramDocuments() {
   const [items, setItems] = useState(initialDiagrams);

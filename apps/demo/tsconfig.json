@@ -4,6 +4,7 @@
     "composite": true,
     "jsx": "react-jsx",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client"],
     "noEmit": true,
     "tsBuildInfoFile": "../../dist/tsconfig.demo.tsbuildinfo"
   },

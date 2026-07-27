@@ -13,7 +13,7 @@ For viewer query parameters and iframe options, see the shorter
 Local .diagram.json file
         |
         v
-apps/demo/public/diagrams/
+outputs/
         |
         | npm run build
         v
@@ -43,8 +43,7 @@ npm install
 
 ## 2. Save Your Diagram
 
-Open the local editor, create or edit a diagram, and use **Save** or **Save as** to produce a file
-such as:
+Use `create-diagram`, or create and edit a diagram in the local editor, to produce a file such as:
 
 ```txt
 checkout-flow.diagram.json
@@ -55,21 +54,23 @@ credentials, private hostnames, or other sensitive data in a diagram that will b
 
 ## 3. Add the Diagram to the Static Site
 
-For Git-based continuous deployment, place the file in the demo application's public directory:
+`create-diagram` writes new files to `outputs/` by default. The local editor home page automatically
+lists valid `outputs/**/*.diagram.json` files after refresh. For an existing file saved elsewhere,
+place it there before committing:
 
 ```sh
-mkdir -p apps/demo/public/diagrams
-cp /absolute/path/to/checkout-flow.diagram.json apps/demo/public/diagrams/
+mkdir -p outputs
+cp /absolute/path/to/checkout-flow.diagram.json outputs/
 ```
 
 Validate the file before committing it:
 
 ```sh
-npm run diagrams:validate -- apps/demo/public/diagrams/checkout-flow.diagram.json
+npm run diagrams:validate -- outputs/checkout-flow.diagram.json
 ```
 
-Vite copies files under `apps/demo/public/` into the root of `dist/`. After a production build, the
-source file above is therefore available at:
+The production build packages every Diagram JSON file under `outputs/` into `dist/diagrams/`. After
+a production build, the source file above is therefore available at:
 
 ```txt
 dist/diagrams/checkout-flow.diagram.json
@@ -78,7 +79,7 @@ dist/diagrams/checkout-flow.diagram.json
 Commit the source Diagram JSON, not the generated `dist/` directory:
 
 ```sh
-git add apps/demo/public/diagrams/checkout-flow.diagram.json
+git add outputs/checkout-flow.diagram.json
 git commit -m "Add checkout flow diagram"
 ```
 
@@ -205,7 +206,7 @@ For external JSON hosting:
 To update an existing embed without changing the iframe:
 
 1. Edit the local `.diagram.json` file in DiaFlow.
-2. Replace the copy under `apps/demo/public/diagrams/` while keeping the same filename.
+2. Replace the copy under `outputs/` while keeping the same filename.
 3. Validate, commit, and push the change.
 4. Wait for the static host to deploy the new build.
 
@@ -230,7 +231,7 @@ JSON response's CORS headers and the viewer page's Content Security Policy.
 Validate the exact deployed source file locally:
 
 ```sh
-npm run diagrams:validate -- apps/demo/public/diagrams/checkout-flow.diagram.json
+npm run diagrams:validate -- outputs/checkout-flow.diagram.json
 ```
 
 The viewer build and Diagram JSON must support the same `schemaVersion`.
@@ -238,4 +239,4 @@ The viewer build and Diagram JSON must support the same `schemaVersion`.
 ### A newly saved local file is missing from the deployment
 
 Files in Downloads or another local folder are not available to Netlify's build machine. Copy the
-file into `apps/demo/public/diagrams/`, commit it, and push it to the connected Git repository.
+file into `outputs/`, commit it, and push it to the connected Git repository.

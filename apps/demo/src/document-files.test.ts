@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
+import { createOutputDiagramItems } from "./useDiagramDocuments";
 import {
   createEmptyDiagramDocument,
   formatDiagramFileError,
@@ -12,6 +13,25 @@ import {
 } from "./document-files";
 
 describe("diagram document files", () => {
+  it("creates local editor items from output directory diagram files", () => {
+    const outputs = createOutputDiagramItems({
+      "../../../outputs/nested/architecture.diagram.json": JSON.stringify({
+        ...sampleDiagram,
+        id: "diagram_output_architecture",
+        metadata: { ...sampleDiagram.metadata, title: "Generated Architecture" },
+      }),
+    });
+
+    expect(outputs).toHaveLength(1);
+    expect(outputs[0]).toMatchObject({
+      id: "output:nested/architecture.diagram.json",
+      source: "output",
+      title: "Generated Architecture",
+      fileName: "outputs/nested/architecture.diagram.json",
+      isDirty: false,
+    });
+  });
+
   it("creates an empty schema-valid architecture diagram", () => {
     const diagram = createEmptyDiagramDocument(new Date("2026-07-14T01:02:03.000Z"));
 

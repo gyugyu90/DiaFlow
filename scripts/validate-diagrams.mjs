@@ -12,7 +12,7 @@ addFormats(ajv);
 const validateStructure = ajv.compile(publicSchema);
 
 const inputs = process.argv.slice(2);
-const targets = inputs.length > 0 ? inputs : ["examples"];
+const targets = inputs.length > 0 ? inputs : ["examples", "outputs"];
 const files = (await Promise.all(targets.map(collectDiagramFiles))).flat().sort();
 
 if (files.length === 0) {
