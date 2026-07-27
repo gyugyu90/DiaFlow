@@ -10,7 +10,7 @@ import { applyScene } from "@interactive-diagram/runtime";
 import type { DiagramDocument } from "@interactive-diagram/schema";
 import { DiagramEditorViewport } from "../DiagramEditorViewport";
 import { SceneControls } from "../SceneControls";
-import type { DiagramListItem } from "../useDiagramDocuments";
+import { canSaveDiagramDirectly, type DiagramListItem } from "../useDiagramDocuments";
 import { EdgeInspector } from "./EdgeInspector";
 import { EditorDocumentHeading } from "./EditorDocumentHeading";
 import { EditorSidebar } from "./EditorSidebar";
@@ -30,6 +30,7 @@ export function EditorPage({
   onView: () => void;
 }) {
   const editorRef = useRef<DiagramEditorController | null>(null);
+  const canSaveDirectly = canSaveDiagramDirectly(item);
   const scenes = item.diagram.scenes ?? [];
   const [activeSceneId, setActiveSceneId] = useState<string | null>(() => scenes[0]?.id ?? null);
   const [editScope, setEditScope] = useState<EditorEditScope>(() =>
@@ -128,12 +129,12 @@ export function EditorPage({
             <span>View</span>
           </button>
           <button className="button button-primary" type="button" onClick={onSave}>
-            {item.fileHandle ? (
+            {canSaveDirectly ? (
               <Save size={17} aria-hidden="true" />
             ) : (
               <Download size={17} aria-hidden="true" />
             )}
-            <span>{item.fileHandle ? "Save" : "Save as"}</span>
+            <span>{canSaveDirectly ? "Save" : "Save as"}</span>
           </button>
         </div>
       </header>

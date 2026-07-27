@@ -5,6 +5,7 @@ import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diag
 import pkceOauth2Diagram from "../../../examples/pkce-oauth2-flow.diagram.json";
 import {
   canPickDiagramFile,
+  canWriteOutputDiagramFile,
   createEmptyDiagramDocument,
   downloadDiagramFile,
   formatDiagramFileError,
@@ -12,6 +13,7 @@ import {
   pickDiagramFile,
   readDiagramFile,
   writeDiagramFile,
+  writeOutputDiagramFile,
   type DiagramFileHandle,
 } from "./document-files";
 
@@ -25,6 +27,10 @@ export type DiagramListItem = {
   isDirty: boolean;
   diagram: DiagramDocument;
 };
+
+export function canSaveDiagramDirectly(item: DiagramListItem): boolean {
+  return Boolean(item.fileHandle) || (item.source === "output" && canWriteOutputDiagramFile());
+}
 
 const outputDiagramFiles = import.meta.glob("../../../outputs/**/*.diagram.json", {
   eager: true,
@@ -163,6 +169,8 @@ export function useDiagramDocuments() {
     try {
       if (item.fileHandle) {
         await writeDiagramFile(item.fileHandle, item.diagram);
+      } else if (item.source === "output" && canWriteOutputDiagramFile()) {
+        await writeOutputDiagramFile(item.fileName, item.diagram);
       } else {
         downloadDiagramFile(item.diagram, item.fileName);
       }

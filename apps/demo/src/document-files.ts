@@ -7,6 +7,8 @@ import {
 } from "@interactive-diagram/schema";
 
 const DIAGRAM_FILE_SUFFIX = ".diagram.json";
+const OUTPUT_DIRECTORY_PREFIX = "outputs/";
+const OUTPUT_SAVE_ENDPOINT = "/__diaflow/outputs/";
 
 type DiagramWritableFileStream = {
   write: (data: string) => Promise<void> | void;
@@ -136,6 +138,27 @@ export async function writeDiagramFile(
   await writable.close();
 }
 
+export function canWriteOutputDiagramFile(): boolean {
+  return import.meta.env.DEV;
+}
+
+export async function writeOutputDiagramFile(
+  fileName: string,
+  diagram: DiagramDocument,
+): Promise<void> {
+  const outputPath = getOutputRelativePath(fileName);
+  const response = await fetch(`${OUTPUT_SAVE_ENDPOINT}${encodeURIComponent(outputPath)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: serializeDiagramDocument(diagram),
+  });
+
+  if (response.ok) return;
+
+  const detail = (await response.text()).trim();
+  throw new Error(detail || `Could not save outputs/${outputPath}.`);
+}
+
 export function formatDiagramFileError(error: unknown): string {
   if (error instanceof UnsupportedDiagramVersionError) {
     return error.message;
@@ -189,4 +212,17 @@ function formatIssues(issues: Issue[]): string {
 function getNativeOpenFilePicker(): DiagramOpenFilePicker | null {
   const candidate = (globalThis as { showOpenFilePicker?: unknown }).showOpenFilePicker;
   return typeof candidate === "function" ? candidate as DiagramOpenFilePicker : null;
+}
+
+function getOutputRelativePath(fileName: string): string {
+  if (!fileName.startsWith(OUTPUT_DIRECTORY_PREFIX)) {
+    throw new Error("Only files under outputs/ can be saved to the local workspace.");
+  }
+
+  const path = fileName.slice(OUTPUT_DIRECTORY_PREFIX.length);
+  if (!path || !path.endsWith(DIAGRAM_FILE_SUFFIX)) {
+    throw new Error("Output files must use the .diagram.json suffix.");
+  }
+
+  return path;
 }
