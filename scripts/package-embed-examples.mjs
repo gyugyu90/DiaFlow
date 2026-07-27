@@ -16,7 +16,7 @@ const bundledDiagrams = [
     target: "circuit-breaker-scenes.diagram.json",
   },
   {
-    source: "pkce-oauth2-flow.diagram.json",
+    source: "examples/pkce-oauth2-flow.diagram.json",
     target: "pkce-oauth2-flow.diagram.json",
   },
 ];

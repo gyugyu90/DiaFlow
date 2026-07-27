@@ -119,6 +119,7 @@ See the following resources:
 - [JSON Schema](schemas/diagram.schema.json)
 - [Basic web architecture example](examples/basic-web-architecture.diagram.json)
 - [Circuit breaker scenes example](examples/circuit-breaker-scenes.diagram.json)
+- [PKCE OAuth2 flow example](examples/pkce-oauth2-flow.diagram.json)
 
 The Zod definition in `packages/schema/src/index.ts` is the schema source of truth.
 `schemas/diagram.schema.json` is generated from it and should not be edited by hand.
