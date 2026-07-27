@@ -70,6 +70,17 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 - Put arbitrary extensions only in `Node.data`, `Edge.data`, or `Animation.payload`; structural objects are strict.
 - Do not make unrelated visual cleanup or schema migrations unless requested.
 
+## Optional Local Preview
+
+After successful normalization and validation, check whether the local DiaFlow development server is reachable at its expected local address without starting it.
+
+- If the server is running, report its URL and tell the user to open the updated `.diagram.json` through the editor.
+- If the server is not running and the task is interactive, ask whether the user wants to start it. Start it from the DiaFlow repository root only after confirmation, then report the actual URL printed by the development server.
+- If the user already requested a local preview or server startup, treat that as confirmation and do not ask again.
+- Skip the preview offer for batch, CI, or explicitly file-only requests.
+- Do not treat preview availability or server startup failure as diagram-update failure.
+- Do not copy the diagram into application or public directories solely for preview.
+
 ## Output Boundary
 
 Modify only the resolved `.diagram.json` file unless validation requires a directly related repair. Do not modify runtime or editor source while carrying out a diagram-content request.
