@@ -1,14 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import { parseDiagramDocument } from "@interactive-diagram/schema";
-import { createOutputDiagramItems } from "./useDiagramDocuments";
+import { canSaveDiagramDirectly, createOutputDiagramItems } from "./useDiagramDocuments";
 import {
+  canWriteOutputDiagramFile,
   createEmptyDiagramDocument,
   formatDiagramFileError,
   normalizeDiagramFileName,
   parseDiagramText,
   serializeDiagramDocument,
   writeDiagramFile,
+  writeOutputDiagramFile,
   type DiagramFileHandle,
 } from "./document-files";
 
@@ -89,6 +91,39 @@ describe("diagram document files", () => {
     expect(handle.createWritable).toHaveBeenCalledOnce();
     expect(write).toHaveBeenCalledWith(serializeDiagramDocument(diagram));
     expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("writes output documents through the local development server", async () => {
+    const diagram = parseDiagramDocument(sampleDiagram);
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      await writeOutputDiagramFile("outputs/nested/architecture.diagram.json", diagram);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/__diaflow/outputs/nested%2Farchitecture.diagram.json",
+      expect.objectContaining({
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: serializeDiagramDocument(diagram),
+      }),
+    );
+  });
+
+  it("uses direct save for output documents in the local development app", () => {
+    expect(canWriteOutputDiagramFile()).toBe(true);
+    expect(canSaveDiagramDirectly({
+      id: "output:architecture.diagram.json",
+      source: "output",
+      title: "Architecture",
+      fileName: "outputs/architecture.diagram.json",
+      isDirty: false,
+      diagram: parseDiagramDocument(sampleDiagram),
+    })).toBe(true);
   });
 
   it("returns readable syntax and schema validation errors", () => {

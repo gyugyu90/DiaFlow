@@ -82,15 +82,18 @@ listed on this page; refresh after adding a file while the development server is
 1. Select **Open** to load an existing `.diagram.json` file, or select **New diagram** to create
    an empty schema-valid document.
 2. Add, select, move, edit, or delete nodes and edit supported edge properties on the canvas.
-3. Select **Save** to overwrite the original file when your browser supports the File System
-   Access API, or select **Save as** to download the current document as a `.diagram.json` file.
+3. With `npm run dev`, select a document from `outputs/` and use **Save** to overwrite that source
+   file. Files opened through the browser's File System Access API can also use **Save** directly.
+   Other files use **Save as** to download the current document as a `.diagram.json` file.
 4. Reopen that file later to continue editing.
 
 Opened files are validated against both the structural schema and cross-document reference rules.
 Invalid JSON, missing or malformed fields, duplicate IDs, and broken references are reported in the
 application.
 
-Browsers without the File System Access API continue to use the standard upload and download flow.
+The `outputs/` write path is available only from the local Vite development server. A deployed
+static editor has no server-side file write capability, so it continues to use the browser upload
+and download flow.
 
 ## 🧩 Diagram JSON
 
