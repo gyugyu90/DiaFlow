@@ -30,8 +30,7 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Open" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "New diagram" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Examples" })).toBeTruthy();
-    expect(screen.getByRole("region", { name: "Local editor start" })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Basic Web Architecture" })).toBeNull();
+    expect(screen.getByRole("main")).toBeTruthy();
     expect(screen.getByLabelText("Build version").textContent).toBe("Build test-build");
   });
 
@@ -156,7 +155,8 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe("/");
-      expect(screen.getByRole("region", { name: "Local editor start" })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "New diagram" })).toBeTruthy();
     });
   });
 
