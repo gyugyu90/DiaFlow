@@ -30,7 +30,7 @@ const embedExample = readFileSync(embedExamplePath, "utf8");
 const packagedEmbedExample = readFileSync(packagedEmbedExamplePath, "utf8");
 const assetFiles = readdirSync(assetsPath);
 
-if (!viewerHtml.includes("<title>DiaFlow Viewer</title>")) {
+if (!viewerHtml.includes("<title>DiaStream Viewer</title>")) {
   fail("Viewer artifact does not use the dedicated viewer HTML entry.");
 }
 if (viewerHtml.includes("/src/main.tsx") || appHtml.includes("/src/viewer-main.tsx")) {

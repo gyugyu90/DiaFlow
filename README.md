@@ -1,21 +1,21 @@
-# DiaFlow
+# DiaStream
 
-DiaFlow helps you turn technical systems into interactive diagrams that people can explore, edit,
+DiaStream helps you turn technical systems into interactive diagrams that people can explore, edit,
 and play through.
 
 **Diagrams that explain themselves: interactive, easy to create and refine, scenario-aware,
 embeddable anywhere, and readable by both people and AI.**
 
-Every diagram is saved as structured `Diagram JSON`, so it stays editable and portable. DiaFlow
+Every diagram is saved as structured `Diagram JSON`, so it stays editable and portable. DiaStream
 turns that data into an interactive SVG experience in the browser.
 
-DiaFlow normalizes saved documents into a canonical form with explicit edge, animation, and group
+DiaStream normalizes saved documents into a canonical form with explicit edge, animation, and group
 defaults. The same JSON therefore carries its behavior without relying on hidden runtime defaults.
 
-> 🚧 **Project status:** DiaFlow is an early public prototype. Diagram JSON currently uses
+> 🚧 **Project status:** DiaStream is an early public prototype. Diagram JSON currently uses
 > `schemaVersion: "0.2"`, and its APIs and file format may change before the first stable release.
 
-## 🌟 Why DiaFlow?
+## 🌟 Why DiaStream?
 
 - 💡 **Self-explanatory.** A diagram should communicate its structure and behavior without requiring
   a separate wall of text. Labels, visual hierarchy, animation, and scenes should work together to
@@ -62,8 +62,8 @@ The required Node.js major version is recorded in [`.nvmrc`](.nvmrc).
 ### Run Locally
 
 ```sh
-git clone https://github.com/gyugyu90/DiaFlow.git
-cd DiaFlow
+git clone https://github.com/gyugyu90/DiaStream.git
+cd DiaStream
 nvm install
 nvm use
 npm install
@@ -137,7 +137,7 @@ npm run diagrams:validate   # Run structural and reference-integrity checks on e
 
 ## 🤖 LLM Skills
 
-DiaFlow includes two service-neutral skills that work with local files and the repository schema:
+DiaStream includes two service-neutral skills that work with local files and the repository schema:
 
 - [`create-diagram`](.agents/skills/create-diagram/SKILL.md) creates a new schema-valid Diagram JSON file
   from an architecture or scenario description.
@@ -160,7 +160,7 @@ ln -s "$PWD/.agents/skills/update-diagram" "$HOME/.agents/skills/update-diagram"
 ```
 
 Other LLM tools can use the instructions in each `SKILL.md` without authentication or a hosted
-DiaFlow service. If a newly added skill does not appear in Codex, restart Codex and reopen the
+DiaStream service. If a newly added skill does not appear in Codex, restart Codex and reopen the
 repository.
 
 Both skills target `schemaVersion: "0.2"` and run the repository validator before completing a
@@ -172,7 +172,7 @@ contract changes.
 
 ```txt
 apps/
-  demo/       Local DiaFlow application and example gallery
+  demo/       Local DiaStream application and example gallery
 
 packages/
   schema/     Diagram JSON types, structural validation, and reference validation
@@ -249,7 +249,7 @@ untouched:
 - Unsupported schema versions produce compatibility errors. The migration entry point exists, but
   no cross-version migration path is registered yet.
 
-## 🗺️ Where DiaFlow Is Heading
+## 🗺️ Where DiaStream Is Heading
 
 Here is what comes next for the local-first experience:
 
@@ -259,7 +259,7 @@ Here is what comes next for the local-first experience:
 
 ## 🤝 Contributing
 
-DiaFlow is being developed in public. Focused issues and pull requests are welcome, especially for
+DiaStream is being developed in public. Focused issues and pull requests are welcome, especially for
 schema correctness, renderer compatibility, editor usability, accessibility, testing, and
 self-hosted embedding.
 
@@ -272,5 +272,5 @@ Before submitting a change:
 
 ## 📄 License
 
-DiaFlow is available under the [MIT License](LICENSE). Selected Material Symbols assets are
+DiaStream is available under the [MIT License](LICENSE). Selected Material Symbols assets are
 distributed under Apache 2.0; see [Third-Party Notices](THIRD_PARTY_NOTICES.md).

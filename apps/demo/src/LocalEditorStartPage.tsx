@@ -26,7 +26,7 @@ export function LocalEditorStartPage({
     <main className="app-shell">
       <header className="app-header">
         <div className="brand-lockup">
-          <h1>DiaFlow</h1>
+          <h1>DiaStream</h1>
           <p>Local editor</p>
         </div>
         <div className="toolbar">

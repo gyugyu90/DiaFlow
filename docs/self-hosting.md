@@ -1,8 +1,8 @@
 # Self-Hosting Your Own Diagrams
 
 This guide covers the complete path from a local `.diagram.json` file to a diagram embedded in a
-website. It is intended for developers who want to host both the DiaFlow viewer and their diagram
-files without a DiaFlow account or hosted backend.
+website. It is intended for developers who want to host both the DiaStream viewer and their diagram
+files without a DiaStream account or hosted backend.
 
 For viewer query parameters and iframe options, see the shorter
 [embedding reference](embedding.md).
@@ -27,15 +27,15 @@ iframe in a blog or documentation site
 ```
 
 The viewer fetches the Diagram JSON in the visitor's browser. No server-side rendering, database,
-upload API, or DiaFlow service is involved.
+upload API, or DiaStream service is involved.
 
 ## 1. Prepare the Repository
 
-Clone DiaFlow and install its dependencies:
+Clone DiaStream and install its dependencies:
 
 ```sh
-git clone https://github.com/gyugyu90/DiaFlow.git
-cd DiaFlow
+git clone https://github.com/gyugyu90/DiaStream.git
+cd DiaStream
 nvm install
 nvm use
 npm install
@@ -205,7 +205,7 @@ For external JSON hosting:
 
 To update an existing embed without changing the iframe:
 
-1. Edit the local `.diagram.json` file in DiaFlow.
+1. Edit the local `.diagram.json` file in DiaStream.
 2. Replace the copy under `outputs/` while keeping the same filename.
 3. Validate, commit, and push the change.
 4. Wait for the static host to deploy the new build.

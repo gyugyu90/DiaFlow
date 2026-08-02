@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`Diagram JSON` is the source-of-truth document format for interactive diagrams in DiaFlow.
+`Diagram JSON` is the source-of-truth document format for interactive diagrams in DiaStream.
 
 It is not an existing standard. It is a project-defined schema designed for:
 
@@ -30,7 +30,7 @@ instead of being silently discarded. Arbitrary extension properties are allowed 
 
 ## Canonical Serialization
 
-DiaFlow accepts documents that omit supported defaults, then normalizes them before editing or
+DiaStream accepts documents that omit supported defaults, then normalizes them before editing or
 saving. Canonical `.diagram.json` files explicitly store behavior and appearance defaults so the
 same file remains understandable to people, LLMs, and future runtime versions.
 
@@ -185,7 +185,7 @@ Theme values:
 
 ### Color Values
 
-DiaFlow accepts a limited color vocabulary so AI-generated documents, editor controls, and runtime
+DiaStream accepts a limited color vocabulary so AI-generated documents, editor controls, and runtime
 rendering use the same contract.
 
 Semantic presets:

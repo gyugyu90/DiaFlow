@@ -105,7 +105,7 @@ describe("diagram document files", () => {
     }
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/__diaflow/outputs/nested%2Farchitecture.diagram.json",
+      "/__diastream/outputs/nested%2Farchitecture.diagram.json",
       expect.objectContaining({
         method: "PUT",
         headers: { "Content-Type": "application/json" },

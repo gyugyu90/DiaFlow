@@ -20,8 +20,8 @@ const {
 } = normalizeSchema(generated);
 const publicSchema = {
   $schema: "https://json-schema.org/draft/2019-09/schema",
-  $id: "https://raw.githubusercontent.com/gyugyu90/DiaFlow/main/schemas/diagram.schema.json",
-  title: "DiaFlow Diagram",
+  $id: "https://raw.githubusercontent.com/gyugyu90/DiaStream/main/schemas/diagram.schema.json",
+  title: "DiaStream Diagram",
   description,
   ...schemaBody,
 };

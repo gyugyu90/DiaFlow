@@ -1,9 +1,9 @@
 # Self-Hosted Embedding
 
-DiaFlow's MVP embed path is self-hosted. You host the built viewer files and your
+DiaStream's MVP embed path is self-hosted. You host the built viewer files and your
 `.diagram.json` files on static hosting you control, then place an iframe in your documentation.
 
-No DiaFlow account, database, upload API, or hosted diagram service is required.
+No DiaStream account, database, upload API, or hosted diagram service is required.
 
 For the complete workflow from a locally saved diagram to a Git-based Netlify deployment, see
 [Self-Hosting Your Own Diagrams](self-hosting.md).
@@ -82,8 +82,8 @@ dist/
     pkce-oauth2-flow.diagram.json
 ```
 
-When DiaFlow is hosted at the site root, use `/viewer/?src=/diagrams/checkout.diagram.json`.
-If your host serves DiaFlow under a subdirectory, keep the `src` path relative to that deployment.
+When DiaStream is hosted at the site root, use `/viewer/?src=/diagrams/checkout.diagram.json`.
+If your host serves DiaStream under a subdirectory, keep the `src` path relative to that deployment.
 
 To test the bundled examples on your own static host, upload the generated `dist/` directory and
 open `/embed/`. The example page embeds `/viewer/?src=/diagrams/basic-web-architecture.diagram.json`.
@@ -151,7 +151,7 @@ The viewer renders an in-frame error for:
 ## Current Limitations
 
 - The viewer is read-only.
-- There is no hosted DiaFlow diagram storage.
+- There is no hosted DiaStream diagram storage.
 - There is no `postMessage` control API yet.
 - There is no script embed or React SDK yet.
 - The viewer artifact and shared assets must be deployed together from the same build.

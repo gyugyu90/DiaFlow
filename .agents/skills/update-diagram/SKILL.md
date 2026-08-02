@@ -1,15 +1,15 @@
 ---
 name: update-diagram
-description: Find and safely update an existing DiaFlow .diagram.json file while preserving stable IDs and reference integrity. Use when the user asks to change, edit, revise, rename, extend, or remove content from a diagram identified by path, filename, metadata title, or natural-language context.
+description: Find and safely update an existing DiaStream .diagram.json file while preserving stable IDs and reference integrity. Use when the user asks to change, edit, revise, rename, extend, or remove content from a diagram identified by path, filename, metadata title, or natural-language context.
 ---
 
-# Update DiaFlow Diagram
+# Update DiaStream Diagram
 
 Resolve exactly one existing Diagram JSON document, make the smallest requested change, and validate the result. Keep Diagram JSON as the source of truth; never replace it with SVG, HTML, Canvas code, or an image.
 
 ## Compatibility
 
-Target DiaFlow `schemaVersion: "0.2"`. Read `packages/schema/src/index.ts` or `schemas/diagram.schema.json` before changing schema-sensitive fields.
+Target DiaStream `schemaVersion: "0.2"`. Read `packages/schema/src/index.ts` or `schemas/diagram.schema.json` before changing schema-sensitive fields.
 
 ## Identify The Target
 
@@ -20,7 +20,7 @@ Accept selectors written naturally or as explicit prompt fields such as `path:`,
 3. exact `metadata.title`, case-insensitive
 4. filename or title explicitly contained in the natural-language request
 
-Use the bundled resolver from the DiaFlow repository root:
+Use the bundled resolver from the DiaStream repository root:
 
 ```sh
 node .agents/skills/update-diagram/scripts/find-diagram.mjs --root . --path diagrams/api.diagram.json
@@ -34,7 +34,7 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 ## Workflow
 
 1. Resolve one target file and read it completely.
-2. Validate the unchanged input from the DiaFlow repository root:
+2. Validate the unchanged input from the DiaStream repository root:
 
    ```sh
    npm run diagrams:validate -- path/to/file.diagram.json
@@ -72,10 +72,10 @@ Do not guess when resolution returns no file or multiple files. Show the candida
 
 ## Optional Local Preview
 
-After successful normalization and validation, check whether the local DiaFlow development server is reachable at its expected local address without starting it.
+After successful normalization and validation, check whether the local DiaStream development server is reachable at its expected local address without starting it.
 
 - If the server is running, report its URL and tell the user to open the updated `.diagram.json` through the editor.
-- If the server is not running and the task is interactive, ask whether the user wants to start it. Start it from the DiaFlow repository root only after confirmation, then report the actual URL printed by the development server.
+- If the server is not running and the task is interactive, ask whether the user wants to start it. Start it from the DiaStream repository root only after confirmation, then report the actual URL printed by the development server.
 - If the user already requested a local preview or server startup, treat that as confirmation and do not ask again.
 - Skip the preview offer for batch, CI, or explicitly file-only requests.
 - Do not treat preview availability or server startup failure as diagram-update failure.

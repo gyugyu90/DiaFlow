@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { DiagramResolutionError, findDiagram } from "./find-diagram.mjs";
 
 async function makeFixture() {
-  const root = await mkdtemp(join(tmpdir(), "diaflow-find-"));
+  const root = await mkdtemp(join(tmpdir(), "diastream-find-"));
   await mkdir(join(root, "nested"));
   await writeDiagram(join(root, "api-overview.diagram.json"), "API Overview");
   await writeDiagram(join(root, "nested", "worker-flow.diagram.json"), "Worker Flow");

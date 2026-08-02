@@ -245,7 +245,7 @@ export const diagramDocumentSchema = z.object({
   groups: z.array(groupSchema).optional().describe("Optional visual node groups."),
   animations: z.array(animationSchema).optional().describe("Optional flow animations."),
   scenes: z.array(sceneSchema).optional().describe("Optional ordered scenario steps."),
-}).strict().describe("Source-of-truth document for a DiaFlow interactive architecture diagram.");
+}).strict().describe("Source-of-truth document for a DiaStream interactive architecture diagram.");
 
 export type DiagramDocument = z.infer<typeof diagramDocumentSchema>;
 export type DiagramNode = z.infer<typeof nodeSchema>;
@@ -575,7 +575,7 @@ function formatUnsupportedDiagramVersionMessage(
     return `Diagram JSON schemaVersion ${String(schemaVersion)} is older than the current schemaVersion ${currentVersion}. No migration path to ${targetVersion} is available yet.`;
   }
   if (reason === "newer") {
-    return `Diagram JSON schemaVersion ${String(schemaVersion)} is newer than the current schemaVersion ${currentVersion}. Please open it with a newer DiaFlow version.`;
+    return `Diagram JSON schemaVersion ${String(schemaVersion)} is newer than the current schemaVersion ${currentVersion}. Please open it with a newer DiaStream version.`;
   }
   return `Diagram JSON schemaVersion ${String(schemaVersion)} is not supported. Supported schemaVersion: ${supportedVersions}.`;
 }

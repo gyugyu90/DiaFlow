@@ -25,7 +25,7 @@ describe("App", () => {
   it("starts on the local editor entry point", () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DiaStream" })).toBeTruthy();
     expect(screen.getByText("Local editor")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Open" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "New diagram" })).toBeTruthy();
@@ -102,7 +102,7 @@ describe("App", () => {
 
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toContain("This file is not valid JSON");
-    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DiaStream" })).toBeTruthy();
   });
 
   it("shows a schemaVersion compatibility error when an opened file is too old", async () => {
@@ -122,7 +122,7 @@ describe("App", () => {
       "schemaVersion 0.1 is older than the current schemaVersion 0.2",
     );
     expect(alert.textContent).toContain("No migration path to 0.2 is available yet");
-    expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "DiaStream" })).toBeTruthy();
   });
 
   it("opens a sample edit route directly and returns to the gallery route", () => {
@@ -155,7 +155,7 @@ describe("App", () => {
 
     await waitFor(() => {
       expect(window.location.pathname).toBe("/");
-      expect(screen.getByRole("heading", { name: "DiaFlow" })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "DiaStream" })).toBeTruthy();
       expect(screen.getByRole("button", { name: "New diagram" })).toBeTruthy();
     });
   });

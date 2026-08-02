@@ -1,23 +1,23 @@
 ---
 name: create-diagram
-description: Create new DiaFlow .diagram.json files from natural-language architecture or scenario descriptions. Use when the user asks to create, generate, draft, or model a new interactive architecture diagram with nodes, edges, groups, animations, or scenes.
+description: Create new DiaStream .diagram.json files from natural-language architecture or scenario descriptions. Use when the user asks to create, generate, draft, or model a new interactive architecture diagram with nodes, edges, groups, animations, or scenes.
 ---
 
-# Create DiaFlow Diagram
+# Create DiaStream Diagram
 
-Create a schema-valid Diagram JSON document that remains editable in DiaFlow. Generate JSON as the source of truth, never SVG, HTML, Canvas code, or a rendered image.
+Create a schema-valid Diagram JSON document that remains editable in DiaStream. Generate JSON as the source of truth, never SVG, HTML, Canvas code, or a rendered image.
 
 ## Compatibility
 
-Target DiaFlow `schemaVersion: "0.2"`. Treat the repository's `packages/schema/src/index.ts` as the source of truth and `schemas/diagram.schema.json` as the public validation contract. Read the current schema before authoring instead of relying on memory.
+Target DiaStream `schemaVersion: "0.2"`. Treat the repository's `packages/schema/src/index.ts` as the source of truth and `schemas/diagram.schema.json` as the public validation contract. Read the current schema before authoring instead of relying on memory.
 
 ## Workflow
 
-1. Locate the DiaFlow repository root containing `schemas/diagram.schema.json` and `package.json`.
+1. Locate the DiaStream repository root containing `schemas/diagram.schema.json` and `package.json`.
 2. Read `schemas/diagram.schema.json`. Consult `docs/diagram-json-schema-draft.md` and the closest file in `examples/` when layout, animation, or scene behavior is needed.
 3. Extract the requested components, relationships, flows, and scenario steps. Ask a question only when a missing detail prevents a coherent diagram; otherwise choose conservative architecture defaults.
-4. Use the requested output path. When none is given, derive a lowercase hyphenated filename ending in `.diagram.json` under `outputs/` at the DiaFlow repository root. Never overwrite an existing file unless the user explicitly requests it.
-5. Write one complete JSON document, normalize it, and validate it from the DiaFlow repository root:
+4. Use the requested output path. When none is given, derive a lowercase hyphenated filename ending in `.diagram.json` under `outputs/` at the DiaStream repository root. Never overwrite an existing file unless the user explicitly requests it.
+5. Write one complete JSON document, normalize it, and validate it from the DiaStream repository root:
 
    ```sh
    npm run diagrams:normalize -- path/to/file.diagram.json
@@ -48,10 +48,10 @@ Target DiaFlow `schemaVersion: "0.2"`. Treat the repository's `packages/schema/s
 
 ## Optional Local Preview
 
-After successful normalization and validation, check whether the local DiaFlow development server is reachable at its expected local address without starting it.
+After successful normalization and validation, check whether the local DiaStream development server is reachable at its expected local address without starting it.
 
 - If the server is running, report its URL and tell the user to open the generated `.diagram.json` through the editor.
-- If the server is not running and the task is interactive, ask whether the user wants to start it. Start it from the DiaFlow repository root only after confirmation, then report the actual URL printed by the development server.
+- If the server is not running and the task is interactive, ask whether the user wants to start it. Start it from the DiaStream repository root only after confirmation, then report the actual URL printed by the development server.
 - If the user already requested a local preview or server startup, treat that as confirmation and do not ask again.
 - Skip the preview offer for batch, CI, or explicitly file-only requests.
 - Do not treat preview availability or server startup failure as diagram-generation failure.

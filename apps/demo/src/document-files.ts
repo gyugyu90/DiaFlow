@@ -8,7 +8,7 @@ import {
 
 const DIAGRAM_FILE_SUFFIX = ".diagram.json";
 const OUTPUT_DIRECTORY_PREFIX = "outputs/";
-const OUTPUT_SAVE_ENDPOINT = "/__diaflow/outputs/";
+const OUTPUT_SAVE_ENDPOINT = "/__diastream/outputs/";
 
 type DiagramWritableFileStream = {
   write: (data: string) => Promise<void> | void;

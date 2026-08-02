@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "https://raw.githubusercontent.com/gyugyu90/DiaFlow/main/schemas/diagram.schema.json",
-  "title": "DiaFlow Diagram",
-  "description": "Source-of-truth document for a DiaFlow interactive architecture diagram.",
+  "$id": "https://raw.githubusercontent.com/gyugyu90/DiaStream/main/schemas/diagram.schema.json",
+  "title": "DiaStream Diagram",
+  "description": "Source-of-truth document for a DiaStream interactive architecture diagram.",
   "type": "object",
   "properties": {
     "schemaVersion": {

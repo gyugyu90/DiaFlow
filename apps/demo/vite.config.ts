@@ -51,10 +51,10 @@ export default defineConfig({
 
 function outputWorkspacePlugin(): Plugin {
   const outputsRoot = resolve(__dirname, "../../outputs");
-  const endpointPrefix = "/__diaflow/outputs/";
+  const endpointPrefix = "/__diastream/outputs/";
 
   return {
-    name: "diaflow-output-workspace",
+    name: "diastream-output-workspace",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         if (request.method !== "PUT" || !request.url?.startsWith(endpointPrefix)) {
