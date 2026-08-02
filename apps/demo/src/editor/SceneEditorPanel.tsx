@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
-import type { EditorEditScope } from "@interactive-diagram/editor";
-import type { DiagramScene } from "@interactive-diagram/schema";
+import type { EditorEditScope } from "@diastream/editor";
+import type { DiagramScene } from "@diastream/schema";
 
 type SceneField = "title" | "description";
 

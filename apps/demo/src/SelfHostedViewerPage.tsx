@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertCircle } from "lucide-react";
-import type { DiagramDocument } from "@interactive-diagram/schema";
+import type { DiagramDocument } from "@diastream/schema";
 import { DiagramViewport } from "./DiagramViewport";
 import { SceneControls } from "./SceneControls";
 import { formatDiagramFileError, parseDiagramText } from "./document-files";

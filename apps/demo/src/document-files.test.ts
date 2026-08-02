@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
-import { parseDiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument } from "@diastream/schema";
 import { canSaveDiagramDirectly, createOutputDiagramItems } from "./useDiagramDocuments";
 import {
   canWriteOutputDiagramFile,

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
-import { parseDiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument } from "@diastream/schema";
 import { renderDiagram, type DiagramRenderOptions } from "./index";
 
 const diagram = parseDiagramDocument(sampleDiagram);

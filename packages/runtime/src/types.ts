@@ -1,4 +1,4 @@
-import type { DiagramDocument, DiagramNode } from "@interactive-diagram/schema";
+import type { DiagramDocument, DiagramNode } from "@diastream/schema";
 
 export type Point = { x: number; y: number };
 export type Size = { width: number; height: number };

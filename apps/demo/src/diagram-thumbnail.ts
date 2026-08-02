@@ -1,5 +1,5 @@
-import type { DiagramDocument, DiagramNode } from "@interactive-diagram/schema";
-import type { ViewBox } from "@interactive-diagram/runtime";
+import type { DiagramDocument, DiagramNode } from "@diastream/schema";
+import type { ViewBox } from "@diastream/runtime";
 
 const THUMBNAIL_ASPECT_RATIO = 16 / 9;
 const THUMBNAIL_NODE_LIMIT = 3;

@@ -5,7 +5,7 @@ import type {
   DiagramScene,
   DiagramSceneEdgeOverride,
   DiagramSceneNodeOverride,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 import type { DiagramMetadataPatch, EdgePatch, NodePatch, ScenePatch } from "./types.js";
 
 export type NewNodeInput = Partial<Pick<DiagramNode, "label" | "type" | "icon" | "position">>;

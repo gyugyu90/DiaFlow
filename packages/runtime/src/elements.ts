@@ -4,11 +4,11 @@ import type {
   DiagramGroup,
   EdgeLabelPlacement,
   EdgeMarker,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 import {
   resolveEdgeEndMarker,
   resolveEdgeStartMarker,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 import { resolveEdgeColor } from "./edge-style.js";
 import {
   getEdgeLabelAnchor,

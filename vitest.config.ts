@@ -7,9 +7,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@interactive-diagram/editor": resolve(__dirname, "packages/editor/src/index.ts"),
-      "@interactive-diagram/runtime": resolve(__dirname, "packages/runtime/src/index.ts"),
-      "@interactive-diagram/schema": resolve(__dirname, "packages/schema/src/index.ts"),
+      "@diastream/editor": resolve(__dirname, "packages/editor/src/index.ts"),
+      "@diastream/runtime": resolve(__dirname, "packages/runtime/src/index.ts"),
+      "@diastream/schema": resolve(__dirname, "packages/schema/src/index.ts"),
     },
   },
   test: {

@@ -1,6 +1,6 @@
 import { Link2, RotateCcw, Trash2, X } from "lucide-react";
-import type { InspectorPosition, NodePatch } from "@interactive-diagram/editor";
-import { nodeTypeSchema, type DiagramNode } from "@interactive-diagram/schema";
+import type { InspectorPosition, NodePatch } from "@diastream/editor";
+import { nodeTypeSchema, type DiagramNode } from "@diastream/schema";
 import { NodeIconPicker } from "./NodeIconPicker";
 
 const nodeTypeOptions = nodeTypeSchema.options;

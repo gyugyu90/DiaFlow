@@ -16,23 +16,23 @@ export default defineConfig({
   resolve: {
     alias: [
       {
-        find: "@interactive-diagram/editor/styles.css",
+        find: "@diastream/editor/styles.css",
         replacement: resolve(__dirname, "../../packages/editor/styles.css"),
       },
       {
-        find: "@interactive-diagram/runtime/styles.css",
+        find: "@diastream/runtime/styles.css",
         replacement: resolve(__dirname, "../../packages/runtime/styles.css"),
       },
       {
-        find: "@interactive-diagram/editor",
+        find: "@diastream/editor",
         replacement: resolve(__dirname, "../../packages/editor/src/index.ts"),
       },
       {
-        find: "@interactive-diagram/runtime",
+        find: "@diastream/runtime",
         replacement: resolve(__dirname, "../../packages/runtime/src/index.ts"),
       },
       {
-        find: "@interactive-diagram/schema",
+        find: "@diastream/schema",
         replacement: resolve(__dirname, "../../packages/schema/src/index.ts"),
       },
     ],

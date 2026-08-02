@@ -3,8 +3,8 @@ import {
   type DiagramChangeSet,
   type DiagramRenderer,
   type ViewportChangeEvent,
-} from "@interactive-diagram/runtime";
-import type { DiagramDocument, DiagramNode } from "@interactive-diagram/schema";
+} from "@diastream/runtime";
+import type { DiagramDocument, DiagramNode } from "@diastream/schema";
 import {
   getEventEdgeId,
   getEventNodeId,

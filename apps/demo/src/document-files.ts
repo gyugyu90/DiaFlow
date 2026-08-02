@@ -4,7 +4,7 @@ import {
   parseDiagramDocument,
   serializeDiagramDocument as serializeCanonicalDiagramDocument,
   type DiagramDocument,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 
 const DIAGRAM_FILE_SUFFIX = ".diagram.json";
 const OUTPUT_DIRECTORY_PREFIX = "outputs/";

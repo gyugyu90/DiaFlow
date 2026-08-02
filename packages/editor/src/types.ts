@@ -3,7 +3,7 @@ import type {
   DiagramEdge,
   DiagramNode,
   DiagramScene,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 
 export type NodePatch = Partial<Pick<DiagramNode, "label" | "type" | "icon">>;
 export type DiagramMetadataPatch = Partial<

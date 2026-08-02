@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { parseDiagramDocument, type DiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument, type DiagramDocument } from "@diastream/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import pkceOauth2Diagram from "../../../examples/pkce-oauth2-flow.diagram.json";

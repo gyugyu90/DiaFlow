@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { DiagramScene } from "@interactive-diagram/schema";
+import type { DiagramScene } from "@diastream/schema";
 
 export function SceneControls({
   scene,

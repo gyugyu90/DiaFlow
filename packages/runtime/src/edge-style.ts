@@ -1,4 +1,4 @@
-import { EDGE_COLOR_PRESETS, hexColorSchema } from "@interactive-diagram/schema";
+import { EDGE_COLOR_PRESETS, hexColorSchema } from "@diastream/schema";
 
 export const EDGE_COLOR_OPTIONS = EDGE_COLOR_PRESETS;
 

@@ -1,6 +1,6 @@
 import { PlayCircle, Plus } from "lucide-react";
-import type { EditorEditScope } from "@interactive-diagram/editor";
-import type { DiagramNode, DiagramScene } from "@interactive-diagram/schema";
+import type { EditorEditScope } from "@diastream/editor";
+import type { DiagramNode, DiagramScene } from "@diastream/schema";
 import { SceneEditorPanel } from "./SceneEditorPanel";
 
 export function EditorSidebar({

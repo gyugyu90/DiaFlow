@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { parseDiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument } from "@diastream/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../examples/circuit-breaker-scenes.diagram.json";
 import { DiagramViewModal } from "./DiagramViewModal";

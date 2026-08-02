@@ -1,5 +1,5 @@
 {
-  "name": "@interactive-diagram/editor",
+  "name": "@diastream/editor",
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
     "test": "vitest run --root ../.. --config vitest.config.ts packages/editor/src/index.test.ts"
   },
   "dependencies": {
-    "@interactive-diagram/runtime": "0.1.0",
-    "@interactive-diagram/schema": "0.1.0"
+    "@diastream/runtime": "0.1.0",
+    "@diastream/schema": "0.1.0"
   }
 }

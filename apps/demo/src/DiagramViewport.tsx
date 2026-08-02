@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { renderDiagram, type DiagramRenderer } from "@interactive-diagram/runtime";
-import type { DiagramDocument } from "@interactive-diagram/schema";
+import { renderDiagram, type DiagramRenderer } from "@diastream/runtime";
+import type { DiagramDocument } from "@diastream/schema";
 
 export function DiagramViewport({
   animations,

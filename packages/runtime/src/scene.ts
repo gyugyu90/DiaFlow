@@ -5,7 +5,7 @@ import type {
   DiagramScene,
   DiagramSceneEdgeOverride,
   DiagramSceneNodeOverride,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 
 export function getScene(diagram: DiagramDocument, sceneId: string | null): DiagramScene | null {
   if (!sceneId) return null;

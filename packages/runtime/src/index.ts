@@ -1,4 +1,4 @@
-import type { DiagramDocument } from "@interactive-diagram/schema";
+import type { DiagramDocument } from "@diastream/schema";
 import { SvgDiagramRenderer } from "./renderer.js";
 import type { DiagramRenderer, DiagramRenderOptions } from "./types.js";
 

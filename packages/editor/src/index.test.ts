@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent } from "@testing-library/dom";
-import { parseDiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument } from "@diastream/schema";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
 import {
   addDiagramEdge,

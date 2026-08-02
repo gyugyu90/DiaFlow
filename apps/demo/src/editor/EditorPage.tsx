@@ -5,9 +5,9 @@ import type {
   DiagramEditorState,
   EditorEditScope,
   InspectorPosition,
-} from "@interactive-diagram/editor";
-import { applyScene } from "@interactive-diagram/runtime";
-import type { DiagramDocument } from "@interactive-diagram/schema";
+} from "@diastream/editor";
+import { applyScene } from "@diastream/runtime";
+import type { DiagramDocument } from "@diastream/schema";
 import { DiagramEditorViewport } from "../DiagramEditorViewport";
 import { SceneControls } from "../SceneControls";
 import { canSaveDiagramDirectly, type DiagramListItem } from "../useDiagramDocuments";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import sampleDiagram from "../../../examples/basic-web-architecture.diagram.json";
-import { parseDiagramDocument, type DiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument, type DiagramDocument } from "@diastream/schema";
 import { getDiagramThumbnailViewBox } from "./diagram-thumbnail";
 
 describe("diagram thumbnail", () => {

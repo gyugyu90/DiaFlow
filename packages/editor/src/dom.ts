@@ -1,4 +1,4 @@
-import type { DiagramNode } from "@interactive-diagram/schema";
+import type { DiagramNode } from "@diastream/schema";
 import type { InspectorPosition } from "./types.js";
 
 export function getEventNodeId(event: Event): string | null {

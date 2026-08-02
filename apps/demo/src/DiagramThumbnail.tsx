@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import { renderDiagram } from "@interactive-diagram/runtime";
-import type { DiagramDocument } from "@interactive-diagram/schema";
+import { renderDiagram } from "@diastream/runtime";
+import type { DiagramDocument } from "@diastream/schema";
 import { getDiagramThumbnailViewBox } from "./diagram-thumbnail";
 
 export function DiagramThumbnail({ diagram }: { diagram: DiagramDocument }) {

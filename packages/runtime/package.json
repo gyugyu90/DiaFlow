@@ -1,5 +1,5 @@
 {
-  "name": "@interactive-diagram/runtime",
+  "name": "@diastream/runtime",
   "version": "0.1.0",
   "license": "MIT",
   "type": "module",
@@ -23,6 +23,6 @@
     "test": "vitest run --root ../.. --config vitest.config.ts packages/runtime/src/index.test.ts"
   },
   "dependencies": {
-    "@interactive-diagram/schema": "0.1.0"
+    "@diastream/schema": "0.1.0"
   }
 }

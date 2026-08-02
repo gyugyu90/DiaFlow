@@ -5,8 +5,8 @@ import {
   type DiagramEditorState,
   type EditorEditScope,
   type InspectorPosition,
-} from "@interactive-diagram/editor";
-import type { DiagramDocument } from "@interactive-diagram/schema";
+} from "@diastream/editor";
+import type { DiagramDocument } from "@diastream/schema";
 
 export function DiagramEditorViewport({
   className,

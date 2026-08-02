@@ -1,5 +1,5 @@
 import { RotateCcw, Trash2, X } from "lucide-react";
-import type { EdgePatch, InspectorPosition } from "@interactive-diagram/editor";
+import type { EdgePatch, InspectorPosition } from "@diastream/editor";
 import {
   EDGE_COLOR_OPTIONS,
   EDGE_COLOR_PALETTE,
@@ -7,7 +7,7 @@ import {
   isEdgeColorPreset,
   resolveEdgeColor,
   type EdgeColorPreset,
-} from "@interactive-diagram/runtime";
+} from "@diastream/runtime";
 import {
   edgeLabelPlacementSchema,
   edgeLineSchema,
@@ -16,7 +16,7 @@ import {
   resolveEdgeEndMarker,
   resolveEdgeStartMarker,
   type DiagramEdge,
-} from "@interactive-diagram/schema";
+} from "@diastream/schema";
 
 const edgeMarkerOptions = edgeMarkerSchema.options;
 const edgeLineOptions = edgeLineSchema.options;

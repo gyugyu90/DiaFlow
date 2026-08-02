@@ -1,4 +1,4 @@
-import type { DiagramNode, EdgeLabelPlacement } from "@interactive-diagram/schema";
+import type { DiagramNode, EdgeLabelPlacement } from "@diastream/schema";
 import type { NormalizedNode, Point, ViewBox } from "./types.js";
 
 const EDGE_LABEL_OFFSET = 24;

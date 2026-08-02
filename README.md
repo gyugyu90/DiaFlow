@@ -188,7 +188,7 @@ scripts/      Schema generation and Diagram JSON validation tools
 docs/         Format and testing documentation
 ```
 
-The package namespace remains `@interactive-diagram/*` for now. These packages are workspace
+The package namespace remains `@diastream/*` for now. These packages are workspace
 packages and are not yet documented as a stable public npm API.
 
 ## 🛠️ Build and Test

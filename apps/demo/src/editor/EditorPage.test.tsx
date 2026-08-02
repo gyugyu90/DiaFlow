@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { parseDiagramDocument, type DiagramDocument } from "@interactive-diagram/schema";
+import { parseDiagramDocument, type DiagramDocument } from "@diastream/schema";
 import sampleDiagram from "../../../../examples/basic-web-architecture.diagram.json";
 import circuitBreakerDiagram from "../../../../examples/circuit-breaker-scenes.diagram.json";
 import { createEmptyDiagramDocument } from "../document-files";

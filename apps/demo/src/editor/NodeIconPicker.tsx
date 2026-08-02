@@ -5,7 +5,7 @@ import {
   DIAGRAM_ICON_CATALOG,
   resolveDiagramIcon,
   type DiagramIconDefinition,
-} from "@interactive-diagram/runtime";
+} from "@diastream/runtime";
 
 const PICKER_WIDTH = 352;
 const PICKER_HEIGHT = 360;
